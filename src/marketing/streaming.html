@@ -1,0 +1,236 @@
+<!-- HERO -->
+<section class="relative overflow-hidden border-b hairline">
+  <div class="absolute inset-0 grid-bg opacity-60 mask-radial-center"></div>
+  <div class="relative mx-auto max-w-7xl px-6 pt-24 pb-20">
+    <div class="meta-bar text-[11px] font-mono uppercase tracking-[0.14em] text-muted-foreground">
+      <span><span class="text-signal mr-1.5">Standard</span>MPP &middot; Stripe + Tempo</span>
+      <span><span class="text-signal mr-1.5">Primitive</span>Sessions &middot; streamed</span>
+      <span><span class="text-signal mr-1.5">Rails</span>Stablecoin &middot; card &middot; Lightning</span>
+    </div>
+
+    <h1 class="mt-9 font-display font-medium text-5xl md:text-7xl leading-[1.0] tracking-[-0.03em] max-w-4xl">
+      Memory your agents <span class="text-gradient-signal">stream and pay for.</span>
+    </h1>
+
+    <p class="mt-7 max-w-2xl text-[17px] leading-relaxed text-muted-foreground">
+      MemRails endpoints settle over the Machine Payments Protocol &mdash; the open agent-payment standard from Stripe and Tempo. An agent authorizes a budget once, then streams packets against it, each one settled by a lightweight off-chain voucher. No account, no API key, and no on-chain transaction per query. The session is the unit, not the call.
+    </p>
+
+    <div class="mt-9 flex flex-wrap items-center gap-3">
+      <a href="#sessions" class="inline-flex items-center gap-2 h-11 px-5 rounded-md bg-signal text-signal-foreground font-semibold text-sm shadow-signal hover:opacity-95 transition tracking-tight">See a session stream &rarr;</a>
+      <a href="#rails" class="inline-flex items-center gap-2 h-11 px-5 rounded-md border hairline text-sm font-medium hover:border-signal/60 hover:text-signal transition">Which rails it accepts</a>
+    </div>
+  </div>
+</section>
+
+<!-- 01 — SESSIONS & STREAMING (LEAD) -->
+<section id="sessions" class="relative border-b hairline bg-graphite-2/60">
+  <div class="mx-auto max-w-7xl px-6 py-24">
+    <div class="ref-eyebrow text-[11px] font-mono uppercase tracking-[0.18em] text-muted-foreground" data-ref="01"><span class="ref-rule"></span>Sessions, not one-shot calls</div>
+    <h2 class="mt-5 font-display font-medium text-3xl md:text-5xl tracking-tight max-w-4xl leading-[1.05]">
+      Authorize once, then <span class="text-gradient-signal">stream the packets.</span>
+    </h2>
+    <p class="mt-5 max-w-2xl text-[16px] leading-relaxed text-muted-foreground">
+      A retrieval-heavy agent makes hundreds of small memory calls. Paying on-chain for each one would cost more in fees than the packets are worth. MPP's sessions primitive fixes that: the agent sets a spending cap up front, then draws against it with off-chain vouchers &mdash; continuous micropayments, settled in seconds, with one authorization covering the whole run.
+    </p>
+
+    <div class="reveal mt-12 grid lg:grid-cols-[1.45fr_1fr] gap-4 items-stretch">
+      <div class="rounded-xl border border-signal/40 bg-graphite shadow-card overflow-hidden flex flex-col">
+        <div class="flex items-center gap-2 px-4 h-10 border-b hairline bg-graphite-2">
+          <span style="width:.625rem;height:.625rem;border-radius:50%;background:var(--evidence-bad)"></span>
+          <span style="width:.625rem;height:.625rem;border-radius:50%;background:var(--evidence-warn)"></span>
+          <span style="width:.625rem;height:.625rem;border-radius:50%;background:var(--evidence-good)"></span>
+          <span class="ml-3 text-[11px] font-mono text-muted-foreground">agent &rarr; mr.endpoint &middot; MPP session</span>
+        </div>
+<pre class="p-5 text-[12.5px] leading-relaxed font-mono overflow-x-auto flex-grow" style="color:color-mix(in oklab,var(--foreground) 90%,transparent)"><span class="tok-c"># 1 — first call, no session yet</span>
+<span class="http-verb">POST</span> /q  {"query":"deploy risks?"}
+
+<span class="tok-c"># 2 — endpoint offers an MPP session</span>
+<span class="http-402">402 Payment Required</span>
+WWW-Authenticate: <span class="tok-s">Payment</span>
+  methods: <span class="tok-s">usdc, card, lightning</span>
+  session: <span class="tok-s">offer</span>  unit: <span class="tok-n">0.0005</span>/packet
+
+<span class="tok-c"># 3 — agent authorizes a cap, once</span>
+<span class="http-verb">POST</span> /session  Authorization: <span class="tok-s">Payment</span>
+  cap: <span class="tok-n">2.00</span> <span class="tok-s">USDC</span>  via: <span class="tok-s">tempo</span>
+<span class="http-200">&rarr;</span> session: <span class="tok-s">sess_8f3a</span>  remaining: <span class="tok-n">2.0000</span>
+
+<span class="tok-c"># 4 — stream packets, off-chain vouchers</span>
+<span class="http-verb">POST</span> /q  X-Session: sess_8f3a
+<span class="http-200">200</span> {packet} debit <span class="tok-n">0.0005</span>  rem <span class="tok-n">1.9995</span>
+<span class="http-verb">POST</span> /q  X-Session: sess_8f3a
+<span class="http-200">200</span> {packet} debit <span class="tok-n">0.0005</span>  rem <span class="tok-n">1.9990</span>
+<span class="tok-c">  … no per-call chain write …</span></pre>
+      </div>
+
+      <div class="rounded-xl border hairline bg-graphite/40 p-7 flex flex-col">
+        <div class="font-mono text-[11px] uppercase tracking-widest text-muted-foreground mb-5">Live session</div>
+        <div class="flex items-center gap-2 font-mono text-[13px] mb-2"><span class="live-dot"></span>sess_8f3a</div>
+        <div class="flex justify-between font-mono text-[12px] text-muted-foreground mb-2"><span>cap 2.0000 USDC</span><span class="text-signal">rem 1.9990</span></div>
+        <div class="sess-meter mb-6"><div class="sess-fill"></div></div>
+        <div class="voucher-row head"><span>Packet</span><span style="text-align:right">Debit</span><span style="text-align:right">Remaining</span></div>
+        <div class="voucher-row"><span style="color:color-mix(in oklab,var(--foreground) 88%,transparent)">pkt_8f3a</span><span class="text-signal" style="text-align:right">0.0005</span><span class="text-muted-foreground" style="text-align:right">1.9995</span></div>
+        <div class="voucher-row"><span style="color:color-mix(in oklab,var(--foreground) 88%,transparent)">pkt_2a1c</span><span class="text-signal" style="text-align:right">0.0005</span><span class="text-muted-foreground" style="text-align:right">1.9990</span></div>
+        <div class="mt-auto pt-5 font-mono text-[11px] text-muted-foreground leading-relaxed">2 packets &middot; 1 authorization &middot; <span class="text-evidence-good">0 on-chain writes</span></div>
+      </div>
+    </div>
+
+    <div class="mt-4 grid sm:grid-cols-3 gap-4">
+      <div class="reveal rounded-xl border hairline bg-graphite/40 p-5">
+        <div class="font-mono text-[10px] uppercase tracking-widest text-muted-foreground mb-2">Authorizations</div>
+        <div class="font-display font-medium text-3xl tracking-tight">1</div>
+        <p class="mt-2 text-[13px] text-muted-foreground leading-relaxed">One signature covers the whole run, not one per packet.</p>
+      </div>
+      <div class="reveal rounded-xl border hairline bg-graphite/40 p-5">
+        <div class="font-mono text-[10px] uppercase tracking-widest text-muted-foreground mb-2">On-chain writes</div>
+        <div class="font-display font-medium text-3xl tracking-tight">0<span class="text-[0.4em] text-muted-foreground font-mono ml-1">/ call</span></div>
+        <p class="mt-2 text-[13px] text-muted-foreground leading-relaxed">Vouchers settle off-chain; fees don't swallow the packet.</p>
+      </div>
+      <div class="reveal rounded-xl border hairline bg-graphite/40 p-5">
+        <div class="font-mono text-[10px] uppercase tracking-widest text-muted-foreground mb-2">Settled per packet</div>
+        <div class="font-display font-medium text-3xl tracking-tight">0.0005<span class="text-[0.4em] text-muted-foreground font-mono ml-1">USDC</span></div>
+        <p class="mt-2 text-[13px] text-muted-foreground leading-relaxed">Sub-cent micropayments, the way streaming was meant to work.</p>
+      </div>
+    </div>
+  </div>
+</section>
+
+<!-- 02 — RAIL-AGNOSTIC -->
+<section id="rails" class="relative border-b hairline">
+  <div class="mx-auto max-w-7xl px-6 py-24">
+    <div class="ref-eyebrow text-[11px] font-mono uppercase tracking-[0.18em] text-muted-foreground" data-ref="02"><span class="ref-rule"></span>Rail-agnostic payment</div>
+    <h2 class="mt-5 font-display font-medium text-3xl md:text-5xl tracking-tight max-w-4xl leading-[1.05]">
+      One protocol, <span class="text-gradient-signal">whatever the agent holds.</span>
+    </h2>
+    <p class="mt-5 max-w-2xl text-[16px] leading-relaxed text-muted-foreground">
+      MPP is rail-agnostic by design. The same endpoint accepts stablecoins over Tempo, cards through Stripe and Visa, and Bitcoin over Lightning &mdash; the buyer's agent picks the method in the handshake. That widens who can pay for your memory far past crypto-native wallets.
+    </p>
+
+    <div class="reveal mt-10">
+      <div class="text-[11px] font-mono uppercase tracking-widest text-muted-foreground mb-4">Accepted in one handshake</div>
+      <div class="flex flex-wrap gap-2">
+        <span class="rail-chip primary">USDC &middot; Tempo</span>
+        <span class="rail-chip primary">Cards &middot; Stripe</span>
+        <span class="rail-chip">Visa network</span>
+        <span class="rail-chip">Bitcoin &middot; Lightning</span>
+        <span class="rail-chip">Shared Payment Tokens</span>
+        <span class="rail-chip">Custom method</span>
+      </div>
+    </div>
+
+    <div class="mt-12 grid md:grid-cols-3 gap-4">
+      <div class="reveal rounded-xl border hairline p-7 bg-graphite/40 flex flex-col hover:border-signal/50 transition">
+        <div class="font-display font-medium text-5xl text-signal/70 tracking-tight mb-5">01</div>
+        <h3 class="font-display font-semibold text-xl leading-tight mb-4">Crypto or card, same call.</h3>
+        <p class="text-[14px] leading-relaxed text-muted-foreground flex-grow">The 402 challenge lists every method the endpoint accepts. An agent funded in USDC and one funded by a corporate card hit the identical endpoint and both get the packet.</p>
+      </div>
+      <div class="reveal rounded-xl border hairline p-7 bg-graphite/40 flex flex-col hover:border-signal/50 transition">
+        <div class="font-display font-medium text-5xl text-signal/70 tracking-tight mb-5">02</div>
+        <h3 class="font-display font-semibold text-xl leading-tight mb-4">Stripe does the settling.</h3>
+        <p class="text-[14px] leading-relaxed text-muted-foreground flex-grow">Payments clear through Stripe PaymentIntents, with Tempo as the default stablecoin chain. If you already run Stripe, agent revenue lands in the same dashboard and payout schedule as everything else.</p>
+      </div>
+      <div class="reveal rounded-xl border hairline p-7 bg-graphite/40 flex flex-col hover:border-signal/50 transition">
+        <div class="font-display font-medium text-5xl text-signal/70 tracking-tight mb-5">03</div>
+        <h3 class="font-display font-semibold text-xl leading-tight mb-4">Open, not proprietary.</h3>
+        <p class="text-[14px] leading-relaxed text-muted-foreground flex-grow">MPP is an open standard co-authored by Stripe and Tempo, and it shares the HTTP-402 substrate with Coinbase's x402. MemRails speaks it because it's the commons, not a MemRails toll booth.</p>
+      </div>
+    </div>
+  </div>
+</section>
+
+<!-- 03 — SELL & BUY -->
+<section id="market" class="relative border-b hairline bg-graphite-2/60">
+  <div class="mx-auto max-w-7xl px-6 py-24">
+    <div class="ref-eyebrow text-[11px] font-mono uppercase tracking-[0.18em] text-muted-foreground" data-ref="03"><span class="ref-rule"></span>Sell your memory, buy others'</div>
+    <h2 class="mt-5 font-display font-medium text-3xl md:text-5xl tracking-tight max-w-4xl leading-[1.05]">
+      Every corpus becomes <span class="text-gradient-signal">a priced endpoint.</span>
+    </h2>
+    <p class="mt-5 max-w-2xl text-[16px] leading-relaxed text-muted-foreground">
+      Because payment rides the protocol, memory is two-sided. Publish a corpus as a paid MPP endpoint and name your price per packet; point your agents at someone else's the same way. The packet contract is identical whether the memory is yours or bought &mdash; and buyers open a session against it, not a contract.
+    </p>
+
+    <div class="reveal mt-12 grid lg:grid-cols-2 gap-4">
+      <div class="rounded-xl border hairline bg-graphite/40 overflow-hidden">
+        <div class="flex items-center justify-between px-4 h-10 border-b hairline bg-graphite-2">
+          <div class="text-[11px] font-mono text-muted-foreground">endpoints &middot; available</div>
+          <div class="text-[11px] font-mono text-signal">price / packet</div>
+        </div>
+        <div class="mkt-row head"><span>Endpoint</span><span class="mkt-hide-sm">Domain</span><span style="text-align:right">USDC</span></div>
+        <div class="mkt-row"><span style="color:color-mix(in oklab,var(--foreground) 90%,transparent)">infra-runbooks</span><span class="mkt-hide-sm text-muted-foreground font-mono text-[11px]">ops</span><span class="price-tag">0.0005</span></div>
+        <div class="mkt-row"><span style="color:color-mix(in oklab,var(--foreground) 90%,transparent)">legal-precedent</span><span class="mkt-hide-sm text-muted-foreground font-mono text-[11px]">law</span><span class="price-tag">0.0040</span></div>
+        <div class="mkt-row"><span style="color:color-mix(in oklab,var(--foreground) 90%,transparent)">protein-assays</span><span class="mkt-hide-sm text-muted-foreground font-mono text-[11px]">bio</span><span class="price-tag">0.0120</span></div>
+        <div class="mkt-row"><span style="color:color-mix(in oklab,var(--foreground) 90%,transparent)">market-filings</span><span class="mkt-hide-sm text-muted-foreground font-mono text-[11px]">fin</span><span class="price-tag">0.0085</span></div>
+      </div>
+
+      <div class="rounded-xl border border-signal/40 p-7 flex flex-col" style="background:color-mix(in oklab,var(--signal) 5%,transparent)">
+        <div class="font-mono text-[11px] uppercase tracking-widest text-signal mb-4">Publish your own</div>
+        <h3 class="font-display font-semibold text-2xl leading-tight mb-3">Set a price, get paid per call.</h3>
+        <p class="text-[15px] leading-relaxed text-muted-foreground flex-grow">Flip a corpus to a paid MPP endpoint and name your per-packet price. Buyers' agents open sessions and stream against them; settlement clears through Stripe to your account, and the activity reconciles in Console alongside your own usage.</p>
+        <div class="mt-6 grid grid-cols-2 gap-3 font-mono text-[12px]">
+          <div class="rounded-lg border hairline bg-graphite/40 p-3"><div class="text-muted-foreground mb-1">You set</div><div class="text-signal">price / packet</div></div>
+          <div class="rounded-lg border hairline bg-graphite/40 p-3"><div class="text-muted-foreground mb-1">You keep</div><div class="text-evidence-good">settlement, net fee</div></div>
+        </div>
+      </div>
+    </div>
+  </div>
+</section>
+
+<!-- 04 — SETTLEMENT & AUDIT -->
+<section id="settlement" class="relative border-b hairline">
+  <div class="mx-auto max-w-7xl px-6 py-24">
+    <div class="ref-eyebrow text-[11px] font-mono uppercase tracking-[0.18em] text-muted-foreground" data-ref="04"><span class="ref-rule"></span>Settlement &amp; audit</div>
+    <h2 class="mt-5 font-display font-medium text-3xl md:text-5xl tracking-tight max-w-4xl leading-[1.05]">
+      Every voucher, <span class="text-gradient-signal">on the same ledger.</span>
+    </h2>
+    <p class="mt-5 max-w-2xl text-[16px] leading-relaxed text-muted-foreground">
+      Each packet drawn from a session is logged exactly like any other &mdash; input hash, output hash, model version &mdash; with the session id and voucher reference attached. The session reconciles to its cap, the cap reconciles to a Stripe PaymentIntent, and the whole thing lands on the Console ledger to the cent.
+    </p>
+
+    <div class="reveal mt-12 rounded-xl border hairline bg-graphite/40 overflow-hidden shadow-card">
+      <div class="flex items-center justify-between px-4 h-10 border-b hairline bg-graphite-2">
+        <div class="text-[11px] font-mono text-muted-foreground">audit/mpp &middot; ledger</div>
+        <div class="text-[11px] font-mono text-evidence-good">● settled &middot; 0 disputes</div>
+      </div>
+<pre class="p-5 font-mono text-[12px] leading-relaxed overflow-x-auto" style="color:color-mix(in oklab,var(--foreground) 90%,transparent)"><span class="tok-c">{"ts":"2026-05-22T14:02:04Z","packet":"pkt_8f3a","session":"sess_8f3a","voucher":"v_001","debit":"0.0005 USDC","in":"sha256:9c1f…","out":"sha256:4be0…","ver":"compress-v1.4.2"}</span>
+<span class="tok-c">{"ts":"2026-05-22T14:01:47Z","packet":"pkt_2a1c","session":"sess_8f3a","voucher":"v_002","debit":"0.0005 USDC","settles_to":"pi_3Rk… (stripe)","ver":"compress-v1.4.2"}</span></pre>
+      <div class="px-5 py-4 border-t hairline flex items-center justify-between text-[12px] font-mono text-muted-foreground">
+        <span>session id &middot; voucher ref &middot; PaymentIntent &middot; hashes</span>
+        <a href="/console" class="text-signal hover:underline">Reconcile in Console &rarr;</a>
+      </div>
+    </div>
+
+    <div class="mt-4 grid md:grid-cols-2 gap-4">
+      <div class="reveal rounded-xl border hairline bg-graphite/40 p-7">
+        <div class="font-mono text-[11px] uppercase tracking-widest text-signal mb-3">Lifecycle-aware</div>
+        <h4 class="font-display font-semibold text-xl mb-2.5">Past the one-shot handshake.</h4>
+        <p class="text-[14px] leading-relaxed text-muted-foreground">Where a bare 402 settles a single call, MPP carries the lifecycle &mdash; authorize, stream, cancel, reconcile. A session can be closed early and the unspent cap simply never clears.</p>
+      </div>
+      <div class="reveal rounded-xl border hairline bg-graphite/40 p-7">
+        <div class="font-mono text-[11px] uppercase tracking-widest text-signal mb-3">One contract</div>
+        <h4 class="font-display font-semibold text-xl mb-2.5">Bought packets look identical.</h4>
+        <p class="text-[14px] leading-relaxed text-muted-foreground">A packet streamed over MPP carries the same confidence, provenance, and hashes as one from your own corpus. Your agent code never knows whether memory was local or paid for.</p>
+      </div>
+    </div>
+  </div>
+</section>
+
+<!-- CTA -->
+<section id="cta" class="relative overflow-hidden border-b hairline">
+  <div class="absolute inset-0 grid-bg opacity-50 mask-radial-bottom"></div>
+  <div class="relative mx-auto max-w-7xl px-6 py-32 text-center">
+    <div class="flex justify-center text-[11px] font-mono uppercase tracking-[0.18em] text-muted-foreground">
+      <span class="flex items-center gap-2"><span class="w-1.5 h-1.5 rounded-full bg-signal shadow-signal"></span>MPP &middot; stream per packet</span>
+    </div>
+    <h2 class="mt-6 font-display font-medium text-4xl md:text-6xl tracking-tight max-w-3xl mx-auto leading-[1.05]">
+      Memory that <span class="text-gradient-signal">meters itself.</span>
+    </h2>
+    <p class="mt-6 max-w-2xl mx-auto text-muted-foreground">
+      Expose a corpus as a paid MPP endpoint, or let your agents open a session and stream the packets they need. Sub-cent, rail-agnostic, settled through Stripe, audited the same as everything else.
+    </p>
+    <div class="mt-9 flex flex-wrap items-center justify-center gap-3">
+      <a href="/#dashboard" class="inline-flex items-center gap-2 h-11 px-5 rounded-md bg-signal text-signal-foreground font-semibold text-sm shadow-signal hover:opacity-95 transition tracking-tight">Get Started &rarr;</a>
+      <a href="/#docs" class="inline-flex items-center gap-2 h-11 px-5 rounded-md border hairline text-sm font-medium hover:border-signal/60 hover:text-signal transition">Read the MPP spec</a>
+    </div>
+  </div>
+</section>

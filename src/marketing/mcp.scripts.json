@@ -1,0 +1,3 @@
+[
+  "if (window.IntersectionObserver && !window.matchMedia('(prefers-reduced-motion: reduce)').matches) {\n  var io = new IntersectionObserver(function (entries) {\n    entries.forEach(function (e) { if (e.isIntersecting) { e.target.classList.add('in'); io.unobserve(e.target); } });\n  }, { threshold: 0.08, rootMargin: '0px 0px -40px 0px' });\n  document.querySelectorAll('.reveal').forEach(function (el) { io.observe(el); });\n}"
+]

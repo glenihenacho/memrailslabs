@@ -1,0 +1,742 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8" />
+<meta name="viewport" content="width=device-width,initial-scale=1" />
+<title>MemRails MCP — Your memory, one URL away</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&family=Inter+Tight:wght@500;600;700;800&family=JetBrains+Mono:wght@400;500;600&family=Newsreader:ital,opsz,wght@1,72,500;1,72,600&display=swap" rel="stylesheet">
+<script src="https://cdn.tailwindcss.com/3.4.16"></script>
+<script>
+  if (typeof tailwind !== 'undefined') {
+  tailwind.config = {
+    theme: {
+      extend: {
+        fontFamily: {
+          sans: ['Inter', 'ui-sans-serif', 'system-ui', 'sans-serif'],
+          mono: ['"JetBrains Mono"', 'ui-monospace', 'SF Mono', 'Menlo', 'monospace'],
+          display: ['"Inter Tight"', 'Inter', 'sans-serif'],
+        },
+        colors: {
+          background: 'var(--background)',
+          foreground: 'var(--foreground)',
+          border: 'var(--border)',
+          card: 'var(--card)',
+          signal: { DEFAULT: 'var(--signal)', foreground: 'var(--signal-foreground)' },
+          violet: 'var(--violet)',
+          cyan: 'var(--cyan)',
+          muted: { DEFAULT: 'var(--muted)', foreground: 'var(--muted-foreground)' },
+          graphite: 'var(--graphite)',
+          'graphite-2': 'var(--graphite-2)',
+          'evidence-good': 'var(--evidence-good)',
+          'evidence-warn': 'var(--evidence-warn)',
+          'evidence-bad': 'var(--evidence-bad)',
+        },
+        boxShadow: {
+          signal: '0 0 80px -20px rgb(239 17 126 / 0.40), 0 1px 0 rgb(239 17 126 / 0.08) inset',
+          card: '0 1px 0 oklch(1 0 0 / 0.04) inset, 0 30px 60px -30px oklch(0 0 0 / 0.7)',
+        },
+      }
+    }
+  }
+  }
+</script>
+<style>
+  :root {
+    --radius: 0.5rem;
+    --background: rgb(25, 23, 31);
+    --background: oklch(0.14 0.012 280);
+    --foreground: rgb(243, 242, 246);
+    --foreground: oklch(0.97 0.005 280);
+    --card: rgb(31, 29, 38);
+    --card: oklch(0.17 0.014 280);
+    --primary: #ef117e;
+    --secondary: rgb(43, 40, 51);
+    --secondary: oklch(0.22 0.018 280);
+    --muted: rgb(38, 36, 46);
+    --muted: oklch(0.20 0.015 280);
+    --muted-foreground: rgb(160, 158, 175);
+    --muted-foreground: oklch(0.68 0.018 280);
+    --border: rgb(55, 52, 66);
+    --border: oklch(0.27 0.018 280);
+    --signal: #ef117e;
+    --signal-foreground: rgb(25, 23, 31);
+    --signal-foreground: oklch(0.14 0.012 280);
+    --violet: rgb(141, 90, 247);
+    --violet: oklch(0.66 0.27 295);
+    --cyan: rgb(76, 200, 224);
+    --cyan: oklch(0.82 0.16 200);
+    --evidence-good: rgb(86, 209, 113);
+    --evidence-good: oklch(0.78 0.19 152);
+    --evidence-warn: rgb(229, 195, 78);
+    --evidence-warn: oklch(0.82 0.17 80);
+    --evidence-bad: rgb(225, 90, 78);
+    --evidence-bad: oklch(0.68 0.24 25);
+    --graphite: rgb(33, 31, 41);
+    --graphite: oklch(0.18 0.013 280);
+    --graphite-2: rgb(40, 37, 49);
+    --graphite-2: oklch(0.21 0.015 280);
+    --gradient-signal: linear-gradient(135deg, #ff3a96 0%, #ef117e 45%, #b8095e 100%);
+    --grid-line: oklch(1 0 0 / 0.045);
+  }
+  html { font-family: 'Inter', ui-sans-serif, system-ui, sans-serif; -webkit-font-smoothing: antialiased; text-rendering: optimizeLegibility; scroll-behavior: smooth; }
+  html { overflow-x: hidden; }
+  body {
+    background-color: rgb(25, 23, 31);
+    background-color: var(--background);
+    color: rgb(243, 242, 246);
+    color: var(--foreground);
+    margin: 0;
+    overflow-x: hidden;
+  }
+  h1, h2, h3 { font-family: 'Inter Tight', 'Inter', sans-serif; letter-spacing: -0.02em; }
+  code, pre { font-family: 'JetBrains Mono', ui-monospace, 'SF Mono', Menlo, monospace; }
+  ::selection { background: var(--signal); color: var(--signal-foreground); }
+  .font-display { font-family: 'Inter Tight', 'Inter', sans-serif; }
+  .font-mono { font-family: 'JetBrains Mono', ui-monospace, 'SF Mono', Menlo, monospace; }
+  .text-signal { color: var(--signal); }
+  .bg-signal { background-color: var(--signal); }
+  .text-signal-foreground { color: var(--signal-foreground); }
+  .bg-graphite { background-color: var(--graphite); }
+  .bg-graphite-2 { background-color: var(--graphite-2); }
+  .text-cyan { color: var(--cyan); }
+  .text-evidence-good { color: var(--evidence-good); }
+  .text-evidence-bad { color: var(--evidence-bad); }
+  .text-muted-foreground { color: var(--muted-foreground); }
+  .border-border { border-color: var(--border); }
+  .bg-border { background-color: var(--border); }
+  .shadow-signal { box-shadow: 0 0 80px -20px rgb(239 17 126 / 0.40), 0 1px 0 rgb(239 17 126 / 0.08) inset; }
+  .shadow-card { box-shadow: 0 1px 0 oklch(1 0 0 / 0.04) inset, 0 30px 60px -30px oklch(0 0 0 / 0.7); }
+  .gradient-signal { background-image: var(--gradient-signal); }
+  .grid-bg {
+    background-image:
+      linear-gradient(var(--grid-line) 1px, transparent 1px),
+      linear-gradient(90deg, var(--grid-line) 1px, transparent 1px);
+    background-size: 56px 56px;
+  }
+  .mask-radial-center { -webkit-mask-image: radial-gradient(60% 60% at 50% 30%, #000, transparent); mask-image: radial-gradient(60% 60% at 50% 30%, #000, transparent); }
+  .mask-radial-bottom { -webkit-mask-image: radial-gradient(60% 60% at 50% 60%, #000, transparent); mask-image: radial-gradient(60% 60% at 50% 60%, #000, transparent); }
+  *, *::before, *::after { border-color: var(--border); }
+  .hairline { border-color: oklch(1 0 0 / 0.08); }
+
+  /* ── original wordmark / logo sizing ───────────────────────────────── */
+  .logo-mark, .logo-wordmark { width: auto; display: block; color: var(--signal); }
+  .logo-mark { display: none !important; }
+  .logo-wordmark { height: 1.25rem; }
+  @media (min-width: 768px) { .logo-wordmark { height: 1.375rem; } }
+
+  /* ── mobile menu / hamburger / drawer ──────────────────────────────── */
+  .nav-hamburger { display: inline-flex; align-items: center; color: var(--signal); background: transparent; border: 0; cursor: pointer; }
+  @media (min-width: 768px) { .nav-hamburger { display: none !important; } }
+  .nav-hamburger svg line {
+    transform-origin: 12px 12px;
+    transform: rotate(0deg) translateY(0);
+    transition: transform 240ms cubic-bezier(0.22, 1, 0.36, 1);
+  }
+  .nav-hamburger[aria-expanded="true"] svg line.line-top { transform: rotate(45deg) translateY(3px); }
+  .nav-hamburger[aria-expanded="true"] svg line.line-bottom { transform: rotate(-45deg) translateY(-3px); }
+  #nav-drawer {
+    position: fixed;
+    top: var(--header-h, 53px);
+    left: 0; right: 0; bottom: 0;
+    background: var(--background);
+    z-index: 195;
+    transform: translateY(-12px);
+    opacity: 0; visibility: hidden;
+    transition: transform 280ms cubic-bezier(0.22, 1, 0.36, 1), opacity 220ms ease, visibility 0ms linear 280ms;
+    overflow-y: auto; overscroll-behavior: contain;
+    display: flex; flex-direction: column;
+  }
+  #nav-drawer.is-open {
+    transform: translateY(0); opacity: 1; visibility: visible;
+    transition: transform 280ms cubic-bezier(0.22, 1, 0.36, 1), opacity 220ms ease, visibility 0ms;
+  }
+  @media (min-width: 768px) { #nav-drawer { display: none !important; } }
+  .nav-drawer-list { display: flex; flex-direction: column; padding: 0.75rem 1rem 1.25rem; flex: 1; }
+  .nav-drawer-group { padding: 0.375rem 0 0.375rem; }
+  .nav-drawer-group + .nav-drawer-group { border-top: 1px solid var(--border); margin-top: 0.375rem; }
+  .nav-drawer-group-title {
+    padding: 0.5rem 0.625rem 0.375rem;
+    font-family: 'JetBrains Mono', ui-monospace, monospace;
+    font-size: 10.5px; letter-spacing: 0.24em; text-transform: uppercase;
+    color: color-mix(in oklab, var(--muted-foreground) 70%, transparent);
+  }
+  .nav-drawer-group a {
+    display: flex; align-items: center; justify-content: space-between;
+    padding: 0.625rem 0.625rem;
+    font-family: 'Inter Tight', sans-serif; font-size: 18px; font-weight: 600;
+    letter-spacing: -0.018em; color: var(--foreground); text-decoration: none;
+    border-radius: 0.5rem; transition: color 140ms ease, background 140ms ease;
+    -webkit-tap-highlight-color: transparent;
+  }
+  .nav-drawer-group a::after {
+    content: "→"; font-size: 14px; opacity: 0.35;
+    transition: opacity 160ms ease, transform 200ms cubic-bezier(0.22, 1, 0.36, 1);
+  }
+  @media (hover: hover) {
+    .nav-drawer-group a:hover { color: var(--signal); background: color-mix(in oklab, var(--signal) 6%, transparent); }
+    .nav-drawer-group a:hover::after { opacity: 1; transform: translateX(3px); }
+  }
+  .nav-drawer-group a:focus-visible { color: var(--signal); background: color-mix(in oklab, var(--signal) 6%, transparent); }
+  .nav-drawer-group a:focus-visible::after { opacity: 1; transform: translateX(3px); }
+  .nav-drawer-cta { margin-top: auto; padding: 1.25rem 0.5rem 0.25rem; display: flex; gap: 0.5rem; }
+  .nav-drawer-cta-btn {
+    flex: 1; display: flex; align-items: center; justify-content: center;
+    height: 3rem; border-radius: 0.625rem; border: 1px solid var(--border);
+    background: transparent; color: var(--foreground);
+    font-family: 'Inter Tight', sans-serif; font-size: 16px; font-weight: 600;
+    letter-spacing: -0.01em; text-decoration: none; -webkit-tap-highlight-color: transparent;
+    transition: border-color 140ms ease, background 140ms ease, opacity 140ms ease;
+  }
+  .nav-drawer-cta-btn--light { background: var(--foreground); color: var(--background); border-color: transparent; box-shadow: 0 1px 0 rgba(0,0,0,0.04) inset; }
+  @media (hover: hover) {
+    .nav-drawer-cta-btn:hover { border-color: var(--signal); background: color-mix(in oklab, var(--graphite) 50%, transparent); }
+    .nav-drawer-cta-btn--light:hover { opacity: 0.95; border-color: transparent; }
+  }
+
+  /* ── header nav link + dropdown ────────────────────────────────────── */
+  .nav-link { position: relative; transition: color 200ms ease; }
+  .nav-link::after {
+    content: ""; position: absolute; left: 0; right: 100%;
+    bottom: -6px; height: 1px; background: var(--signal);
+    transition: right 280ms cubic-bezier(0.22, 1, 0.36, 1);
+  }
+  .nav-link:hover { color: var(--foreground) !important; }
+  .nav-link:hover::after { right: 0; }
+  .nav-dropdown { position: relative; }
+  .nav-dropdown-trigger { display: inline-flex; align-items: center; gap: 0.3rem; background: transparent; border: 0; padding: 0; cursor: pointer; font: inherit; color: inherit; }
+  .nav-chevron { width: 9px; height: 9px; opacity: 0.75; transition: transform 220ms cubic-bezier(0.22, 1, 0.36, 1); }
+  .nav-dropdown:hover .nav-chevron, .nav-dropdown:focus-within .nav-chevron { transform: rotate(180deg); }
+  .nav-dropdown-panel {
+    position: absolute; top: 100%; left: -0.75rem; min-width: 220px;
+    margin-top: 14px; padding: 0.5rem;
+    background: color-mix(in oklab, var(--graphite) 92%, var(--background));
+    border: 1px solid var(--border); border-radius: 0.625rem;
+    box-shadow: 0 14px 40px rgba(0,0,0,0.45), 0 1px 0 rgba(255,255,255,0.04) inset;
+    opacity: 0; visibility: hidden; pointer-events: none;
+    transform: translateY(-4px);
+    transition: opacity 180ms ease, transform 180ms ease, visibility 0ms linear 180ms;
+    z-index: 60;
+  }
+  .nav-dropdown:hover .nav-dropdown-panel, .nav-dropdown:focus-within .nav-dropdown-panel {
+    opacity: 1; visibility: visible; pointer-events: auto; transform: translateY(0);
+    transition: opacity 180ms ease, transform 180ms ease, visibility 0ms;
+  }
+  .nav-dropdown-panel::before { content: ""; position: absolute; left: 0; right: 0; top: -14px; height: 14px; }
+  .nav-dropdown-panel a {
+    display: flex; align-items: center; padding: 0.5rem 0.75rem; border-radius: 0.4rem;
+    color: color-mix(in oklab, var(--muted-foreground) 95%, transparent);
+    font-size: 13px; font-weight: 500; letter-spacing: -0.005em;
+    transition: color 140ms ease, background 140ms ease;
+  }
+  .nav-dropdown-panel a:hover { color: var(--foreground); background: color-mix(in oklab, var(--graphite-2) 80%, transparent); }
+  .nav-pill {
+    display: inline-flex; align-items: center; justify-content: center;
+    height: 2rem; padding: 0 0.875rem; border-radius: 999px; border: 1px solid var(--border);
+    color: color-mix(in oklab, var(--muted-foreground) 95%, transparent);
+    font-weight: 500; font-size: 12.5px; letter-spacing: -0.005em;
+    transition: color 160ms ease, border-color 160ms ease, background 160ms ease;
+  }
+  .nav-pill:hover { color: var(--foreground); border-color: var(--signal); background: color-mix(in oklab, var(--graphite) 60%, transparent); }
+  .nav-pill-light {
+    display: inline-flex; align-items: center; justify-content: center;
+    height: 2rem; padding: 0 0.875rem; border-radius: 999px;
+    background: var(--foreground); color: var(--background);
+    font-weight: 500; font-size: 12.5px; letter-spacing: -0.005em;
+    transition: background 160ms ease, transform 160ms ease;
+  }
+  .nav-pill-light:hover { background: color-mix(in oklab, var(--foreground) 88%, var(--signal) 12%); }
+  .nav-pill-light:active { transform: translateY(0.5px); }
+
+  /* The emphasis word in every headline — Newsreader italic, gold-pink gradient. */
+  .text-gradient-signal {
+    font-family: 'Newsreader', 'Inter Tight', Georgia, serif;
+    font-style: italic; font-weight: 500;
+    font-variation-settings: "opsz" 72;
+    letter-spacing: -0.015em;
+    background: var(--gradient-signal);
+    -webkit-background-clip: text; background-clip: text; color: transparent;
+    padding-right: 0.04em;
+  }
+
+  /* Watch-style section ref badge. */
+  .ref-eyebrow { display: inline-flex; align-items: center; gap: 0.875rem; }
+  .ref-eyebrow::before {
+    content: attr(data-ref);
+    display: inline-flex; align-items: center; justify-content: center;
+    width: 1.625rem; height: 1.625rem;
+    border: 1px solid color-mix(in oklab, var(--signal) 55%, transparent);
+    border-radius: 999px; background: color-mix(in oklab, var(--signal) 6%, transparent);
+    color: var(--signal); font-family: 'JetBrains Mono', ui-monospace, monospace;
+    font-size: 10px; font-weight: 500; letter-spacing: 0.04em;
+  }
+  .ref-eyebrow .ref-rule {
+    height: 1px; width: 2rem;
+    background: linear-gradient(90deg, color-mix(in oklab, var(--signal) 40%, transparent), transparent);
+  }
+
+  /* Film-grain noise overlay matching the original page. */
+  body::before {
+    content: "";
+    position: fixed; inset: 0; pointer-events: none; z-index: -2; opacity: 0.035;
+    background-image: url("data:image/svg+xml;utf8,<svg xmlns='http://www.w3.org/2000/svg' width='200' height='200'><filter id='n'><feTurbulence type='fractalNoise' baseFrequency='0.85' numOctaves='2' stitchTiles='stitch'/></filter><rect width='200' height='200' filter='url(%23n)' opacity='0.9'/></svg>");
+    mix-blend-mode: overlay;
+  }
+
+  /* small color-mix helpers used in markup */
+  .border-signal\/40 { border-color: color-mix(in oklab, var(--signal) 40%, transparent); }
+  .border-signal\/50 { border-color: color-mix(in oklab, var(--signal) 50%, transparent); }
+  .border-signal\/60 { border-color: color-mix(in oklab, var(--signal) 60%, transparent); }
+  .border-cyan\/40 { border-color: color-mix(in oklab, var(--cyan) 40%, transparent); }
+  .bg-signal\/5 { background-color: color-mix(in oklab, var(--signal) 5%, transparent); }
+  .bg-graphite\/40 { background-color: color-mix(in oklab, var(--graphite) 40%, transparent); }
+  .bg-graphite\/30 { background-color: color-mix(in oklab, var(--graphite) 30%, transparent); }
+  .bg-graphite\/60 { background-color: color-mix(in oklab, var(--graphite) 60%, transparent); }
+  .bg-graphite-2\/60 { background-color: color-mix(in oklab, var(--graphite-2) 60%, transparent); }
+  .bg-background\/70 { background-color: color-mix(in oklab, var(--background) 70%, transparent); }
+  .text-signal\/70 { color: color-mix(in oklab, var(--signal) 70%, transparent); }
+  .text-evidence-bad\/70 { color: color-mix(in oklab, var(--evidence-bad) 70%, transparent); }
+  .hover\:border-signal\/60:hover { border-color: color-mix(in oklab, var(--signal) 60%, transparent); }
+  .hover\:border-signal\/50:hover { border-color: color-mix(in oklab, var(--signal) 50%, transparent); }
+  .hover\:text-signal:hover { color: var(--signal); }
+  .hover\:bg-graphite\/60:hover { background-color: color-mix(in oklab, var(--graphite) 60%, transparent); }
+
+  /* Reveal-on-scroll */
+  @media (prefers-reduced-motion: no-preference) {
+    .reveal { opacity: 0; transform: translateY(16px); transition: opacity 0.7s ease-out, transform 0.7s ease-out; }
+    .reveal.in { opacity: 1; transform: translateY(0); }
+  }
+
+  /* ── mcp page components ────────────────────────────────────── */
+  .live-dot { width:7px; height:7px; border-radius:50%; background:var(--evidence-good); box-shadow:0 0 8px var(--evidence-good); display:inline-block; animation:pulse 2.4s ease-in-out infinite; }
+  @keyframes pulse { 0%,100%{opacity:1;} 50%{opacity:.35;} }
+  .meta-bar { display:flex; gap:2rem; flex-wrap:wrap; }
+
+  .tok-k { color: var(--signal); }
+  .tok-s { color: var(--cyan); }
+  .tok-n { color: var(--evidence-good); }
+  .tok-c { color: var(--muted-foreground); font-style: italic; }
+
+  /* integration chip (shared w/ harness pattern) */
+  .integ-chip { display:inline-flex; align-items:center; height:2.25rem; padding:0 0.875rem; border-radius:0.5rem; border:1px solid var(--border); background:color-mix(in oklab,var(--graphite) 40%, transparent); font-family:'JetBrains Mono',ui-monospace,monospace; font-size:12.5px; color:color-mix(in oklab,var(--foreground) 80%, transparent); transition:border-color 140ms ease, color 140ms ease; }
+  .integ-chip:hover { border-color:color-mix(in oklab,var(--signal) 50%, transparent); color:var(--signal); }
+  .integ-chip.prewired { border-color:color-mix(in oklab,var(--signal) 45%, transparent); color:var(--signal); background:color-mix(in oklab,var(--signal) 6%, transparent); }
+
+  /* tool manifest row */
+  .tool-row { display:grid; grid-template-columns: 200px 1fr; gap:1.25rem; padding:1.1rem 1.25rem; border-top:1px solid color-mix(in oklab,var(--border) 60%, transparent); align-items:start; }
+  .tool-row:first-of-type { border-top:none; }
+  .tool-name { font-family:'JetBrains Mono',ui-monospace,monospace; font-size:13px; color:var(--signal); }
+  .tool-tag { display:inline-block; margin-top:0.4rem; font-family:'JetBrains Mono',ui-monospace,monospace; font-size:10px; letter-spacing:0.08em; text-transform:uppercase; padding:1px 7px; border-radius:4px; }
+  .tool-tag.read { color:var(--cyan); background:color-mix(in oklab,var(--cyan) 12%, transparent); }
+  .tool-tag.write { color:var(--evidence-warn); background:color-mix(in oklab,var(--evidence-warn) 14%, transparent); }
+  @media (max-width:640px){ .tool-row { grid-template-columns: 1fr; gap:0.5rem; } }
+
+  /* resource pill */
+  .res-pill { display:inline-flex; align-items:center; gap:0.5rem; padding:0.4rem 0.75rem; border-radius:0.5rem; border:1px solid var(--border); background:color-mix(in oklab,var(--graphite) 40%, transparent); font-family:'JetBrains Mono',ui-monospace,monospace; font-size:12px; color:var(--muted-foreground); }
+
+</style>
+</head>
+<body>
+
+<!-- NAV -->
+<header class="sticky top-0 z-[200] backdrop-blur-md bg-background/70 border-b hairline">
+  <div class="mx-auto max-w-7xl px-6 h-16 flex items-center justify-between">
+    <a href="index.html" class="flex items-center group">
+      <svg class="logo-wordmark" viewBox="86 389 1314 230" xmlns="http://www.w3.org/2000/svg" aria-label="memrails"><path fill="currentColor" d="M 1023,451 L 1022,452 L 1016,452 L 1015,453 L 1012,453 L 1011,454 L 1009,454 L 1008,455 L 1006,455 L 1005,456 L 1003,456 L 1002,457 L 1001,457 L 1000,458 L 999,458 L 998,459 L 997,459 L 996,460 L 995,460 L 994,461 L 993,461 L 991,463 L 990,463 L 989,464 L 988,464 L 986,466 L 985,466 L 981,470 L 980,470 L 974,476 L 974,477 L 969,482 L 969,483 L 966,486 L 966,487 L 965,488 L 965,489 L 964,490 L 964,491 L 962,493 L 962,494 L 961,495 L 961,496 L 960,497 L 960,498 L 959,499 L 959,501 L 958,502 L 958,504 L 957,505 L 957,507 L 956,508 L 956,511 L 955,512 L 955,516 L 954,517 L 954,539 L 955,540 L 955,544 L 956,545 L 956,548 L 957,549 L 957,551 L 958,552 L 958,554 L 959,555 L 959,557 L 960,558 L 960,559 L 961,560 L 961,561 L 962,562 L 962,563 L 963,564 L 963,565 L 964,566 L 964,567 L 966,569 L 966,570 L 967,571 L 967,572 L 969,574 L 969,575 L 974,580 L 974,581 L 978,585 L 979,585 L 984,590 L 985,590 L 987,592 L 988,592 L 990,594 L 991,594 L 992,595 L 993,595 L 994,596 L 995,596 L 996,597 L 997,597 L 998,598 L 999,598 L 1000,599 L 1001,599 L 1002,600 L 1004,600 L 1005,601 L 1007,601 L 1008,602 L 1010,602 L 1011,603 L 1014,603 L 1015,604 L 1019,604 L 1020,605 L 1027,605 L 1028,606 L 1037,606 L 1038,605 L 1049,605 L 1050,604 L 1054,604 L 1055,603 L 1056,603 L 1057,602 L 1058,602 L 1060,600 L 1060,599 L 1061,598 L 1061,597 L 1062,596 L 1062,588 L 1061,587 L 1061,586 L 1056,581 L 1054,581 L 1053,580 L 1046,580 L 1045,581 L 1035,581 L 1034,582 L 1031,582 L 1030,581 L 1023,581 L 1022,580 L 1018,580 L 1017,579 L 1015,579 L 1014,578 L 1012,578 L 1011,577 L 1009,577 L 1008,576 L 1007,576 L 1005,574 L 1004,574 L 1003,573 L 1002,573 L 999,570 L 998,570 L 989,561 L 989,560 L 986,557 L 986,556 L 985,555 L 985,554 L 984,553 L 984,552 L 983,551 L 983,550 L 982,549 L 982,547 L 981,546 L 981,545 L 980,544 L 980,542 L 979,541 L 979,538 L 978,537 L 978,520 L 979,519 L 979,515 L 980,514 L 980,512 L 981,511 L 981,509 L 982,508 L 982,507 L 983,506 L 983,505 L 984,504 L 984,503 L 985,502 L 985,501 L 987,499 L 987,498 L 991,494 L 991,493 L 996,488 L 997,488 L 1000,485 L 1001,485 L 1003,483 L 1004,483 L 1005,482 L 1006,482 L 1007,481 L 1008,481 L 1009,480 L 1010,480 L 1011,479 L 1012,479 L 1013,478 L 1015,478 L 1016,477 L 1019,477 L 1020,476 L 1025,476 L 1026,475 L 1038,475 L 1039,476 L 1042,476 L 1043,477 L 1046,477 L 1047,478 L 1049,478 L 1050,479 L 1052,479 L 1053,480 L 1054,480 L 1055,481 L 1056,481 L 1057,482 L 1058,482 L 1060,484 L 1061,484 L 1064,487 L 1065,487 L 1072,494 L 1072,495 L 1075,498 L 1075,499 L 1077,501 L 1077,502 L 1078,503 L 1078,504 L 1079,505 L 1079,506 L 1080,507 L 1080,508 L 1081,509 L 1081,511 L 1082,512 L 1082,515 L 1083,516 L 1083,519 L 1084,520 L 1084,569 L 1085,570 L 1085,573 L 1086,574 L 1086,576 L 1087,577 L 1087,579 L 1088,580 L 1088,582 L 1090,584 L 1090,585 L 1091,586 L 1091,587 L 1094,590 L 1094,591 L 1099,596 L 1100,596 L 1103,599 L 1104,599 L 1106,601 L 1107,601 L 1108,602 L 1109,602 L 1110,603 L 1111,603 L 1112,604 L 1114,604 L 1115,605 L 1118,605 L 1119,606 L 1136,606 L 1137,605 L 1140,605 L 1141,604 L 1142,604 L 1143,603 L 1144,603 L 1145,602 L 1146,602 L 1147,601 L 1148,601 L 1149,600 L 1150,600 L 1152,598 L 1153,598 L 1163,588 L 1163,587 L 1165,585 L 1165,584 L 1166,583 L 1166,582 L 1167,581 L 1167,579 L 1168,578 L 1168,577 L 1169,576 L 1169,574 L 1170,573 L 1170,570 L 1171,569 L 1171,459 L 1170,458 L 1170,457 L 1165,452 L 1164,452 L 1163,451 L 1156,451 L 1155,452 L 1153,452 L 1148,457 L 1148,459 L 1147,460 L 1147,566 L 1146,567 L 1146,569 L 1145,570 L 1145,571 L 1144,572 L 1144,573 L 1138,579 L 1137,579 L 1136,580 L 1135,580 L 1134,581 L 1132,581 L 1131,582 L 1123,582 L 1122,581 L 1120,581 L 1118,579 L 1117,579 L 1111,573 L 1111,572 L 1110,571 L 1110,570 L 1109,569 L 1109,566 L 1108,565 L 1108,518 L 1107,517 L 1107,512 L 1106,511 L 1106,508 L 1105,507 L 1105,505 L 1104,504 L 1104,502 L 1103,501 L 1103,499 L 1102,498 L 1102,497 L 1101,496 L 1101,495 L 1100,494 L 1100,493 L 1099,492 L 1099,491 L 1098,490 L 1098,489 L 1096,487 L 1096,486 L 1094,484 L 1094,483 L 1091,480 L 1091,479 L 1080,468 L 1079,468 L 1076,465 L 1075,465 L 1073,463 L 1072,463 L 1071,462 L 1070,462 L 1068,460 L 1067,460 L 1066,459 L 1065,459 L 1064,458 L 1063,458 L 1062,457 L 1061,457 L 1060,456 L 1058,456 L 1057,455 L 1055,455 L 1054,454 L 1051,454 L 1050,453 L 1047,453 L 1046,452 L 1042,452 L 1041,451 Z M 219,451 L 218,452 L 213,452 L 212,453 L 210,453 L 209,454 L 207,454 L 206,455 L 204,455 L 203,456 L 202,456 L 201,457 L 200,457 L 199,458 L 198,458 L 196,460 L 195,460 L 193,462 L 192,462 L 189,465 L 188,465 L 182,471 L 182,472 L 178,476 L 178,477 L 176,479 L 176,480 L 175,481 L 175,482 L 173,484 L 173,486 L 172,487 L 172,488 L 171,489 L 171,490 L 170,491 L 170,494 L 169,495 L 169,498 L 168,499 L 168,505 L 167,506 L 167,564 L 166,565 L 166,567 L 165,568 L 165,569 L 164,570 L 164,571 L 162,573 L 162,574 L 156,580 L 155,580 L 154,581 L 153,581 L 152,582 L 151,582 L 150,583 L 148,583 L 147,584 L 144,584 L 143,585 L 111,585 L 110,586 L 109,586 L 108,587 L 108,588 L 103,593 L 103,594 L 96,601 L 96,605 L 99,608 L 100,608 L 101,609 L 145,609 L 146,608 L 151,608 L 152,607 L 155,607 L 156,606 L 158,606 L 159,605 L 161,605 L 162,604 L 163,604 L 164,603 L 165,603 L 167,601 L 168,601 L 169,600 L 170,600 L 173,597 L 174,597 L 177,594 L 177,593 L 183,587 L 183,586 L 184,585 L 184,584 L 186,582 L 186,581 L 187,580 L 187,579 L 188,578 L 188,577 L 189,576 L 189,574 L 190,573 L 190,569 L 191,568 L 191,563 L 192,562 L 192,504 L 193,503 L 193,500 L 194,499 L 194,498 L 195,497 L 195,495 L 197,493 L 197,492 L 199,490 L 199,489 L 205,483 L 206,483 L 209,480 L 210,480 L 211,479 L 212,479 L 213,478 L 215,478 L 216,477 L 218,477 L 219,476 L 223,476 L 224,475 L 232,475 L 233,476 L 237,476 L 238,477 L 239,477 L 240,478 L 242,478 L 243,479 L 244,479 L 245,480 L 246,480 L 248,482 L 249,482 L 253,486 L 253,487 L 256,490 L 256,491 L 258,493 L 258,494 L 259,495 L 259,496 L 260,497 L 260,499 L 261,500 L 261,504 L 262,505 L 262,600 L 263,601 L 263,602 L 264,603 L 264,604 L 266,606 L 267,606 L 268,607 L 269,607 L 270,608 L 278,608 L 279,607 L 280,607 L 281,606 L 282,606 L 284,604 L 284,603 L 285,602 L 285,601 L 286,600 L 286,505 L 287,504 L 287,502 L 288,501 L 288,499 L 289,498 L 289,496 L 290,495 L 290,494 L 291,493 L 291,492 L 294,489 L 294,488 L 298,484 L 299,484 L 302,481 L 303,481 L 305,479 L 306,479 L 307,478 L 309,478 L 310,477 L 312,477 L 313,476 L 316,476 L 317,475 L 327,475 L 328,476 L 331,476 L 332,477 L 334,477 L 335,478 L 336,478 L 337,479 L 338,479 L 339,480 L 340,480 L 341,481 L 342,481 L 351,490 L 351,491 L 353,493 L 353,494 L 354,495 L 354,497 L 355,498 L 355,500 L 356,501 L 356,504 L 357,505 L 357,567 L 358,568 L 358,572 L 359,573 L 359,575 L 360,576 L 360,578 L 361,579 L 361,581 L 362,582 L 362,583 L 364,585 L 364,586 L 365,587 L 365,588 L 368,591 L 368,592 L 373,597 L 374,597 L 377,600 L 378,600 L 380,602 L 381,602 L 382,603 L 383,603 L 384,604 L 385,604 L 386,605 L 387,605 L 388,606 L 391,606 L 392,607 L 395,607 L 396,608 L 435,608 L 436,607 L 437,607 L 438,606 L 438,605 L 439,604 L 439,600 L 438,599 L 438,598 L 435,595 L 435,594 L 432,591 L 432,590 L 430,588 L 430,587 L 428,585 L 427,585 L 426,584 L 401,584 L 400,583 L 397,583 L 396,582 L 395,582 L 394,581 L 393,581 L 384,572 L 384,571 L 383,570 L 383,568 L 382,567 L 382,564 L 381,563 L 381,500 L 380,499 L 380,496 L 379,495 L 379,492 L 378,491 L 378,490 L 377,489 L 377,487 L 376,486 L 376,485 L 375,484 L 375,483 L 374,482 L 374,481 L 372,479 L 372,478 L 369,475 L 369,474 L 366,471 L 366,470 L 361,465 L 360,465 L 357,462 L 356,462 L 354,460 L 353,460 L 352,459 L 351,459 L 349,457 L 348,457 L 347,456 L 346,456 L 345,455 L 343,455 L 342,454 L 340,454 L 339,453 L 336,453 L 335,452 L 330,452 L 329,451 L 312,451 L 311,452 L 307,452 L 306,453 L 304,453 L 303,454 L 300,454 L 299,455 L 298,455 L 297,456 L 296,456 L 295,457 L 294,457 L 293,458 L 292,458 L 290,460 L 289,460 L 286,463 L 285,463 L 275,473 L 274,473 L 269,468 L 269,467 L 267,465 L 266,465 L 263,462 L 262,462 L 260,460 L 259,460 L 258,459 L 257,459 L 255,457 L 254,457 L 253,456 L 251,456 L 250,455 L 249,455 L 248,454 L 246,454 L 245,453 L 243,453 L 242,452 L 238,452 L 237,451 Z M 482,450 L 481,451 L 475,451 L 474,452 L 470,452 L 469,453 L 467,453 L 466,454 L 464,454 L 463,455 L 461,455 L 460,456 L 459,456 L 458,457 L 456,457 L 455,458 L 454,458 L 452,460 L 451,460 L 450,461 L 449,461 L 447,463 L 446,463 L 444,465 L 443,465 L 439,469 L 438,469 L 431,476 L 431,477 L 427,481 L 427,482 L 424,485 L 424,486 L 423,487 L 423,488 L 421,490 L 421,491 L 420,492 L 420,493 L 419,494 L 419,495 L 418,496 L 418,498 L 417,499 L 417,500 L 416,501 L 416,503 L 415,504 L 415,506 L 414,507 L 414,510 L 413,511 L 413,516 L 412,517 L 412,537 L 413,538 L 413,542 L 414,543 L 414,547 L 415,548 L 415,550 L 416,551 L 416,553 L 417,554 L 417,556 L 418,557 L 418,558 L 419,559 L 419,560 L 420,561 L 420,562 L 421,563 L 421,564 L 422,565 L 422,566 L 423,567 L 423,568 L 425,570 L 425,571 L 427,573 L 427,574 L 429,576 L 429,577 L 440,588 L 441,588 L 444,591 L 445,591 L 447,593 L 448,593 L 450,595 L 451,595 L 452,596 L 453,596 L 454,597 L 455,597 L 456,598 L 457,598 L 458,599 L 459,599 L 460,600 L 462,600 L 463,601 L 465,601 L 466,602 L 467,602 L 468,603 L 471,603 L 472,604 L 476,604 L 477,605 L 481,605 L 482,606 L 569,606 L 570,605 L 573,605 L 574,604 L 576,604 L 577,603 L 579,603 L 580,602 L 581,602 L 582,601 L 583,601 L 584,600 L 585,600 L 587,598 L 588,598 L 590,596 L 591,596 L 598,589 L 598,588 L 601,585 L 601,584 L 603,582 L 603,581 L 604,580 L 604,579 L 605,578 L 605,577 L 606,576 L 606,574 L 607,573 L 607,570 L 608,569 L 608,566 L 609,565 L 609,505 L 610,504 L 610,501 L 611,500 L 611,498 L 612,497 L 612,495 L 614,493 L 614,492 L 615,491 L 615,490 L 623,482 L 624,482 L 626,480 L 627,480 L 628,479 L 629,479 L 630,478 L 632,478 L 633,477 L 634,477 L 635,476 L 639,476 L 640,475 L 650,475 L 651,476 L 653,476 L 654,477 L 656,477 L 657,478 L 658,478 L 659,479 L 660,479 L 661,480 L 662,480 L 664,482 L 665,482 L 671,488 L 671,489 L 673,491 L 673,492 L 674,493 L 674,494 L 675,495 L 675,496 L 676,497 L 676,499 L 677,500 L 677,503 L 678,504 L 678,599 L 679,600 L 679,601 L 680,602 L 680,603 L 683,606 L 684,606 L 685,607 L 687,607 L 688,608 L 693,608 L 694,607 L 696,607 L 698,605 L 699,605 L 700,604 L 700,603 L 701,602 L 701,601 L 702,600 L 702,507 L 703,506 L 703,502 L 704,501 L 704,499 L 705,498 L 705,496 L 706,495 L 706,494 L 708,492 L 708,491 L 712,487 L 712,486 L 714,484 L 715,484 L 718,481 L 719,481 L 721,479 L 722,479 L 723,478 L 725,478 L 726,477 L 728,477 L 729,476 L 733,476 L 734,475 L 743,475 L 744,476 L 747,476 L 748,477 L 750,477 L 751,478 L 753,478 L 755,480 L 756,480 L 757,481 L 758,481 L 761,484 L 762,484 L 765,487 L 765,488 L 768,491 L 768,492 L 769,493 L 769,494 L 770,495 L 770,496 L 771,497 L 771,499 L 772,500 L 772,502 L 773,503 L 773,562 L 774,563 L 774,570 L 775,571 L 775,574 L 776,575 L 776,576 L 777,577 L 777,579 L 778,580 L 778,581 L 779,582 L 779,583 L 780,584 L 780,585 L 781,586 L 781,587 L 783,589 L 783,590 L 790,597 L 791,597 L 794,600 L 795,600 L 796,601 L 797,601 L 798,602 L 799,602 L 800,603 L 801,603 L 802,604 L 803,604 L 804,605 L 807,605 L 808,606 L 811,606 L 812,607 L 850,607 L 851,606 L 853,606 L 856,603 L 856,602 L 857,601 L 857,599 L 858,598 L 858,510 L 859,509 L 859,507 L 860,506 L 860,504 L 861,503 L 861,502 L 862,501 L 862,500 L 863,499 L 863,498 L 864,497 L 864,496 L 866,494 L 866,493 L 874,485 L 875,485 L 878,482 L 879,482 L 880,481 L 881,481 L 882,480 L 883,480 L 884,479 L 886,479 L 887,478 L 889,478 L 890,477 L 894,477 L 895,476 L 942,476 L 943,475 L 944,475 L 945,474 L 946,474 L 949,471 L 949,470 L 950,469 L 950,467 L 951,466 L 951,462 L 950,461 L 950,459 L 949,458 L 949,457 L 945,453 L 944,453 L 943,452 L 891,452 L 890,453 L 886,453 L 885,454 L 883,454 L 882,455 L 879,455 L 878,456 L 877,456 L 876,457 L 874,457 L 873,458 L 872,458 L 871,459 L 870,459 L 869,460 L 868,460 L 866,462 L 865,462 L 863,464 L 862,464 L 860,466 L 859,466 L 848,477 L 848,478 L 846,480 L 846,481 L 844,483 L 844,484 L 842,486 L 842,487 L 841,488 L 841,489 L 840,490 L 840,492 L 839,493 L 839,494 L 838,495 L 838,497 L 837,498 L 837,499 L 836,500 L 836,503 L 835,504 L 835,509 L 834,510 L 834,582 L 833,583 L 816,583 L 815,582 L 813,582 L 812,581 L 811,581 L 810,580 L 809,580 L 808,579 L 807,579 L 801,573 L 801,572 L 800,571 L 800,570 L 799,569 L 799,567 L 798,566 L 798,506 L 797,505 L 797,499 L 796,498 L 796,495 L 795,494 L 795,492 L 794,491 L 794,489 L 793,488 L 793,487 L 792,486 L 792,485 L 791,484 L 791,482 L 789,480 L 789,479 L 787,477 L 787,476 L 783,472 L 783,471 L 775,463 L 774,463 L 772,461 L 771,461 L 769,459 L 768,459 L 766,457 L 764,457 L 763,456 L 762,456 L 761,455 L 759,455 L 758,454 L 756,454 L 755,453 L 753,453 L 752,452 L 748,452 L 747,451 L 729,451 L 728,452 L 723,452 L 722,453 L 720,453 L 719,454 L 718,454 L 717,455 L 715,455 L 714,456 L 713,456 L 712,457 L 711,457 L 710,458 L 709,458 L 708,459 L 707,459 L 704,462 L 703,462 L 699,466 L 698,466 L 694,470 L 694,471 L 691,474 L 688,471 L 688,470 L 683,465 L 682,465 L 678,461 L 677,461 L 675,459 L 674,459 L 673,458 L 672,458 L 671,457 L 670,457 L 669,456 L 668,456 L 667,455 L 665,455 L 664,454 L 662,454 L 661,453 L 659,453 L 658,452 L 655,452 L 654,451 L 636,451 L 635,452 L 630,452 L 629,453 L 627,453 L 626,454 L 624,454 L 623,455 L 621,455 L 620,456 L 619,456 L 618,457 L 617,457 L 616,458 L 615,458 L 613,460 L 612,460 L 610,462 L 609,462 L 604,467 L 603,467 L 600,470 L 600,471 L 596,475 L 596,476 L 594,478 L 594,479 L 592,481 L 592,482 L 591,483 L 591,484 L 590,485 L 590,487 L 589,488 L 589,489 L 588,490 L 588,492 L 587,493 L 587,495 L 586,496 L 586,500 L 585,501 L 585,561 L 584,562 L 584,566 L 583,567 L 583,568 L 582,569 L 582,570 L 581,571 L 581,572 L 575,578 L 574,578 L 573,579 L 572,579 L 571,580 L 570,580 L 569,581 L 567,581 L 566,582 L 486,582 L 485,581 L 480,581 L 479,580 L 476,580 L 475,579 L 473,579 L 472,578 L 470,578 L 469,577 L 468,577 L 467,576 L 466,576 L 465,575 L 464,575 L 463,574 L 462,574 L 460,572 L 459,572 L 456,569 L 455,569 L 448,562 L 448,561 L 446,559 L 446,558 L 444,556 L 444,555 L 443,554 L 443,553 L 441,551 L 441,549 L 440,548 L 440,547 L 439,546 L 439,544 L 438,543 L 438,540 L 437,539 L 437,535 L 436,534 L 436,520 L 437,519 L 437,515 L 438,514 L 438,511 L 439,510 L 439,508 L 440,507 L 440,506 L 441,505 L 441,504 L 442,503 L 442,502 L 444,500 L 444,499 L 446,497 L 446,496 L 458,484 L 459,484 L 461,482 L 462,482 L 463,481 L 464,481 L 465,480 L 466,480 L 467,479 L 468,479 L 469,478 L 472,478 L 473,477 L 475,477 L 476,476 L 480,476 L 481,475 L 495,475 L 496,476 L 500,476 L 501,477 L 503,477 L 504,478 L 506,478 L 507,479 L 509,479 L 510,480 L 511,480 L 512,481 L 513,481 L 515,483 L 516,483 L 520,487 L 521,487 L 524,490 L 524,491 L 528,495 L 528,496 L 530,498 L 530,499 L 531,500 L 531,501 L 532,502 L 532,503 L 533,504 L 533,506 L 534,507 L 534,510 L 535,511 L 535,513 L 534,514 L 526,514 L 525,515 L 463,515 L 462,516 L 461,516 L 457,520 L 457,521 L 456,522 L 456,531 L 457,532 L 457,533 L 458,534 L 458,535 L 459,536 L 460,536 L 461,537 L 462,537 L 463,538 L 465,538 L 466,539 L 546,539 L 547,538 L 549,538 L 550,537 L 551,537 L 552,536 L 553,536 L 557,532 L 557,531 L 558,530 L 558,529 L 559,528 L 559,527 L 560,526 L 560,511 L 559,510 L 559,506 L 558,505 L 558,501 L 557,500 L 557,499 L 556,498 L 556,496 L 555,495 L 555,494 L 554,493 L 554,492 L 553,491 L 553,490 L 552,489 L 552,488 L 551,487 L 551,486 L 549,484 L 549,483 L 548,482 L 548,481 L 544,477 L 544,476 L 536,468 L 535,468 L 531,464 L 530,464 L 528,462 L 527,462 L 525,460 L 524,460 L 523,459 L 522,459 L 521,458 L 520,458 L 519,457 L 518,457 L 517,456 L 516,456 L 515,455 L 513,455 L 512,454 L 510,454 L 509,453 L 506,453 L 505,452 L 501,452 L 500,451 L 494,451 L 493,450 Z M 1215,399 L 1214,400 L 1212,400 L 1208,404 L 1208,405 L 1207,406 L 1207,568 L 1208,569 L 1208,572 L 1209,573 L 1209,575 L 1210,576 L 1210,577 L 1211,578 L 1211,579 L 1212,580 L 1212,581 L 1213,582 L 1213,583 L 1214,584 L 1214,585 L 1215,586 L 1215,587 L 1226,598 L 1227,598 L 1228,599 L 1229,599 L 1231,601 L 1232,601 L 1233,602 L 1234,602 L 1235,603 L 1237,603 L 1238,604 L 1241,604 L 1242,605 L 1245,605 L 1246,606 L 1354,606 L 1355,605 L 1358,605 L 1359,604 L 1360,604 L 1361,603 L 1363,603 L 1364,602 L 1365,602 L 1366,601 L 1367,601 L 1368,600 L 1369,600 L 1371,598 L 1372,598 L 1381,589 L 1381,588 L 1383,586 L 1383,585 L 1384,584 L 1384,583 L 1386,581 L 1386,579 L 1387,578 L 1387,577 L 1388,576 L 1388,575 L 1389,574 L 1389,570 L 1390,569 L 1390,551 L 1389,550 L 1389,547 L 1388,546 L 1388,545 L 1387,544 L 1387,542 L 1386,541 L 1386,540 L 1385,539 L 1385,538 L 1383,536 L 1383,535 L 1380,532 L 1380,531 L 1376,527 L 1375,527 L 1372,524 L 1371,524 L 1369,522 L 1368,522 L 1367,521 L 1366,521 L 1365,520 L 1364,520 L 1363,519 L 1361,519 L 1360,518 L 1358,518 L 1357,517 L 1352,517 L 1351,516 L 1311,516 L 1310,515 L 1308,515 L 1307,514 L 1306,514 L 1305,513 L 1304,513 L 1297,506 L 1297,505 L 1296,504 L 1296,502 L 1295,501 L 1295,491 L 1296,490 L 1296,488 L 1297,487 L 1297,486 L 1304,479 L 1305,479 L 1306,478 L 1307,478 L 1308,477 L 1310,477 L 1311,476 L 1375,476 L 1376,475 L 1377,475 L 1378,474 L 1379,474 L 1382,471 L 1382,470 L 1383,469 L 1383,460 L 1382,459 L 1382,458 L 1381,457 L 1381,456 L 1378,453 L 1377,453 L 1376,452 L 1308,452 L 1307,453 L 1304,453 L 1303,454 L 1301,454 L 1300,455 L 1298,455 L 1297,456 L 1296,456 L 1295,457 L 1294,457 L 1293,458 L 1292,458 L 1290,460 L 1289,460 L 1283,466 L 1282,466 L 1281,467 L 1281,468 L 1278,471 L 1278,472 L 1276,474 L 1276,475 L 1275,476 L 1275,477 L 1274,478 L 1274,479 L 1273,480 L 1273,482 L 1272,483 L 1272,485 L 1271,486 L 1271,491 L 1270,492 L 1270,500 L 1271,501 L 1271,506 L 1272,507 L 1272,509 L 1273,510 L 1273,512 L 1274,513 L 1274,514 L 1275,515 L 1275,516 L 1276,517 L 1276,518 L 1277,519 L 1277,520 L 1279,522 L 1279,523 L 1287,531 L 1288,531 L 1290,533 L 1291,533 L 1292,534 L 1293,534 L 1295,536 L 1296,536 L 1297,537 L 1299,537 L 1300,538 L 1301,538 L 1302,539 L 1305,539 L 1306,540 L 1342,540 L 1343,541 L 1351,541 L 1352,542 L 1354,542 L 1355,543 L 1356,543 L 1357,544 L 1358,544 L 1363,549 L 1363,550 L 1365,552 L 1365,553 L 1366,554 L 1366,557 L 1367,558 L 1367,563 L 1366,564 L 1366,568 L 1365,569 L 1365,570 L 1364,571 L 1364,572 L 1357,579 L 1356,579 L 1355,580 L 1354,580 L 1353,581 L 1351,581 L 1350,582 L 1249,582 L 1248,581 L 1247,581 L 1246,580 L 1244,580 L 1243,579 L 1242,579 L 1240,577 L 1239,577 L 1234,572 L 1234,571 L 1233,570 L 1233,569 L 1232,568 L 1232,565 L 1231,564 L 1231,408 L 1230,407 L 1230,405 L 1229,404 L 1229,403 L 1227,401 L 1226,401 L 1225,400 L 1224,400 L 1223,399 Z M 1154,399 L 1153,400 L 1152,400 L 1151,401 L 1150,401 L 1146,405 L 1146,406 L 1144,408 L 1144,411 L 1143,412 L 1143,417 L 1144,418 L 1144,421 L 1145,422 L 1145,423 L 1150,428 L 1151,428 L 1152,429 L 1154,429 L 1155,430 L 1164,430 L 1165,429 L 1167,429 L 1170,426 L 1171,426 L 1172,425 L 1172,424 L 1174,422 L 1174,420 L 1175,419 L 1175,410 L 1174,409 L 1174,407 L 1172,405 L 1172,404 L 1170,402 L 1169,402 L 1167,400 L 1165,400 L 1164,399 Z"/></svg>
+    </a>
+    <nav class="hidden md:flex items-center gap-7 text-[13px] text-muted-foreground">
+      <div class="nav-dropdown">
+        <button class="nav-link nav-dropdown-trigger" style="color:inherit" aria-haspopup="true" aria-expanded="false">
+          Product
+          <svg class="nav-chevron" viewBox="0 0 12 12" fill="none" stroke="currentColor" stroke-width="1.75" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><polyline points="3,4.5 6,7.5 9,4.5"/></svg>
+        </button>
+        <div class="nav-dropdown-panel" role="menu">
+          <a href="index.html#memory" role="menuitem">Memory</a>
+          <a href="harness.html" role="menuitem">Harness</a>
+          <a href="console.html" role="menuitem">Console</a>
+          <a href="mpp.html" role="menuitem">Streaming</a>
+          <a href="mcp.html" role="menuitem">MCP</a>
+        </div>
+      </div>
+      <a href="pricing.html" class="nav-link" style="color:inherit">Pricing</a>
+      <div class="nav-dropdown">
+        <button class="nav-link nav-dropdown-trigger" style="color:inherit" aria-haspopup="true" aria-expanded="false">
+          Resources
+          <svg class="nav-chevron" viewBox="0 0 12 12" fill="none" stroke="currentColor" stroke-width="1.75" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><polyline points="3,4.5 6,7.5 9,4.5"/></svg>
+        </button>
+        <div class="nav-dropdown-panel" role="menu">
+          <a href="index.html#research" role="menuitem">Research</a>
+          <a href="index.html#blog" role="menuitem">Blog</a>
+          <a href="index.html#docs" role="menuitem">Docs</a>
+          <a href="index.html#community" role="menuitem">Community</a>
+        </div>
+      </div>
+      <span class="h-4 w-px bg-border ml-1"></span>
+      <a href="https://github.com/memrails" class="inline-flex items-center gap-1.5 text-[13px] hover:opacity-80 transition" style="color: color-mix(in oklab, var(--muted-foreground) 95%, transparent);" aria-label="GitHub repository">
+        <svg width="16" height="16" viewBox="0 0 24 24" fill="currentColor" aria-hidden="true">
+          <path d="M12 .5C5.65.5.5 5.65.5 12c0 5.08 3.29 9.39 7.86 10.91.57.1.78-.25.78-.55v-1.93c-3.2.7-3.87-1.54-3.87-1.54-.52-1.33-1.28-1.68-1.28-1.68-1.04-.72.08-.7.08-.7 1.15.08 1.76 1.18 1.76 1.18 1.02 1.76 2.69 1.25 3.34.96.1-.75.4-1.25.73-1.54-2.55-.29-5.23-1.28-5.23-5.69 0-1.26.45-2.29 1.18-3.09-.12-.29-.51-1.46.11-3.04 0 0 .97-.31 3.18 1.18a11 11 0 0 1 5.8 0c2.2-1.49 3.17-1.18 3.17-1.18.63 1.58.24 2.75.12 3.04.74.8 1.18 1.83 1.18 3.09 0 4.42-2.69 5.39-5.25 5.68.41.35.78 1.04.78 2.1v3.11c0 .3.21.66.79.55C20.21 21.38 23.5 17.08 23.5 12 23.5 5.65 18.35.5 12 .5z"/>
+        </svg>
+        <span class="font-medium tabular-nums" style="color: var(--foreground);">102.6K</span>
+      </a>
+      <a href="index.html#dashboard" class="nav-pill">Start for free</a>
+      <a href="index.html#login" class="nav-pill-light">Login</a>
+    </nav>
+    <button id="nav-toggle" class="nav-hamburger -mr-2 p-2 rounded-md hover:bg-graphite/60 transition" aria-label="Open menu" aria-expanded="false" aria-controls="nav-drawer">
+      <svg width="28" height="28" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.25" stroke-linecap="round" aria-hidden="true">
+        <line class="line-top"    x1="4" y1="9"  x2="20" y2="9"/>
+        <line class="line-bottom" x1="4" y1="15" x2="20" y2="15"/>
+      </svg>
+    </button>
+  </div>
+</header>
+
+<aside id="nav-drawer" role="dialog" aria-modal="true" aria-label="Site navigation" aria-hidden="true">
+  <nav class="nav-drawer-list">
+    <div class="nav-drawer-group">
+      <div class="nav-drawer-group-title">Product</div>
+      <a href="index.html#memory">Memory</a>
+      <a href="harness.html">Harness</a>
+      <a href="console.html">Console</a>
+      <a href="mpp.html">Streaming</a>
+      <a href="mcp.html">MCP</a>
+    </div>
+    <div class="nav-drawer-group">
+      <a href="pricing.html">Pricing</a>
+    </div>
+    <div class="nav-drawer-group">
+      <div class="nav-drawer-group-title">Resources</div>
+      <a href="index.html#research">Research</a>
+      <a href="index.html#blog">Blog</a>
+      <a href="index.html#docs">Docs</a>
+      <a href="index.html#community">Community</a>
+    </div>
+    <div class="nav-drawer-cta">
+      <a href="index.html#dashboard" class="nav-drawer-cta-btn">Start for free</a>
+      <a href="index.html#login" class="nav-drawer-cta-btn nav-drawer-cta-btn--light">Login</a>
+    </div>
+  </nav>
+</aside>
+<script>
+  (function () {
+    const drawer  = document.getElementById('nav-drawer');
+    const openBtn = document.getElementById('nav-toggle');
+    if (!drawer || !openBtn) return;
+    function syncHeaderHeight() {
+      const header = document.querySelector('header.sticky');
+      if (header) document.documentElement.style.setProperty('--header-h', header.offsetHeight + 'px');
+    }
+    syncHeaderHeight();
+    window.addEventListener('resize', syncHeaderHeight);
+    if (document.fonts && document.fonts.ready) { document.fonts.ready.then(syncHeaderHeight).catch(() => {}); }
+    function open() {
+      drawer.classList.add('is-open'); drawer.setAttribute('aria-hidden', 'false');
+      openBtn.setAttribute('aria-expanded', 'true'); openBtn.setAttribute('aria-label', 'Close menu');
+      document.body.style.overflow = 'hidden';
+    }
+    function close() {
+      drawer.classList.remove('is-open'); drawer.setAttribute('aria-hidden', 'true');
+      openBtn.setAttribute('aria-expanded', 'false'); openBtn.setAttribute('aria-label', 'Open menu');
+      document.body.style.overflow = '';
+    }
+    function toggle() { if (drawer.classList.contains('is-open')) close(); else open(); }
+    openBtn.addEventListener('click', toggle);
+    drawer.querySelectorAll('a').forEach(a => a.addEventListener('click', close));
+    document.addEventListener('keydown', e => { if (e.key === 'Escape') close(); });
+  })();
+</script>
+
+<main>
+
+<!-- HERO -->
+<section class="relative overflow-hidden border-b hairline">
+  <div class="absolute inset-0 grid-bg opacity-60 mask-radial-center"></div>
+  <div class="relative mx-auto max-w-7xl px-6 pt-24 pb-20">
+    <div class="meta-bar text-[11px] font-mono uppercase tracking-[0.14em] text-muted-foreground">
+      <span><span class="text-signal mr-1.5">Protocol</span>Model Context Protocol</span>
+      <span><span class="text-signal mr-1.5">Transport</span>HTTP &middot; stdio</span>
+      <span><span class="text-signal mr-1.5">Default</span>Read-only, scoped</span>
+    </div>
+
+    <h1 class="mt-9 font-display font-medium text-5xl md:text-7xl leading-[1.0] tracking-[-0.03em] max-w-4xl">
+      Your memory, <span class="text-gradient-signal">one URL away.</span>
+    </h1>
+
+    <p class="mt-7 max-w-2xl text-[17px] leading-relaxed text-muted-foreground">
+      MemRails speaks MCP. Point any compatible client at one server URL and your memory shows up as tools your agent can call &mdash; query the stack, write a refactor, inspect a packet &mdash; with no glue code to write or integration to maintain. The same packet contract you already build against, exposed the way the rest of your stack expects it.
+    </p>
+
+    <div class="mt-9 flex flex-wrap items-center gap-3">
+      <a href="#server" class="inline-flex items-center gap-2 h-11 px-5 rounded-md bg-signal text-signal-foreground font-semibold text-sm shadow-signal hover:opacity-95 transition tracking-tight">Add the server &rarr;</a>
+      <a href="#tools" class="inline-flex items-center gap-2 h-11 px-5 rounded-md border hairline text-sm font-medium hover:border-signal/60 hover:text-signal transition">See the tools</a>
+    </div>
+  </div>
+</section>
+
+<!-- 01 — MEMORY AS AN MCP SERVER -->
+<section id="server" class="relative border-b hairline bg-graphite-2/60">
+  <div class="mx-auto max-w-7xl px-6 py-24">
+    <div class="ref-eyebrow text-[11px] font-mono uppercase tracking-[0.18em] text-muted-foreground" data-ref="01"><span class="ref-rule"></span>Memory as an MCP server</div>
+    <h2 class="mt-5 font-display font-medium text-3xl md:text-5xl tracking-tight max-w-4xl leading-[1.05]">
+      One endpoint, and memory <span class="text-gradient-signal">becomes a tool.</span>
+    </h2>
+    <p class="mt-5 max-w-2xl text-[16px] leading-relaxed text-muted-foreground">
+      Add the MemRails server to your client config and the retrieval stack registers itself as callable tools. No SDK to install in your agent, no adapter to keep in sync with the contract &mdash; the client discovers what's available and your model uses it.
+    </p>
+
+    <div class="reveal mt-12 grid lg:grid-cols-2 gap-4 items-stretch">
+      <div class="rounded-xl border hairline bg-graphite/40 overflow-hidden shadow-card flex flex-col">
+        <div class="flex items-center justify-between px-4 h-10 border-b hairline bg-graphite-2">
+          <div class="text-[11px] font-mono text-muted-foreground">~/.config/mcp/mcp.json</div>
+          <div class="text-[11px] font-mono text-signal">client config</div>
+        </div>
+<pre class="p-5 font-mono text-[12.5px] leading-relaxed overflow-x-auto flex-grow" style="color:color-mix(in oklab,var(--foreground) 90%,transparent)"><span class="tok-k">{</span>
+  <span class="tok-k">"mcpServers"</span>: <span class="tok-k">{</span>
+    <span class="tok-k">"memrails"</span>: <span class="tok-k">{</span>
+      <span class="tok-k">"url"</span>: <span class="tok-s">"https://mcp.memrails.dev"</span>,
+      <span class="tok-k">"transport"</span>: <span class="tok-s">"http"</span>,
+      <span class="tok-k">"scope"</span>: <span class="tok-s">"read"</span>
+    <span class="tok-k">}</span>
+  <span class="tok-k">}</span>
+<span class="tok-k">}</span></pre>
+      </div>
+      <div class="rounded-xl border border-signal/40 bg-graphite/40 overflow-hidden flex flex-col">
+        <div class="flex items-center justify-between px-4 h-10 border-b hairline bg-graphite-2">
+          <div class="text-[11px] font-mono text-muted-foreground">discovery</div>
+          <div class="text-[11px] font-mono text-evidence-good inline-flex items-center gap-2"><span class="live-dot"></span>connected</div>
+        </div>
+<pre class="p-5 font-mono text-[12.5px] leading-relaxed overflow-x-auto flex-grow" style="color:color-mix(in oklab,var(--foreground) 90%,transparent)"><span class="tok-c"># client handshakes, lists capabilities</span>
+&rarr; initialize
+&larr; tools: <span class="tok-n">3</span>  resources: <span class="tok-n">1</span>
+  <span class="tok-k">memory.query</span>     <span class="tok-c"># read</span>
+  <span class="tok-k">memory.write</span>     <span class="tok-c"># write</span>
+  <span class="tok-k">memory.inspect</span>   <span class="tok-c"># read</span>
+  <span class="tok-k">memory://files</span>   <span class="tok-c"># resource</span>
+
+<span class="tok-c"># ready &mdash; no code shipped</span></pre>
+      </div>
+    </div>
+  </div>
+</section>
+
+<!-- 02 — THE TOOLS IT EXPOSES -->
+<section id="tools" class="relative border-b hairline">
+  <div class="mx-auto max-w-7xl px-6 py-24">
+    <div class="ref-eyebrow text-[11px] font-mono uppercase tracking-[0.18em] text-muted-foreground" data-ref="02"><span class="ref-rule"></span>The tools it exposes</div>
+    <h2 class="mt-5 font-display font-medium text-3xl md:text-5xl tracking-tight max-w-4xl leading-[1.05]">
+      Three tools, the <span class="text-gradient-signal">whole contract.</span>
+    </h2>
+    <p class="mt-5 max-w-2xl text-[16px] leading-relaxed text-muted-foreground">
+      The server exposes the protocol as a small, legible tool surface. Each maps directly to the packet contract you already know &mdash; query returns a compressed packet, write proposes a refactor into the market, inspect opens provenance. Nothing new to learn.
+    </p>
+
+    <div class="reveal mt-12 rounded-xl border hairline bg-graphite/40 overflow-hidden shadow-card">
+      <div class="tool-row">
+        <div>
+          <div class="tool-name">memory.query</div>
+          <span class="tool-tag read">read</span>
+        </div>
+        <div>
+          <p class="text-[14px] text-muted-foreground leading-relaxed">Run a query through L1&ndash;L5 and return a compressed packet with confidence, token count, and provenance. The same synthesis the library and harness produce.</p>
+          <div class="mt-2.5 font-mono text-[11.5px] text-muted-foreground">in: <span class="text-cyan">query, intent, max_tokens</span> &rarr; out: <span class="text-signal">packet</span></div>
+        </div>
+      </div>
+      <div class="tool-row">
+        <div>
+          <div class="tool-name">memory.write</div>
+          <span class="tool-tag write">write</span>
+        </div>
+        <div>
+          <p class="text-[14px] text-muted-foreground leading-relaxed">Propose a refactor &mdash; a new claim, a confidence change, a contradiction &mdash; into the refactor market. Staked, reviewed by validators, never silently applied.</p>
+          <div class="mt-2.5 font-mono text-[11.5px] text-muted-foreground">in: <span class="text-cyan">claim, evidence, stake</span> &rarr; out: <span class="text-signal">refactor_id</span></div>
+        </div>
+      </div>
+      <div class="tool-row">
+        <div>
+          <div class="tool-name">memory.inspect</div>
+          <span class="tool-tag read">read</span>
+        </div>
+        <div>
+          <p class="text-[14px] text-muted-foreground leading-relaxed">Open a packet's lineage: the evidence bundle, the provenance weights, the input and output hashes. The Console inspector, available to your agent at call time.</p>
+          <div class="mt-2.5 font-mono text-[11.5px] text-muted-foreground">in: <span class="text-cyan">packet_id</span> &rarr; out: <span class="text-signal">provenance, hashes</span></div>
+        </div>
+      </div>
+    </div>
+  </div>
+</section>
+
+<!-- 03 — WORKS WITH ANY MCP CLIENT -->
+<section id="clients" class="relative border-b hairline bg-graphite-2/60">
+  <div class="mx-auto max-w-7xl px-6 py-24">
+    <div class="ref-eyebrow text-[11px] font-mono uppercase tracking-[0.18em] text-muted-foreground" data-ref="03"><span class="ref-rule"></span>Works with any MCP client</div>
+    <h2 class="mt-5 font-display font-medium text-3xl md:text-5xl tracking-tight max-w-4xl leading-[1.05]">
+      If it speaks MCP, <span class="text-gradient-signal">it speaks to your memory.</span>
+    </h2>
+    <p class="mt-5 max-w-2xl text-[16px] leading-relaxed text-muted-foreground">
+      The server is a standard MCP implementation, so it works with any compliant client out of the box. No per-client adapters, no bespoke plugins &mdash; the same URL drops into all of them.
+    </p>
+
+    <div class="reveal mt-10">
+      <div class="flex flex-wrap gap-2">
+        <span class="integ-chip prewired">Claude Code</span>
+        <span class="integ-chip prewired">Claude Desktop</span>
+        <span class="integ-chip">Cursor</span>
+        <span class="integ-chip">Windsurf</span>
+        <span class="integ-chip">Cline</span>
+        <span class="integ-chip">Zed</span>
+        <span class="integ-chip">VS Code</span>
+        <span class="integ-chip">LangGraph</span>
+        <span class="integ-chip">Custom client</span>
+      </div>
+    </div>
+
+    <div class="mt-4 grid sm:grid-cols-3 gap-4">
+      <div class="reveal rounded-xl border hairline bg-graphite/40 p-5">
+        <div class="font-mono text-[10px] uppercase tracking-widest text-muted-foreground mb-2">Adapters to maintain</div>
+        <div class="font-display font-medium text-3xl tracking-tight">0</div>
+        <p class="mt-2 text-[13px] text-muted-foreground leading-relaxed">One server speaks to every client. Nothing per-integration.</p>
+      </div>
+      <div class="reveal rounded-xl border hairline bg-graphite/40 p-5">
+        <div class="font-mono text-[10px] uppercase tracking-widest text-muted-foreground mb-2">Lines to add a client</div>
+        <div class="font-display font-medium text-3xl tracking-tight">5</div>
+        <p class="mt-2 text-[13px] text-muted-foreground leading-relaxed">One JSON block in the client's config. That's the whole install.</p>
+      </div>
+      <div class="reveal rounded-xl border hairline bg-graphite/40 p-5">
+        <div class="font-mono text-[10px] uppercase tracking-widest text-muted-foreground mb-2">Contract drift</div>
+        <div class="font-display font-medium text-3xl tracking-tight">None</div>
+        <p class="mt-2 text-[13px] text-muted-foreground leading-relaxed">Tools are discovered live, so they can't fall out of sync.</p>
+      </div>
+    </div>
+  </div>
+</section>
+
+<!-- 04 — RESOURCES & SCOPING -->
+<section id="scoping" class="relative border-b hairline">
+  <div class="mx-auto max-w-7xl px-6 py-24">
+    <div class="ref-eyebrow text-[11px] font-mono uppercase tracking-[0.18em] text-muted-foreground" data-ref="04"><span class="ref-rule"></span>Resources &amp; scoping</div>
+    <h2 class="mt-5 font-display font-medium text-3xl md:text-5xl tracking-tight max-w-4xl leading-[1.05]">
+      Exposed on purpose, <span class="text-gradient-signal">scoped by default.</span>
+    </h2>
+    <p class="mt-5 max-w-2xl text-[16px] leading-relaxed text-muted-foreground">
+      Memory files surface as MCP resources, so a client can read the corpus directly when it needs to. Access is read-only until you grant write, and every scope maps to the same audit trail you see in Console.
+    </p>
+
+    <div class="mt-12 grid md:grid-cols-3 gap-4">
+      <div class="reveal rounded-xl border hairline p-7 bg-graphite/40 flex flex-col hover:border-signal/50 transition">
+        <div class="font-mono text-[11px] uppercase tracking-widest text-signal mb-3">Resources</div>
+        <h3 class="font-display font-semibold text-xl leading-tight mb-3">Files, not a black box.</h3>
+        <p class="text-[14px] leading-relaxed text-muted-foreground flex-grow">Markdown memory is published as <code class="font-mono text-[12px] text-cyan">memory://</code> resources. A client can list and read them directly &mdash; the source of truth, not a derived index.</p>
+        <div class="mt-6 flex flex-wrap gap-2">
+          <span class="res-pill">memory://files</span>
+          <span class="res-pill">memory://keys</span>
+        </div>
+      </div>
+      <div class="reveal rounded-xl border hairline p-7 bg-graphite/40 flex flex-col hover:border-signal/50 transition">
+        <div class="font-mono text-[11px] uppercase tracking-widest text-signal mb-3">Scopes</div>
+        <h3 class="font-display font-semibold text-xl leading-tight mb-3">Read-only until you say so.</h3>
+        <p class="text-[14px] leading-relaxed text-muted-foreground flex-grow">A server starts read. Granting <code class="font-mono text-[12px] text-cyan">write</code> opens <code class="font-mono text-[12px] text-signal">memory.write</code> into the refactor market &mdash; an explicit choice, never a default.</p>
+        <div class="mt-6 flex flex-wrap gap-2">
+          <span class="res-pill">scope: read</span>
+          <span class="res-pill">scope: write</span>
+        </div>
+      </div>
+      <div class="reveal rounded-xl border hairline p-7 bg-graphite/40 flex flex-col hover:border-signal/50 transition">
+        <div class="font-mono text-[11px] uppercase tracking-widest text-signal mb-3">Audit</div>
+        <h3 class="font-display font-semibold text-xl leading-tight mb-3">Every call, on the ledger.</h3>
+        <p class="text-[14px] leading-relaxed text-muted-foreground flex-grow">Tool calls through MCP log exactly like every other packet &mdash; hashed in, hashed out, reconcilable. The transport changes; the audit trail doesn't.</p>
+        <div class="mt-6 pt-4 border-t border-dotted hairline"><a href="console.html" class="font-mono text-[12px] text-signal hover:underline">View in Console &rarr;</a></div>
+      </div>
+    </div>
+  </div>
+</section>
+
+<!-- CTA -->
+<section id="cta" class="relative overflow-hidden border-b hairline">
+  <div class="absolute inset-0 grid-bg opacity-50 mask-radial-bottom"></div>
+  <div class="relative mx-auto max-w-7xl px-6 py-32 text-center">
+    <div class="flex justify-center text-[11px] font-mono uppercase tracking-[0.18em] text-muted-foreground">
+      <span class="flex items-center gap-2"><span class="w-1.5 h-1.5 rounded-full bg-signal shadow-signal"></span>One URL &middot; every client</span>
+    </div>
+    <h2 class="mt-6 font-display font-medium text-4xl md:text-6xl tracking-tight max-w-3xl mx-auto leading-[1.05]">
+      Add it once, <span class="text-gradient-signal">use it everywhere.</span>
+    </h2>
+    <p class="mt-6 max-w-2xl mx-auto text-muted-foreground">
+      Drop the server into your client config and your agent has memory as a tool in five lines. Read-only by default, exportable always, audited the same as everything else.
+    </p>
+    <div class="mt-9 flex flex-wrap items-center justify-center gap-3">
+      <a href="index.html#dashboard" class="inline-flex items-center gap-2 h-11 px-5 rounded-md bg-signal text-signal-foreground font-semibold text-sm shadow-signal hover:opacity-95 transition tracking-tight">Get Started &rarr;</a>
+      <a href="index.html#docs" class="inline-flex items-center gap-2 h-11 px-5 rounded-md border hairline text-sm font-medium hover:border-signal/60 hover:text-signal transition">Read the MCP docs</a>
+    </div>
+  </div>
+</section>
+
+</main>
+
+<!-- FOOTER -->
+<footer class="mx-auto max-w-7xl px-6 py-14">
+  <div class="grid grid-cols-1 md:grid-cols-12 gap-10 md:gap-6 text-[12px] font-mono text-muted-foreground">
+    <div class="md:col-span-4">
+      <div class="font-display font-medium text-lg tracking-tight mb-4" style="color: var(--foreground);">
+        memrails<span class="text-signal">.</span>
+      </div>
+      <p class="text-[11px] leading-relaxed max-w-xs" style="color: color-mix(in oklab, var(--muted-foreground) 80%, transparent)">
+        Knowledge density infrastructure for agentic software. Built for teams that treat memory as a protocol, not a vendor lock-in.
+      </p>
+    </div>
+    <div class="md:col-span-3">
+      <div class="text-[10px] uppercase tracking-[0.22em] mb-4" style="color: color-mix(in oklab, var(--muted-foreground) 70%, transparent)">Product</div>
+      <div class="flex flex-col gap-2.5">
+        <a href="index.html#memory" class="hover:text-foreground transition">Memory</a>
+        <a href="harness.html" class="hover:text-foreground transition">Harness</a>
+        <a href="console.html" class="hover:text-foreground transition">Console</a>
+        <a href="mpp.html" class="hover:text-foreground transition">Streaming</a>
+        <a href="mcp.html" class="hover:text-foreground transition">MCP</a>
+        <a href="pricing.html" class="hover:text-foreground transition">Pricing</a>
+      </div>
+    </div>
+    <div class="md:col-span-2">
+      <div class="text-[10px] uppercase tracking-[0.22em] mb-4" style="color: color-mix(in oklab, var(--muted-foreground) 70%, transparent)">Resources</div>
+      <div class="flex flex-col gap-2.5">
+        <a href="index.html#research" class="hover:text-foreground transition">Research</a>
+        <a href="index.html#blog" class="hover:text-foreground transition">Blog</a>
+        <a href="index.html#docs" class="hover:text-foreground transition">Docs</a>
+        <a href="index.html#community" class="hover:text-foreground transition">Community</a>
+      </div>
+    </div>
+    <div class="md:col-span-3">
+      <div class="text-[10px] uppercase tracking-[0.22em] mb-4" style="color: color-mix(in oklab, var(--muted-foreground) 70%, transparent)">Office of Record</div>
+      <div class="flex flex-col gap-2.5">
+        <span class="text-foreground">press@memrails.dev</span>
+        <span>For partnership &amp; institutional inquiry.</span>
+        <span class="mt-2">San Francisco · New York</span>
+      </div>
+    </div>
+  </div>
+
+  <div class="mt-12 pt-6 border-t hairline flex flex-wrap items-center justify-between gap-3 text-[11px] font-mono text-muted-foreground">
+    <div class="flex items-center gap-3">
+      <span>© 2026 MemRails Labs</span>
+      <span class="h-3 w-px bg-border"></span>
+      <span>All rights reserved.</span>
+    </div>
+    <div class="flex items-center gap-4">
+      <a href="#" class="hover:text-foreground transition">Privacy</a>
+      <a href="#" class="hover:text-foreground transition">Terms</a>
+      <a href="#" class="hover:text-foreground transition">Security</a>
+      <span class="h-3 w-px bg-border hidden md:inline-block"></span>
+      <span class="text-[10px] tracking-[0.18em] uppercase">Build · <span class="text-signal">v0.1</span></span>
+    </div>
+  </div>
+</footer>
+
+<script>
+if (window.IntersectionObserver && !window.matchMedia('(prefers-reduced-motion: reduce)').matches) {
+  var io = new IntersectionObserver(function (entries) {
+    entries.forEach(function (e) { if (e.isIntersecting) { e.target.classList.add('in'); io.unobserve(e.target); } });
+  }, { threshold: 0.08, rootMargin: '0px 0px -40px 0px' });
+  document.querySelectorAll('.reveal').forEach(function (el) { io.observe(el); });
+}
+</script>
+
+</body>
+</html>

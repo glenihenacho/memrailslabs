@@ -1,0 +1,254 @@
+<!-- HERO -->
+<section class="relative overflow-hidden border-b hairline">
+  <div class="absolute inset-0 grid-bg opacity-60 mask-radial-center"></div>
+  <div class="relative mx-auto max-w-7xl px-6 pt-24 pb-20">
+    <div class="meta-bar text-[11px] font-mono uppercase tracking-[0.14em] text-muted-foreground">
+      <span><span class="text-signal mr-1.5">Runtime</span>In-loop · agent-side</span>
+      <span><span class="text-signal mr-1.5">Tiers</span>Self-host · Managed</span>
+      <span><span class="text-signal mr-1.5">Managed</span>Pre-tuned OpenClaw</span>
+    </div>
+
+    <h1 class="mt-9 font-display font-medium text-5xl md:text-7xl leading-[1.0] tracking-[-0.03em] max-w-4xl">
+      The harness, tuned and <span class="text-gradient-signal">deployed for you.</span>
+    </h1>
+
+    <p class="mt-7 max-w-2xl text-[17px] leading-relaxed text-muted-foreground">
+      The harness is where MemRails runs inside your agent loop — the retrieval stack, the packet contract, the bindings to the runtimes you already use. Wire it yourself with the open library, or skip the setup entirely: a pre-tuned OpenClaw harness, calibrated for the contract and deployed in one click.
+    </p>
+
+    <div class="mt-9 flex flex-wrap items-center gap-3">
+      <a href="#tiers" class="inline-flex items-center gap-2 h-11 px-5 rounded-md bg-signal text-signal-foreground font-semibold text-sm shadow-signal hover:opacity-95 transition tracking-tight">Compare the two paths &rarr;</a>
+      <a href="#deploy" class="inline-flex items-center gap-2 h-11 px-5 rounded-md border hairline text-sm font-medium hover:border-signal/60 hover:text-signal transition">See the deploy flow</a>
+    </div>
+  </div>
+</section>
+
+<!-- 01 — TWO PATHS -->
+<section id="tiers" class="relative border-b hairline bg-graphite-2/60">
+  <div class="mx-auto max-w-7xl px-6 py-24">
+    <div class="ref-eyebrow text-[11px] font-mono uppercase tracking-[0.18em] text-muted-foreground" data-ref="01"><span class="ref-rule"></span>Two ways to run the harness</div>
+    <h2 class="mt-5 font-display font-medium text-3xl md:text-5xl tracking-tight max-w-4xl leading-[1.05]">
+      Run it yourself, <span class="text-gradient-signal">or let us run the best one.</span>
+    </h2>
+    <p class="mt-5 max-w-2xl text-[16px] leading-relaxed text-muted-foreground">
+      Same protocol underneath, two ways to operate it. The open library drops into your harness and writes to plain Markdown. The managed tier is a pre-tuned OpenClaw deployment we operate end to end &mdash; the SOTA harness experience, without the tuning.
+    </p>
+
+    <div class="mt-12 grid md:grid-cols-2 gap-4">
+      <!-- self-host -->
+      <div class="reveal rounded-xl border hairline bg-graphite/40 p-8 relative">
+        <div class="tier-stamp text-cyan">Open &middot; self-host</div>
+        <div class="text-[11px] font-mono uppercase tracking-widest text-cyan mb-4">@memrails/memory</div>
+        <h3 class="font-display text-2xl font-semibold">You wire it into your harness.</h3>
+        <p class="mt-4 text-[15px] leading-relaxed text-muted-foreground">
+          Install the library, point it at your knowledge directory, and call <code class="code-cyan">memory.query()</code> before any model call. No hosted dependency, no graph to maintain &mdash; it runs in your process and versions to Git.
+        </p>
+        <ul class="mt-5 text-[14px]">
+          <li class="grid grid-cols-[16px_1fr] gap-2.5 py-2.5"><span class="text-cyan font-bold">+</span><span class="text-muted-foreground">Runs in-process, inside your existing harness</span></li>
+          <li class="grid grid-cols-[16px_1fr] gap-2.5 py-2.5 border-t border-dotted hairline"><span class="text-cyan font-bold">+</span><span class="text-muted-foreground">You bring the model key and tune the stack yourself</span></li>
+          <li class="grid grid-cols-[16px_1fr] gap-2.5 py-2.5 border-t border-dotted hairline"><span class="text-cyan font-bold">+</span><span class="text-muted-foreground">Markdown-canonical, Git-versioned, no lock-in</span></li>
+          <li class="grid grid-cols-[16px_1fr] gap-2.5 py-2.5 border-t border-dotted hairline"><span class="text-cyan font-bold">+</span><span class="text-muted-foreground">Free &mdash; orchestration billed per packet, nothing for the harness</span></li>
+        </ul>
+      </div>
+      <!-- managed -->
+      <div class="reveal rounded-xl border border-signal/40 p-8 relative" style="background: color-mix(in oklab, var(--signal) 5%, transparent);">
+        <div class="tier-stamp text-signal">Premium &middot; managed</div>
+        <div class="text-[11px] font-mono uppercase tracking-widest text-signal mb-4">OpenClaw &middot; pre-tuned</div>
+        <h3 class="font-display text-2xl font-semibold">We deploy the best one for you.</h3>
+        <p class="mt-4 text-[15px] leading-relaxed text-muted-foreground">
+          A managed OpenClaw harness, pre-tuned for the packet contract and deployed on our infrastructure in one click. The retrieval stack is calibrated, Compress-v1 is bound, the integrations are pre-wired. You get the SOTA experience with no setup.
+        </p>
+        <ul class="mt-5 text-[14px]">
+          <li class="grid grid-cols-[16px_1fr] gap-2.5 py-2.5"><span class="text-signal font-bold">+</span><span class="text-muted-foreground">Pre-tuned OpenClaw &mdash; thresholds and stack calibrated for you</span></li>
+          <li class="grid grid-cols-[16px_1fr] gap-2.5 py-2.5 border-t border-dotted hairline"><span class="text-signal font-bold">+</span><span class="text-muted-foreground">One-click deploy to a live endpoint &mdash; no infra to run</span></li>
+          <li class="grid grid-cols-[16px_1fr] gap-2.5 py-2.5 border-t border-dotted hairline"><span class="text-signal font-bold">+</span><span class="text-muted-foreground">Compress-v1 bound and managed; integrations pre-connected</span></li>
+          <li class="grid grid-cols-[16px_1fr] gap-2.5 py-2.5 border-t border-dotted hairline"><span class="text-signal font-bold">+</span><span class="text-muted-foreground">Eject to self-host any time &mdash; the config is yours</span></li>
+        </ul>
+      </div>
+    </div>
+  </div>
+</section>
+
+<!-- 02 — WHAT PRE-TUNED MEANS -->
+<section id="tuned" class="relative border-b hairline">
+  <div class="mx-auto max-w-7xl px-6 py-24">
+    <div class="ref-eyebrow text-[11px] font-mono uppercase tracking-[0.18em] text-muted-foreground" data-ref="02"><span class="ref-rule"></span>What pre-tuned means</div>
+    <h2 class="mt-5 font-display font-medium text-3xl md:text-5xl tracking-tight max-w-4xl leading-[1.05]">
+      The stack arrives <span class="text-gradient-signal">already calibrated.</span>
+    </h2>
+    <p class="mt-5 max-w-2xl text-[16px] leading-relaxed text-muted-foreground">
+      A harness is only as good as its tuning. The managed OpenClaw ships with every layer of the retrieval stack wired and the dials already set &mdash; the work most teams spend weeks getting right is done before your first query.
+    </p>
+
+    <div class="mt-12 grid md:grid-cols-3 gap-4">
+      <div class="reveal rounded-xl border hairline p-7 bg-graphite/40 flex flex-col hover:border-signal/50 transition">
+        <div class="font-display font-medium text-5xl text-signal/70 tracking-tight mb-5">01</div>
+        <h3 class="font-display font-semibold text-xl leading-tight mb-4">The L1&ndash;L5 stack, wired.</h3>
+        <p class="text-[14px] leading-relaxed text-muted-foreground flex-grow">Literal scan, key lookup, semantic rank, evidence filter, and compression are connected and ordered out of the box. Cheap filters run first; the model is the last resort, not the default.</p>
+        <div class="mt-6 pt-4 border-t border-dotted hairline font-mono text-[12px] text-muted-foreground leading-relaxed"><span class="text-signal font-medium">Set:</span> retrieval order, fallthrough thresholds</div>
+      </div>
+      <div class="reveal rounded-xl border hairline p-7 bg-graphite/40 flex flex-col hover:border-signal/50 transition">
+        <div class="font-display font-medium text-5xl text-signal/70 tracking-tight mb-5">02</div>
+        <h3 class="font-display font-semibold text-xl leading-tight mb-4">Compress-v1, bound.</h3>
+        <p class="text-[14px] leading-relaxed text-muted-foreground flex-grow">The compression layer points at our managed model, fine-tuned for the packet contract. No key to provision, no endpoint to wire &mdash; packets come back with provenance and contradictions intact.</p>
+        <div class="mt-6 pt-4 border-t border-dotted hairline font-mono text-[12px] text-muted-foreground leading-relaxed"><span class="text-signal font-medium">Set:</span> model route, token budget, fidelity floor</div>
+      </div>
+      <div class="reveal rounded-xl border hairline p-7 bg-graphite/40 flex flex-col hover:border-signal/50 transition">
+        <div class="font-display font-medium text-5xl text-signal/70 tracking-tight mb-5">03</div>
+        <h3 class="font-display font-semibold text-xl leading-tight mb-4">Confidence, calibrated.</h3>
+        <p class="text-[14px] leading-relaxed text-muted-foreground flex-grow">Evidence thresholds, citation density, and contradiction handling are tuned against real network traffic &mdash; not left at defaults for you to discover the hard way in production.</p>
+        <div class="mt-6 pt-4 border-t border-dotted hairline font-mono text-[12px] text-muted-foreground leading-relaxed"><span class="text-signal font-medium">Set:</span> min confidence, citation density</div>
+      </div>
+    </div>
+
+    <div class="reveal mt-4 rounded-xl border hairline bg-graphite/40 overflow-hidden shadow-card">
+      <div class="flex items-center justify-between px-4 h-10 border-b hairline bg-graphite-2">
+        <div class="text-[11px] font-mono text-muted-foreground">openclaw.config.yaml &middot; pre-tuned</div>
+        <div class="text-[11px] font-mono text-signal">managed &middot; read-only</div>
+      </div>
+<pre class="p-5 font-mono text-[12.5px] leading-relaxed overflow-x-auto" style="color:color-mix(in oklab,var(--foreground) 90%,transparent)"><span class="tok-c"># calibrated against live network traffic &mdash; do not hand-edit</span>
+<span class="tok-k">retrieval</span>: [<span class="tok-s">grep</span>, <span class="tok-s">key</span>, <span class="tok-s">semantic</span>, <span class="tok-s">evidence</span>, <span class="tok-s">compress</span>]
+<span class="tok-k">compress</span>:
+  <span class="tok-k">model</span>: <span class="tok-s">compress-v1</span>      <span class="tok-c"># managed, no key required</span>
+  <span class="tok-k">max_tokens</span>: <span class="tok-n">600</span>
+  <span class="tok-k">fidelity_floor</span>: <span class="tok-n">0.85</span>
+<span class="tok-k">evidence</span>:
+  <span class="tok-k">min_confidence</span>: <span class="tok-n">0.75</span>
+  <span class="tok-k">citation_density</span>: <span class="tok-s">balanced</span>
+<span class="tok-k">integrations</span>: <span class="tok-s">auto</span>      <span class="tok-c"># pre-wired to your harness</span></pre>
+    </div>
+  </div>
+</section>
+
+<!-- 03 — ONE-CLICK DEPLOY -->
+<section id="deploy" class="relative border-b hairline bg-graphite-2/60">
+  <div class="mx-auto max-w-7xl px-6 py-24">
+    <div class="ref-eyebrow text-[11px] font-mono uppercase tracking-[0.18em] text-muted-foreground" data-ref="03"><span class="ref-rule"></span>One-click deploy</div>
+    <h2 class="mt-5 font-display font-medium text-3xl md:text-5xl tracking-tight max-w-4xl leading-[1.05]">
+      From corpus to live endpoint <span class="text-gradient-signal">in one step.</span>
+    </h2>
+    <p class="mt-5 max-w-2xl text-[16px] leading-relaxed text-muted-foreground">
+      Point the managed harness at your knowledge directory and deploy. Provisioning, tuning, and binding happen behind one action; what you get back is a live endpoint your agents can query immediately.
+    </p>
+
+    <div class="mt-12 grid lg:grid-cols-2 gap-4 items-stretch">
+      <div class="reveal rounded-xl border hairline bg-graphite/40 p-8">
+        <div class="font-mono text-[11px] uppercase tracking-widest text-muted-foreground mb-6">Deploy &mdash; what happens on click</div>
+        <div class="deploy-step">
+          <div class="deploy-dot done">&check;</div>
+          <div class="font-display font-semibold text-[15px]">Provision OpenClaw</div>
+          <div class="text-[13px] text-muted-foreground mt-1">Dedicated managed harness spun up on MemRails infrastructure.</div>
+        </div>
+        <div class="deploy-step">
+          <div class="deploy-dot done">&check;</div>
+          <div class="font-display font-semibold text-[15px]">Index your corpus</div>
+          <div class="text-[13px] text-muted-foreground mt-1">Markdown knowledge directory scanned; keys and claims registered.</div>
+        </div>
+        <div class="deploy-step">
+          <div class="deploy-dot done">&check;</div>
+          <div class="font-display font-semibold text-[15px]">Apply pre-tuned config</div>
+          <div class="text-[13px] text-muted-foreground mt-1">Calibrated stack, Compress-v1 binding, evidence thresholds set.</div>
+        </div>
+        <div class="deploy-step">
+          <div class="deploy-dot"><span class="live-dot"></span></div>
+          <div class="font-display font-semibold text-[15px] text-signal">Endpoint live</div>
+          <div class="text-[13px] text-muted-foreground mt-1">Agents query immediately; the stream appears in Console.</div>
+        </div>
+      </div>
+
+      <div class="reveal rounded-xl border border-signal/40 bg-graphite shadow-card overflow-hidden flex flex-col">
+        <div class="flex items-center gap-2 px-4 h-10 border-b hairline bg-graphite-2">
+          <span class="console-dot" style="width:0.625rem;height:0.625rem;border-radius:50%;background:var(--evidence-bad)"></span>
+          <span class="console-dot" style="width:0.625rem;height:0.625rem;border-radius:50%;background:var(--evidence-warn)"></span>
+          <span class="console-dot" style="width:0.625rem;height:0.625rem;border-radius:50%;background:var(--evidence-good)"></span>
+          <span class="ml-3 text-[11px] font-mono text-muted-foreground">~/agent &mdash; memrails harness deploy</span>
+        </div>
+<pre class="p-5 text-[13px] leading-relaxed font-mono overflow-x-auto flex-grow" style="color:color-mix(in oklab,var(--foreground) 90%,transparent)">$ <span class="text-signal">memrails</span> harness deploy --managed
+  &#9678; provision openclaw      <span class="text-evidence-good">ok</span>   1.8s
+  &#9678; index knowledge/        <span class="text-evidence-good">ok</span>   412 keys
+  &#9678; apply pre-tuned config  <span class="text-evidence-good">ok</span>
+  &#9678; bind compress-v1        <span class="text-evidence-good">ok</span>
+  &#9678; wire integrations       <span class="text-evidence-good">ok</span>   9 runtimes
+
+  &#9671; endpoint  <span class="text-cyan">https://hx.memrails.dev/agent-7f3a</span>
+  &#9671; status    <span class="text-evidence-good">live</span> &middot; querying enabled
+</pre>
+        <div class="px-5 py-4 border-t hairline flex items-center justify-between text-[12px] font-mono text-muted-foreground">
+          <span class="inline-flex items-center gap-2"><span class="live-dot"></span>deploy &middot; 2.3s total</span>
+          <a href="/console" class="text-signal hover:underline">View in Console &rarr;</a>
+        </div>
+      </div>
+    </div>
+
+    <div class="mt-10">
+      <div class="text-[11px] font-mono uppercase tracking-widest text-muted-foreground mb-4">Pre-wired on the managed harness</div>
+      <div class="flex flex-wrap gap-2">
+        <span class="integ-chip prewired">Claude Code</span>
+        <span class="integ-chip prewired">OpenClaw</span>
+        <span class="integ-chip prewired">OpenCode</span>
+        <span class="integ-chip">Cursor</span>
+        <span class="integ-chip">Codex</span>
+        <span class="integ-chip">LangGraph</span>
+        <span class="integ-chip">CrewAI</span>
+        <span class="integ-chip">n8n</span>
+        <span class="integ-chip">MCP</span>
+      </div>
+    </div>
+  </div>
+</section>
+
+<!-- 04 — STILL A PROTOCOL -->
+<section id="protocol" class="relative border-b hairline">
+  <div class="mx-auto max-w-7xl px-6 py-24">
+    <div class="ref-eyebrow text-[11px] font-mono uppercase tracking-[0.18em] text-muted-foreground" data-ref="04"><span class="ref-rule"></span>Still a protocol</div>
+    <h2 class="mt-5 font-display font-medium text-3xl md:text-5xl tracking-tight max-w-4xl leading-[1.05]">
+      Managed convenience, <span class="text-gradient-signal">never managed lock-in.</span>
+    </h2>
+    <p class="mt-5 max-w-2xl text-[16px] leading-relaxed text-muted-foreground">
+      The premium tier buys you setup and tuning, not a cage. The harness writes to the same Markdown, the config is yours to read and keep, and you can eject to self-host the day it stops earning its place.
+    </p>
+
+    <div class="mt-12 grid md:grid-cols-2 gap-4">
+      <div class="reveal rounded-xl border hairline bg-graphite/40 p-7">
+        <div class="font-mono text-[11px] uppercase tracking-widest text-signal mb-3">01 &mdash; Same source of truth</div>
+        <h4 class="font-display font-semibold text-xl mb-2.5">Markdown underneath, always.</h4>
+        <p class="text-[14px] leading-relaxed text-muted-foreground">Managed or not, memory is plain Markdown with typed frontmatter, versioned in Git. The harness operates on it; it never becomes a proprietary store you can't read.</p>
+      </div>
+      <div class="reveal rounded-xl border hairline bg-graphite/40 p-7">
+        <div class="font-mono text-[11px] uppercase tracking-widest text-signal mb-3">02 &mdash; Your config exports</div>
+        <h4 class="font-display font-semibold text-xl mb-2.5">Take the tuning with you.</h4>
+        <p class="text-[14px] leading-relaxed text-muted-foreground">The pre-tuned configuration is yours to export. Eject to the open library and the same calibration carries over &mdash; you keep the weeks of tuning you didn't have to do.</p>
+      </div>
+      <div class="reveal rounded-xl border hairline bg-graphite/40 p-7">
+        <div class="font-mono text-[11px] uppercase tracking-widest text-signal mb-3">03 &mdash; One contract, both tiers</div>
+        <h4 class="font-display font-semibold text-xl mb-2.5">The packet doesn't change.</h4>
+        <p class="text-[14px] leading-relaxed text-muted-foreground">Self-host and managed emit the identical packet contract. Switching tiers never touches your agent code &mdash; the interface it depends on stays stable.</p>
+      </div>
+      <div class="reveal rounded-xl border hairline bg-graphite/40 p-7">
+        <div class="font-mono text-[11px] uppercase tracking-widest text-signal mb-3">04 &mdash; Aligned incentives</div>
+        <h4 class="font-display font-semibold text-xl mb-2.5">We keep you by being good.</h4>
+        <p class="text-[14px] leading-relaxed text-muted-foreground">Nothing of yours is trapped inside MemRails, so the only reason to stay managed is that the harness is genuinely better to run than the one you'd build. That's the deal.</p>
+      </div>
+    </div>
+  </div>
+</section>
+
+<!-- CTA -->
+<section id="cta" class="relative overflow-hidden border-b hairline">
+  <div class="absolute inset-0 grid-bg opacity-50 mask-radial-bottom"></div>
+  <div class="relative mx-auto max-w-7xl px-6 py-32 text-center">
+    <div class="flex justify-center text-[11px] font-mono uppercase tracking-[0.18em] text-muted-foreground">
+      <span class="flex items-center gap-2"><span class="w-1.5 h-1.5 rounded-full bg-signal shadow-signal"></span>Premium &middot; managed harness</span>
+    </div>
+    <h2 class="mt-6 font-display font-medium text-4xl md:text-6xl tracking-tight max-w-3xl mx-auto leading-[1.05]">
+      Scoped to your stack <span class="text-gradient-signal">before you sign.</span>
+    </h2>
+    <p class="mt-6 max-w-2xl mx-auto text-muted-foreground">
+      Bring your corpus, your runtimes, and your projected volume. We'll scope a managed OpenClaw deployment &mdash; pre-tuned config, deploy plan, and an SLA in writing. Or start free with the open library today.
+    </p>
+    <div class="mt-9 flex flex-wrap items-center justify-center gap-3">
+      <a href="#" class="inline-flex items-center gap-2 h-11 px-5 rounded-md bg-signal text-signal-foreground font-semibold text-sm shadow-signal hover:opacity-95 transition tracking-tight">Talk to sales &rarr;</a>
+      <a href="/#docs" class="inline-flex items-center gap-2 h-11 px-5 rounded-md border hairline text-sm font-medium hover:border-signal/60 hover:text-signal transition">Start with the open library</a>
+    </div>
+  </div>
+</section>

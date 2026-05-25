@@ -1,0 +1,11 @@
+node_modules
+.next
+out
+.env*.local
+.DS_Store
+data/logs/*.jsonl
+data/generated/*.json
+!data/logs/.gitkeep
+!data/generated/.gitkeep
+next-env.d.ts
+*.tsbuildinfo

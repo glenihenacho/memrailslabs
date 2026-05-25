@@ -1,0 +1,350 @@
+<!-- HERO -->
+<section class="relative overflow-hidden border-b hairline">
+  <div class="absolute inset-0 grid-bg opacity-60 mask-radial-center"></div>
+  <div class="relative mx-auto max-w-7xl px-6 pt-24 pb-20">
+    <div class="meta-bar text-[11px] font-mono uppercase tracking-[0.14em] text-muted-foreground">
+      <span><span class="text-signal mr-1.5">Status</span>Production</span>
+      <span><span class="text-signal mr-1.5">Released</span>2026.Q2</span>
+      <span><span class="text-signal mr-1.5">Layer</span>L5 · compression</span>
+      <span><span class="text-signal mr-1.5">Weights</span>Proprietary · MemRails-operated</span>
+    </div>
+
+    <h1 class="mt-9 font-display font-medium text-5xl md:text-7xl leading-[1.0] tracking-[-0.03em]">
+      MemRails <span class="text-gradient-signal">Compress</span><span class="font-mono text-muted-foreground" style="font-size:0.22em; vertical-align:0.9em; letter-spacing:0.06em;">v1</span>
+    </h1>
+
+    <p class="mt-7 max-w-2xl font-display text-2xl md:text-3xl text-foreground leading-snug tracking-tight">
+      The compression layer is the product.
+    </p>
+
+    <p class="mt-6 max-w-2xl text-[17px] leading-relaxed text-muted-foreground">
+      An 8-billion-parameter model fine-tuned on memory-shaped data, served from GPUs we own, behind a stable inference contract. It turns retrieved evidence into the packet your agent actually consumes — and it is the line on our infrastructure bill we are least willing to subcontract.
+    </p>
+
+    <div class="mt-9 flex flex-wrap items-center gap-3">
+      <a href="#card" class="inline-flex items-center gap-2 h-11 px-5 rounded-md bg-signal text-signal-foreground font-semibold text-sm shadow-signal hover:opacity-95 transition tracking-tight">Read the model card →</a>
+      <a href="#stack" class="inline-flex items-center gap-2 h-11 px-5 rounded-md border hairline text-sm font-medium hover:border-signal/60 hover:text-signal transition">See it in context</a>
+    </div>
+  </div>
+</section>
+
+<!-- 01 — WHERE L5 LIVES -->
+<section id="stack" class="relative border-b hairline bg-graphite-2/60">
+  <div class="mx-auto max-w-7xl px-6 py-24">
+    <div class="ref-eyebrow text-[11px] font-mono uppercase tracking-[0.18em] text-muted-foreground" data-ref="01"><span class="ref-rule"></span>Where L5 lives</div>
+    <h2 class="mt-5 font-display font-medium text-3xl md:text-5xl tracking-tight max-w-4xl leading-[1.05]">
+      Fifth in the stack. <span class="text-gradient-signal">First in value.</span>
+    </h2>
+
+    <div class="mt-12 grid lg:grid-cols-2 gap-14 items-center">
+      <div class="flex flex-col gap-2.5">
+        <div class="reveal layer-row grid grid-cols-[40px_1fr_auto] gap-4 items-center rounded-xl border hairline bg-graphite/40 px-5 py-4">
+          <span class="font-mono text-[12px] text-muted-foreground">L1</span>
+          <div><div class="text-[14px] font-medium">Literal scan</div><div class="font-mono text-[11px] text-muted-foreground mt-0.5">ripgrep over Markdown — cheap, exact</div></div>
+          <span class="font-mono text-[11px] text-muted-foreground uppercase tracking-wide">~5ms</span>
+        </div>
+        <div class="reveal layer-row grid grid-cols-[40px_1fr_auto] gap-4 items-center rounded-xl border hairline bg-graphite/40 px-5 py-4">
+          <span class="font-mono text-[12px] text-muted-foreground">L2</span>
+          <div><div class="text-[14px] font-medium">Key lookup</div><div class="font-mono text-[11px] text-muted-foreground mt-0.5">YAML frontmatter index — direct addressing</div></div>
+          <span class="font-mono text-[11px] text-muted-foreground uppercase tracking-wide">~10ms</span>
+        </div>
+        <div class="reveal layer-row grid grid-cols-[40px_1fr_auto] gap-4 items-center rounded-xl border hairline bg-graphite/40 px-5 py-4">
+          <span class="font-mono text-[12px] text-muted-foreground">L3</span>
+          <div><div class="text-[14px] font-medium">Semantic rank</div><div class="font-mono text-[11px] text-muted-foreground mt-0.5">Embedding + Qdrant + reranker</div></div>
+          <span class="font-mono text-[11px] text-muted-foreground uppercase tracking-wide">~250ms</span>
+        </div>
+        <div class="reveal layer-row grid grid-cols-[40px_1fr_auto] gap-4 items-center rounded-xl border hairline bg-graphite/40 px-5 py-4">
+          <span class="font-mono text-[12px] text-muted-foreground">L4</span>
+          <div><div class="text-[14px] font-medium">Evidence filter</div><div class="font-mono text-[11px] text-muted-foreground mt-0.5">Confidence threshold, citation checks</div></div>
+          <span class="font-mono text-[11px] text-muted-foreground uppercase tracking-wide">~40ms</span>
+        </div>
+        <div class="reveal layer-row featured relative overflow-hidden grid grid-cols-[40px_1fr_auto] gap-4 items-center rounded-xl border border-signal/50 bg-signal/5 px-5 py-4">
+          <span class="font-mono text-[12px] text-signal font-semibold">L5</span>
+          <div><div class="text-[14px] font-medium text-signal">Compression packet</div><div class="font-mono text-[11px] text-muted-foreground mt-0.5">Synthesis into agent-ready output</div></div>
+          <span class="font-mono text-[11px] text-signal uppercase tracking-wide">~400ms</span>
+        </div>
+      </div>
+
+      <div>
+        <h3 class="font-display font-semibold text-2xl md:text-3xl tracking-tight leading-tight">L1 through L4 narrow. <span class="text-gradient-signal">L5 synthesizes.</span></h3>
+        <p class="mt-5 text-[15px] leading-relaxed text-muted-foreground">
+          The first four layers do progressively more expensive work on a progressively smaller candidate set: a literal scan throws away most files, key lookup throws away most rows, semantic rank throws away most claims, evidence filtering throws away most candidates. What survives is <code class="text-signal bg-signal/5 px-1.5 py-0.5 rounded text-[0.9em]">~5–15</code> high-confidence pieces of evidence with citations, contradictions surfaced, confidence calibrated.
+        </p>
+        <p class="mt-4 text-[15px] leading-relaxed text-muted-foreground">
+          L5 is where that surviving material becomes something useful. Without L5, the agent receives a list of fragments and has to do its own synthesis — which means burning context window on raw evidence, re-deriving relevance, and producing inconsistent compressions across calls. With L5, the agent receives <span class="text-foreground">the packet</span>: a structured, deterministic compression with provenance preserved.
+        </p>
+        <p class="mt-4 text-[15px] leading-relaxed text-foreground">
+          The packet is the product. The model that produces it is ours.
+        </p>
+      </div>
+    </div>
+  </div>
+</section>
+
+<!-- 02 — THREE PROBLEMS -->
+<section id="why" class="relative border-b hairline">
+  <div class="mx-auto max-w-7xl px-6 py-24">
+    <div class="ref-eyebrow text-[11px] font-mono uppercase tracking-[0.18em] text-muted-foreground" data-ref="02"><span class="ref-rule"></span>Three problems with passthrough</div>
+    <h2 class="mt-5 font-display font-medium text-3xl md:text-5xl tracking-tight max-w-4xl leading-[1.05]">
+      Why we don't route your packets <span class="text-gradient-signal">through someone else.</span>
+    </h2>
+    <p class="mt-5 max-w-2xl text-[16px] leading-relaxed text-muted-foreground">
+      The obvious build would have been to take retrieved evidence and POST it to a frontier model for compression. We considered it. Three specific problems made it untenable for the long product — each independently disqualifying.
+    </p>
+
+    <div class="mt-12 grid md:grid-cols-3 gap-4">
+      <div class="reveal rounded-xl border hairline p-7 bg-graphite/40 flex flex-col hover:border-signal/50 transition">
+        <div class="font-display font-medium text-5xl text-signal/70 tracking-tight mb-5">01</div>
+        <h3 class="font-display font-semibold text-xl leading-tight mb-4">The model doesn't know the shape of memory.</h3>
+        <p class="text-[14px] leading-relaxed text-muted-foreground flex-grow">A general LLM trained on the open internet has no prior on claim/evidence/confidence frontmatter, no instinct for contradiction surfacing, no calibrated behavior around citation density. It compresses adequately and inconsistently. We needed a model that knows what a packet should be — and that means fine-tuning on packets.</p>
+        <div class="mt-6 pt-4 border-t border-dotted hairline font-mono text-[12px] text-muted-foreground leading-relaxed"><span class="text-signal font-medium">Result:</span> a 4–7 point quality gap on internal packet-fidelity evals against frontier passthrough.</div>
+      </div>
+      <div class="reveal rounded-xl border hairline p-7 bg-graphite/40 flex flex-col hover:border-signal/50 transition">
+        <div class="font-display font-medium text-5xl text-signal/70 tracking-tight mb-5">02</div>
+        <h3 class="font-display font-semibold text-xl leading-tight mb-4">Per-token bills compound badly.</h3>
+        <p class="text-[14px] leading-relaxed text-muted-foreground flex-grow">At 10K queries/month, passthrough costs almost nothing. At 1M queries/month, it becomes the structural margin problem — a per-call vendor bill that scales linearly with revenue and never amortizes. Owning the inference flips the curve: high fixed cost at low volume, near-zero marginal cost at scale. The bigger we get, the cheaper each packet gets.</p>
+        <div class="mt-6 pt-4 border-t border-dotted hairline font-mono text-[12px] text-muted-foreground leading-relaxed"><span class="text-signal font-medium">Result:</span> passthrough margin caps at ~30–45%; owned inference reaches <span class="text-signal font-medium">~85%+</span> at Business scale.</div>
+      </div>
+      <div class="reveal rounded-xl border hairline p-7 bg-graphite/40 flex flex-col hover:border-signal/50 transition">
+        <div class="font-display font-medium text-5xl text-signal/70 tracking-tight mb-5">03</div>
+        <h3 class="font-display font-semibold text-xl leading-tight mb-4">The moat evaporates the day they ship an API.</h3>
+        <p class="text-[14px] leading-relaxed text-muted-foreground flex-grow">If the compression is a generic LLM call, any competitor can wire up the same endpoint and ship a packet that looks similar enough. The differentiation has to live inside the model — fine-tuned on data we collect, on tasks we define, with failure modes we own. A passthrough doesn't compound; a fine-tune does.</p>
+        <div class="mt-6 pt-4 border-t border-dotted hairline font-mono text-[12px] text-muted-foreground leading-relaxed"><span class="text-signal font-medium">Result:</span> every query MemRails serves is a training signal for the next checkpoint.</div>
+      </div>
+    </div>
+  </div>
+</section>
+
+<!-- BIG QUOTE -->
+<section class="relative border-b hairline overflow-hidden">
+  <div class="absolute inset-0 grid-bg opacity-40 mask-radial-center"></div>
+  <div class="relative mx-auto max-w-7xl px-6 py-28 md:py-36 text-center">
+    <blockquote class="mx-auto max-w-[22ch] font-display font-medium text-4xl md:text-6xl leading-[1.05] tracking-tight">
+      We <span class="text-gradient-signal">pay</span> for the GPUs so the packet <span class="text-gradient-signal">stays ours.</span>
+    </blockquote>
+    <div class="mt-8 font-mono text-[11px] uppercase tracking-[0.18em] text-muted-foreground">— On the largest line item</div>
+  </div>
+</section>
+
+<!-- 03 — MODEL CARD -->
+<section id="card" class="relative border-b hairline">
+  <div class="mx-auto max-w-7xl px-6 py-24">
+    <div class="ref-eyebrow text-[11px] font-mono uppercase tracking-[0.18em] text-muted-foreground" data-ref="03"><span class="ref-rule"></span>Model card</div>
+    <h2 class="mt-5 font-display font-medium text-3xl md:text-5xl tracking-tight max-w-4xl leading-[1.05]">
+      The specimen, <span class="text-gradient-signal">in detail.</span>
+    </h2>
+
+    <div class="reveal mt-12 rounded-xl border border-signal/40 bg-graphite/40 overflow-hidden shadow-card relative">
+      <div class="flex justify-between items-center gap-3 px-6 md:px-7 py-3.5 border-b border-signal/30 font-mono text-[11px] uppercase tracking-[0.12em] text-signal flex-wrap" style="background: color-mix(in oklab, var(--signal) 5%, transparent);">
+        <span class="inline-flex items-center gap-2"><span class="live-dot"></span>memrails-compress-v1.4.2 · live</span>
+        <span class="text-muted-foreground">Last fine-tune: 2026.05.18 · 03:14 UTC</span>
+      </div>
+
+      <div class="grid md:grid-cols-2 gap-x-14 gap-y-10 p-8 md:p-10">
+        <div>
+          <h4 class="font-mono text-[12px] uppercase tracking-[0.14em] text-signal mb-4">Architecture</h4>
+          <div class="grid grid-cols-[120px_1fr] gap-4 py-3 border-t hairline text-[14px]"><span class="font-mono text-[12px] text-muted-foreground">Base</span><span>Open-weights 8B decoder, transformer<span class="block font-mono text-[12px] text-muted-foreground mt-1.5 leading-relaxed">Selected for instruction-following + small-context efficiency</span></span></div>
+          <div class="grid grid-cols-[120px_1fr] gap-4 py-3 border-t border-dotted hairline text-[14px]"><span class="font-mono text-[12px] text-muted-foreground">Parameters</span><span><span class="font-mono text-signal font-medium">8.03B</span> · 32 layers · 32 heads</span></div>
+          <div class="grid grid-cols-[120px_1fr] gap-4 py-3 border-t border-dotted hairline text-[14px]"><span class="font-mono text-[12px] text-muted-foreground">Quantization</span><span>AWQ <span class="font-mono text-signal font-medium">4-bit</span> for inference · BF16 for training</span></div>
+          <div class="grid grid-cols-[120px_1fr] gap-4 py-3 border-t border-dotted hairline text-[14px]"><span class="font-mono text-[12px] text-muted-foreground">Context</span><span><span class="font-mono text-signal font-medium">32K</span> tokens · packet outputs typically <span class="font-mono text-signal font-medium">~500</span> tokens</span></div>
+          <div class="grid grid-cols-[120px_1fr] gap-4 py-3 border-t border-dotted hairline text-[14px]"><span class="font-mono text-[12px] text-muted-foreground">Fine-tune</span><span>LoRA → merged · DPO on quality-rated packets · weekly cadence</span></div>
+        </div>
+
+        <div>
+          <h4 class="font-mono text-[12px] uppercase tracking-[0.14em] text-signal mb-4">Training &amp; evaluation</h4>
+          <div class="grid grid-cols-[120px_1fr] gap-4 py-3 border-t hairline text-[14px]"><span class="font-mono text-[12px] text-muted-foreground">Corpus</span><span>MemRails query/packet pairs<span class="block font-mono text-[12px] text-muted-foreground mt-1.5 leading-relaxed">Live network traffic, anonymized, with quality signal from downstream agent outcomes</span></span></div>
+          <div class="grid grid-cols-[120px_1fr] gap-4 py-3 border-t border-dotted hairline text-[14px]"><span class="font-mono text-[12px] text-muted-foreground">Corpus size</span><span><span class="font-mono text-signal font-medium">~2.4M</span> pairs and growing · refreshed weekly</span></div>
+          <div class="grid grid-cols-[120px_1fr] gap-4 py-3 border-t border-dotted hairline text-[14px]"><span class="font-mono text-[12px] text-muted-foreground">Packet fidelity</span><span><span class="font-mono text-signal font-medium">0.87</span> · internal eval vs human-graded reference</span></div>
+          <div class="grid grid-cols-[120px_1fr] gap-4 py-3 border-t border-dotted hairline text-[14px]"><span class="font-mono text-[12px] text-muted-foreground">Citation acc.</span><span><span class="font-mono text-evidence-good font-medium">99.4%</span> · provenance preserved through compression</span></div>
+          <div class="grid grid-cols-[120px_1fr] gap-4 py-3 border-t border-dotted hairline text-[14px]"><span class="font-mono text-[12px] text-muted-foreground">Hallucination</span><span><span class="font-mono text-evidence-good font-medium">&lt;0.3%</span> · refuses to synthesize beyond evidence</span></div>
+        </div>
+
+        <div>
+          <h4 class="font-mono text-[12px] uppercase tracking-[0.14em] text-signal mb-4">Serving</h4>
+          <div class="grid grid-cols-[120px_1fr] gap-4 py-3 border-t hairline text-[14px]"><span class="font-mono text-[12px] text-muted-foreground">Primary</span><span>Hetzner GEX44 dedicated GPU · Helsinki · Falkenstein</span></div>
+          <div class="grid grid-cols-[120px_1fr] gap-4 py-3 border-t border-dotted hairline text-[14px]"><span class="font-mono text-[12px] text-muted-foreground">Burst</span><span>Modal · second-billed for spikes &amp; spillover</span></div>
+          <div class="grid grid-cols-[120px_1fr] gap-4 py-3 border-t border-dotted hairline text-[14px]"><span class="font-mono text-[12px] text-muted-foreground">Latency</span><span>p50 <span class="font-mono text-signal font-medium">280ms</span> · p95 <span class="font-mono text-signal font-medium">410ms</span> · p99 <span class="font-mono text-signal font-medium">680ms</span></span></div>
+          <div class="grid grid-cols-[120px_1fr] gap-4 py-3 border-t border-dotted hairline text-[14px]"><span class="font-mono text-[12px] text-muted-foreground">Availability</span><span><span class="font-mono text-evidence-good font-medium">99.94%</span> trailing 90d · target <span class="font-mono text-signal font-medium">99.9%</span></span></div>
+          <div class="grid grid-cols-[120px_1fr] gap-4 py-3 border-t border-dotted hairline text-[14px]"><span class="font-mono text-[12px] text-muted-foreground">Throughput</span><span><span class="font-mono text-signal font-medium">~140</span> packets/sec per GPU · linear horizontal scale</span></div>
+        </div>
+
+        <div>
+          <h4 class="font-mono text-[12px] uppercase tracking-[0.14em] text-signal mb-4">Governance</h4>
+          <div class="grid grid-cols-[120px_1fr] gap-4 py-3 border-t hairline text-[14px]"><span class="font-mono text-[12px] text-muted-foreground">Weights</span><span>Proprietary · not redistributed<span class="block font-mono text-[12px] text-muted-foreground mt-1.5 leading-relaxed">Inference contract is stable and public; weights stay on MemRails infrastructure</span></span></div>
+          <div class="grid grid-cols-[120px_1fr] gap-4 py-3 border-t border-dotted hairline text-[14px]"><span class="font-mono text-[12px] text-muted-foreground">Data policy</span><span>Customer data opt-out of training by default for paid tiers</span></div>
+          <div class="grid grid-cols-[120px_1fr] gap-4 py-3 border-t border-dotted hairline text-[14px]"><span class="font-mono text-[12px] text-muted-foreground">Versioning</span><span>Semantic · breaking changes announced 60 days ahead</span></div>
+          <div class="grid grid-cols-[120px_1fr] gap-4 py-3 border-t border-dotted hairline text-[14px]"><span class="font-mono text-[12px] text-muted-foreground">Eval pipeline</span><span>Continuous regression suite · canary deploys · rollback within <span class="font-mono text-signal font-medium">90s</span></span></div>
+          <div class="grid grid-cols-[120px_1fr] gap-4 py-3 border-t border-dotted hairline text-[14px]"><span class="font-mono text-[12px] text-muted-foreground">Audit</span><span>Every compression logged with input hash, output hash, version</span></div>
+        </div>
+      </div>
+    </div>
+  </div>
+</section>
+
+<!-- 04 — THE PACKET CONTRACT -->
+<section id="contract" class="relative border-b hairline bg-graphite-2/60">
+  <div class="mx-auto max-w-7xl px-6 py-24">
+    <div class="ref-eyebrow text-[11px] font-mono uppercase tracking-[0.18em] text-muted-foreground" data-ref="04"><span class="ref-rule"></span>The packet contract</div>
+    <h2 class="mt-5 font-display font-medium text-3xl md:text-5xl tracking-tight max-w-4xl leading-[1.05]">
+      What goes in. <span class="text-gradient-signal">What comes out.</span>
+    </h2>
+    <p class="mt-5 max-w-2xl text-[16px] leading-relaxed text-muted-foreground">
+      The interface is intentionally narrow and stable. We can rotate the underlying weights without breaking your agent. We can improve fidelity without changing the call. The contract is the part you depend on; everything else is ours to evolve.
+    </p>
+
+    <div class="mt-12 grid lg:grid-cols-[1fr_60px_1fr] gap-0 items-stretch">
+      <div class="reveal rounded-xl border hairline bg-graphite/40 overflow-hidden">
+        <div class="flex justify-between items-center px-5 py-3.5 border-b hairline bg-graphite-2/60 font-mono text-[11px] uppercase tracking-[0.12em] text-cyan">
+          <span>Input — Evidence bundle</span><span class="text-muted-foreground">from L4</span>
+        </div>
+<pre class="p-5 font-mono text-[12.5px] leading-relaxed overflow-x-auto" style="color:color-mix(in oklab,var(--foreground) 90%,transparent)"><span class="tok-k">{</span>
+  <span class="tok-k">"query"</span>: <span class="tok-s">"deployment risks for..."</span>,
+  <span class="tok-k">"candidates"</span>: [
+    <span class="tok-k">{</span>
+      <span class="tok-k">"claim_id"</span>: <span class="tok-s">"clm_8f3a"</span>,
+      <span class="tok-k">"text"</span>: <span class="tok-s">"..."</span>,
+      <span class="tok-k">"confidence"</span>: <span class="tok-n">0.91</span>,
+      <span class="tok-k">"evidence"</span>: [<span class="tok-c">/* ... */</span>],
+      <span class="tok-k">"contradicts"</span>: [<span class="tok-s">"clm_2a1c"</span>]
+    <span class="tok-k">}</span>,
+    <span class="tok-c">// 5–15 candidates typical</span>
+  ],
+  <span class="tok-k">"intent"</span>: <span class="tok-s">"summarize"</span>,
+  <span class="tok-k">"max_tokens"</span>: <span class="tok-n">600</span>
+<span class="tok-k">}</span></pre>
+      </div>
+
+      <div class="arrow-cell py-6 lg:py-0">
+        <svg viewBox="0 0 40 40" fill="none" aria-hidden="true">
+          <path d="M5 20 L30 20 M25 14 L35 20 L25 26" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"/>
+        </svg>
+      </div>
+
+      <div class="reveal rounded-xl border border-signal/40 bg-graphite/40 overflow-hidden">
+        <div class="flex justify-between items-center px-5 py-3.5 border-b hairline bg-graphite-2/60 font-mono text-[11px] uppercase tracking-[0.12em] text-signal">
+          <span>Output — Compressed packet</span><span class="text-muted-foreground">to agent</span>
+        </div>
+<pre class="p-5 font-mono text-[12.5px] leading-relaxed overflow-x-auto" style="color:color-mix(in oklab,var(--foreground) 90%,transparent)"><span class="tok-k">{</span>
+  <span class="tok-k">"packet"</span>: <span class="tok-s">"..."</span>,           <span class="tok-c">// the synthesis</span>
+  <span class="tok-k">"tokens"</span>: <span class="tok-n">487</span>,
+  <span class="tok-k">"provenance"</span>: [
+    <span class="tok-k">{</span>
+      <span class="tok-k">"claim_id"</span>: <span class="tok-s">"clm_8f3a"</span>,
+      <span class="tok-k">"weight"</span>: <span class="tok-n">0.42</span>,
+      <span class="tok-k">"spans"</span>: [[<span class="tok-n">12</span>,<span class="tok-n">87</span>],[<span class="tok-n">203</span>,<span class="tok-n">298</span>]]
+    <span class="tok-k">}</span>,
+    <span class="tok-c">// every claim that shaped the packet</span>
+  ],
+  <span class="tok-k">"confidence"</span>: <span class="tok-n">0.89</span>,
+  <span class="tok-k">"contradictions_surfaced"</span>: <span class="tok-n">1</span>,
+  <span class="tok-k">"model_version"</span>: <span class="tok-s">"compress-v1.4.2"</span>
+<span class="tok-k">}</span></pre>
+      </div>
+    </div>
+  </div>
+</section>
+
+<!-- 05 — ECONOMICS -->
+<section id="economics" class="relative border-b hairline">
+  <div class="mx-auto max-w-7xl px-6 py-24">
+    <div class="ref-eyebrow text-[11px] font-mono uppercase tracking-[0.18em] text-muted-foreground" data-ref="05"><span class="ref-rule"></span>The economics</div>
+    <h2 class="mt-5 font-display font-medium text-3xl md:text-5xl tracking-tight max-w-4xl leading-[1.05]">
+      A fixed-cost layer that gets <span class="text-gradient-signal">cheaper per packet at scale.</span>
+    </h2>
+    <p class="mt-5 max-w-2xl text-[16px] leading-relaxed text-muted-foreground">
+      A dedicated GPU costs the same whether it serves ten thousand packets a month or a million. Owning the inference means paying a fixed floor up front — and watching the per-packet cost collapse as volume arrives. This is exactly the cost-curve a passthrough vendor cannot match.
+    </p>
+
+    <div class="mt-12 grid md:grid-cols-3 gap-4">
+      <div class="reveal rounded-xl border hairline bg-graphite/40 p-7 relative">
+        <div class="font-mono text-[11px] uppercase tracking-widest text-muted-foreground mb-4">Starter scale</div>
+        <div class="font-display font-medium text-4xl tracking-tight">10K<span class="text-[0.42em] text-muted-foreground font-mono ml-1.5">packets/mo</span></div>
+        <div class="font-mono text-[12px] text-muted-foreground mt-1.5 mb-6">≈ <span class="text-signal">$0.00100</span> per packet</div>
+        <div class="flex flex-col gap-2 mb-6 font-mono text-[12.5px]">
+          <div class="flex justify-between text-signal"><span>L5 inference</span><span>~$10</span></div>
+          <div class="flex justify-between text-muted-foreground"><span>Rest of infra</span><span>~$70</span></div>
+          <div class="flex justify-between text-muted-foreground"><span>Total monthly</span><span>~$80</span></div>
+        </div>
+        <p class="pt-5 border-t border-dotted hairline text-[15px] text-muted-foreground leading-relaxed">The floor cost dominates. We absorb it because we're playing the long curve.</p>
+      </div>
+
+      <div class="reveal rounded-xl border hairline bg-graphite/40 p-7 relative">
+        <div class="font-mono text-[11px] uppercase tracking-widest text-muted-foreground mb-4">Team scale</div>
+        <div class="font-display font-medium text-4xl tracking-tight">100K<span class="text-[0.42em] text-muted-foreground font-mono ml-1.5">packets/mo</span></div>
+        <div class="font-mono text-[12px] text-muted-foreground mt-1.5 mb-6">≈ <span class="text-signal">$0.00400</span> per packet</div>
+        <div class="flex flex-col gap-2 mb-6 font-mono text-[12.5px]">
+          <div class="flex justify-between text-signal"><span>L5 inference</span><span>~$200</span></div>
+          <div class="flex justify-between text-muted-foreground"><span>Rest of infra</span><span>~$200</span></div>
+          <div class="flex justify-between text-muted-foreground"><span>Total monthly</span><span>~$400</span></div>
+        </div>
+        <p class="pt-5 border-t border-dotted hairline text-[15px] text-muted-foreground leading-relaxed">Inference and the rest of the stack reach parity here. The curve begins to bend.</p>
+      </div>
+
+      <div class="reveal rounded-xl border border-signal/40 p-7 relative" style="background: color-mix(in oklab, var(--signal) 5%, transparent);">
+        <div class="absolute top-4 right-4 font-mono text-[10px] uppercase tracking-widest text-signal">amortized</div>
+        <div class="font-mono text-[11px] uppercase tracking-widest text-muted-foreground mb-4">Business scale</div>
+        <div class="font-display font-medium text-4xl tracking-tight">1M<span class="text-[0.42em] text-muted-foreground font-mono ml-1.5">packets/mo</span></div>
+        <div class="font-mono text-[12px] text-muted-foreground mt-1.5 mb-6">≈ <span class="text-signal">$0.00250</span> per packet</div>
+        <div class="flex flex-col gap-2 mb-6 font-mono text-[12.5px]">
+          <div class="flex justify-between text-signal"><span>L5 inference</span><span>~$1,500</span></div>
+          <div class="flex justify-between text-muted-foreground"><span>Rest of infra</span><span>~$1,000</span></div>
+          <div class="flex justify-between text-muted-foreground"><span>Total monthly</span><span>~$2,500</span></div>
+        </div>
+        <p class="pt-5 border-t border-dotted border-signal/30 text-[15px] text-foreground leading-relaxed">GPU is now the largest single line and the lowest per-packet line. The moat compounds.</p>
+      </div>
+    </div>
+  </div>
+</section>
+
+<!-- 06 — THE FLYWHEEL -->
+<section id="moat" class="relative border-b hairline bg-graphite-2/60">
+  <div class="mx-auto max-w-7xl px-6 py-24">
+    <div class="ref-eyebrow text-[11px] font-mono uppercase tracking-[0.18em] text-muted-foreground" data-ref="06"><span class="ref-rule"></span>The flywheel</div>
+    <h2 class="mt-5 font-display font-medium text-3xl md:text-5xl tracking-tight max-w-4xl leading-[1.05]">
+      Why the moat <span class="text-gradient-signal">compounds.</span>
+    </h2>
+    <p class="mt-5 max-w-2xl text-[16px] leading-relaxed text-muted-foreground">
+      Owning the model is not the moat. <span class="text-foreground">Owning the model that gets better every week from the network's own traffic</span> is the moat. Every query is a training signal; every refactor is a quality label; every dispute is a hard negative. Compounding works in one direction.
+    </p>
+
+    <div class="mt-12 grid lg:grid-cols-2 gap-14 items-center">
+      <div class="fw-wrap">
+        <div class="fw-arc"><svg viewBox="0 0 100 100" preserveAspectRatio="none"><circle cx="50" cy="50" r="34"/></svg></div>
+        <div class="fw-node n1"><span class="step">01 — Serve</span>Packet shipped to agent</div>
+        <div class="fw-node n2"><span class="step">02 — Signal</span>Agent outcome graded</div>
+        <div class="fw-node n3"><span class="step">03 — Refine</span>Quality pairs accumulated</div>
+        <div class="fw-node n4"><span class="step">04 — Ship</span>Weekly checkpoint fine-tuned</div>
+        <div class="fw-center">MemRails-<br>Compress-v1</div>
+      </div>
+
+      <div>
+        <h3 class="font-display font-semibold text-xl md:text-2xl tracking-tight">Compounding in one direction</h3>
+        <p class="mt-3 text-[15px] leading-relaxed text-muted-foreground">A passthrough vendor sees your traffic but has no incentive to optimize for your task. A fine-tune that uses your traffic improves at your task every cycle. The same data flow that pays our infrastructure bill also trains the next checkpoint.</p>
+        <h3 class="mt-8 font-display font-semibold text-xl md:text-2xl tracking-tight">Weekly cadence, observable rollouts</h3>
+        <p class="mt-3 text-[15px] leading-relaxed text-muted-foreground">A new checkpoint ships every Monday after passing the regression suite. Canary deploys for 24 hours; rollback window 90 seconds; eval scores published in the changelog. You can audit which version produced any packet by its <code class="text-signal bg-signal/5 px-1.5 py-0.5 rounded text-[0.9em]">model_version</code> field.</p>
+        <h3 class="mt-8 font-display font-semibold text-xl md:text-2xl tracking-tight">The asymmetry</h3>
+        <p class="mt-3 text-[15px] leading-relaxed text-muted-foreground">A competitor copying the API can match the contract. They cannot match the corpus. Two and a half million graded query/packet pairs accrued over twelve months is not a weekend project — and ours grows weekly. <span class="text-foreground">Time is on the model's side.</span></p>
+      </div>
+    </div>
+  </div>
+</section>
+
+<!-- CTA -->
+<section id="cta" class="relative overflow-hidden border-b hairline">
+  <div class="absolute inset-0 grid-bg opacity-50 mask-radial-bottom"></div>
+  <div class="relative mx-auto max-w-7xl px-6 py-32 text-center">
+    <div class="flex justify-center text-[11px] font-mono uppercase tracking-[0.18em] text-muted-foreground">
+      <span class="flex items-center gap-2"><span class="w-1.5 h-1.5 rounded-full bg-signal shadow-signal"></span>07 / Ready</span>
+    </div>
+    <h2 class="mt-6 font-display font-medium text-4xl md:text-6xl tracking-tight max-w-3xl mx-auto leading-[1.05]">
+      The packet is the product. <span class="text-gradient-signal">Try one.</span>
+    </h2>
+    <p class="mt-6 max-w-2xl mx-auto text-muted-foreground">
+      Request access to the inference endpoint, or read the full model card. Either way, the contract on this page is the one you'll be calling.
+    </p>
+    <div class="mt-9 flex flex-wrap items-center justify-center gap-3">
+      <a href="#" class="inline-flex items-center gap-2 h-11 px-5 rounded-md bg-signal text-signal-foreground font-semibold text-sm shadow-signal hover:opacity-95 transition tracking-tight">Request access →</a>
+      <a href="#card" class="inline-flex items-center gap-2 h-11 px-5 rounded-md border hairline text-sm font-medium hover:border-signal/60 hover:text-signal transition">Re-read the model card</a>
+    </div>
+  </div>
+</section>

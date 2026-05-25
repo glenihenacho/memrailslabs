@@ -1,0 +1,400 @@
+<!-- HERO -->
+<section class="relative overflow-hidden border-b hairline">
+  <div class="absolute inset-0 grid-bg opacity-60 mask-radial-center"></div>
+  <div class="relative mx-auto max-w-7xl px-6 pt-24 pb-20">
+    <div class="meta-bar text-[11px] font-mono uppercase tracking-[0.14em] text-muted-foreground">
+      <span><span class="text-signal mr-1.5">Surface</span>Web · Observability</span>
+      <span><span class="text-signal mr-1.5">Scope</span>Read-only by default</span>
+      <span><span class="text-signal mr-1.5">Retention</span>Logs export as JSONL</span>
+    </div>
+
+    <h1 class="mt-9 font-display font-medium text-5xl md:text-7xl leading-[1.0] tracking-[-0.03em] max-w-4xl">
+      See every packet your <span class="text-gradient-signal">agents pulled.</span>
+    </h1>
+
+    <p class="mt-7 max-w-2xl text-[17px] leading-relaxed text-muted-foreground">
+      Console is the window into the memory layer. Every query that crosses L1–L5, every packet your agents consumed, every refactor that changed a claim — logged, inspectable, and reconcilable against your bill. The protocol promises auditability; this is where you exercise it.
+    </p>
+
+    <div class="mt-9 flex flex-wrap items-center gap-3">
+      <a href="#stream" class="inline-flex items-center gap-2 h-11 px-5 rounded-md bg-signal text-signal-foreground font-semibold text-sm shadow-signal hover:opacity-95 transition tracking-tight">Tour the console →</a>
+      <a href="#audit" class="inline-flex items-center gap-2 h-11 px-5 rounded-md border hairline text-sm font-medium hover:border-signal/60 hover:text-signal transition">Jump to audit &amp; compliance</a>
+    </div>
+  </div>
+</section>
+
+<!-- 01 — QUERY STREAM -->
+<section id="stream" class="relative border-b hairline bg-graphite-2/60">
+  <div class="mx-auto max-w-7xl px-6 py-24">
+    <div class="ref-eyebrow text-[11px] font-mono uppercase tracking-[0.18em] text-muted-foreground" data-ref="01"><span class="ref-rule"></span>The query stream</div>
+    <h2 class="mt-5 font-display font-medium text-3xl md:text-5xl tracking-tight max-w-4xl leading-[1.05]">
+      Every query, and the layer that <span class="text-gradient-signal">resolved it.</span>
+    </h2>
+    <p class="mt-5 max-w-2xl text-[16px] leading-relaxed text-muted-foreground">
+      The stream is the front page of Console. Each row is one query through the retrieval stack — which layer answered, how long it took, how many tokens the packet cost, and the exact model version that produced it. Most queries never reach L5; the stream makes that visible at a glance.
+    </p>
+
+    <div class="reveal mt-12 console-window">
+      <div class="console-titlebar">
+        <span class="console-dot" style="background:var(--evidence-bad)"></span>
+        <span class="console-dot" style="background:var(--evidence-warn)"></span>
+        <span class="console-dot" style="background:var(--evidence-good)"></span>
+        <span class="ml-3 font-mono text-[11px] text-muted-foreground">console.memrails.dev — query stream</span>
+        <span class="ml-auto inline-flex items-center gap-2 font-mono text-[10px] uppercase tracking-[0.12em] text-muted-foreground"><span class="live-dot"></span>live · 1,000,000 / mo</span>
+      </div>
+      <div class="console-tabbar">
+        <div class="console-tab active">Stream</div>
+        <div class="console-tab">Inspector</div>
+        <div class="console-tab">Refactors</div>
+        <div class="console-tab">Audit</div>
+        <div class="console-tab">Evals</div>
+      </div>
+      <div class="qs-row qs-head">
+        <span>Time</span><span>Query</span><span>Layer</span><span class="qs-hide-sm">Latency</span><span class="qs-hide-sm">Tokens</span><span class="qs-hide-sm">Conf.</span>
+      </div>
+      <div class="qs-row">
+        <span class="text-muted-foreground">14:02:11</span>
+        <span class="qs-q">how do we handle auth token refresh?</span>
+        <span><span class="layer-chip layer-L1">L1</span></span>
+        <span class="qs-hide-sm text-muted-foreground">4ms</span>
+        <span class="qs-hide-sm text-muted-foreground">—</span>
+        <span class="qs-hide-sm text-muted-foreground">—</span>
+      </div>
+      <div class="qs-row">
+        <span class="text-muted-foreground">14:02:09</span>
+        <span class="qs-q">kv-cache eviction policy</span>
+        <span><span class="layer-chip layer-L2">L2</span></span>
+        <span class="qs-hide-sm text-muted-foreground">9ms</span>
+        <span class="qs-hide-sm text-muted-foreground">—</span>
+        <span class="qs-hide-sm text-muted-foreground">—</span>
+      </div>
+      <div class="qs-row featured">
+        <span class="text-signal">14:02:04</span>
+        <span class="qs-q">deployment risks for the new ranking model</span>
+        <span><span class="layer-chip layer-L5">L5</span></span>
+        <span class="qs-hide-sm text-signal">410ms</span>
+        <span class="qs-hide-sm text-signal">487</span>
+        <span class="qs-hide-sm text-evidence-good">0.89</span>
+      </div>
+      <div class="qs-row">
+        <span class="text-muted-foreground">14:01:58</span>
+        <span class="qs-q">which embedding model is canonical now?</span>
+        <span><span class="layer-chip layer-L3">L3</span></span>
+        <span class="qs-hide-sm text-muted-foreground">240ms</span>
+        <span class="qs-hide-sm text-muted-foreground">—</span>
+        <span class="qs-hide-sm text-muted-foreground">—</span>
+      </div>
+      <div class="qs-row">
+        <span class="text-muted-foreground">14:01:52</span>
+        <span class="qs-q">contradictions on retry-backoff strategy</span>
+        <span><span class="layer-chip layer-L4">L4</span></span>
+        <span class="qs-hide-sm text-muted-foreground">38ms</span>
+        <span class="qs-hide-sm text-muted-foreground">—</span>
+        <span class="qs-hide-sm text-muted-foreground">—</span>
+      </div>
+      <div class="qs-row">
+        <span class="text-muted-foreground">14:01:47</span>
+        <span class="qs-q">summarize what we know about rate limits</span>
+        <span><span class="layer-chip layer-L5">L5</span></span>
+        <span class="qs-hide-sm text-muted-foreground">392ms</span>
+        <span class="qs-hide-sm text-muted-foreground">503</span>
+        <span class="qs-hide-sm text-evidence-good">0.91</span>
+      </div>
+      <div class="qs-row">
+        <span class="text-muted-foreground">14:01:39</span>
+        <span class="qs-q">find the on-call escalation path</span>
+        <span><span class="layer-chip layer-L1">L1</span></span>
+        <span class="qs-hide-sm text-muted-foreground">3ms</span>
+        <span class="qs-hide-sm text-muted-foreground">—</span>
+        <span class="qs-hide-sm text-muted-foreground">—</span>
+      </div>
+    </div>
+
+    <div class="mt-4 grid sm:grid-cols-3 gap-4">
+      <div class="reveal rounded-xl border hairline bg-graphite/40 p-5">
+        <div class="font-mono text-[10px] uppercase tracking-widest text-muted-foreground mb-2">Resolved below L5</div>
+        <div class="font-display font-medium text-3xl tracking-tight">82<span class="text-[0.4em] text-muted-foreground font-mono ml-1">%</span></div>
+        <p class="mt-2 text-[13px] text-muted-foreground leading-relaxed">Most queries never need the model. Cheap filters answer first.</p>
+      </div>
+      <div class="reveal rounded-xl border hairline bg-graphite/40 p-5">
+        <div class="font-mono text-[10px] uppercase tracking-widest text-muted-foreground mb-2">Median packet</div>
+        <div class="font-display font-medium text-3xl tracking-tight">487<span class="text-[0.4em] text-muted-foreground font-mono ml-1">tok</span></div>
+        <p class="mt-2 text-[13px] text-muted-foreground leading-relaxed">What an L5 synthesis actually costs your agent's context.</p>
+      </div>
+      <div class="reveal rounded-xl border hairline bg-graphite/40 p-5">
+        <div class="font-mono text-[10px] uppercase tracking-widest text-muted-foreground mb-2">p95 latency</div>
+        <div class="font-display font-medium text-3xl tracking-tight">410<span class="text-[0.4em] text-muted-foreground font-mono ml-1">ms</span></div>
+        <p class="mt-2 text-[13px] text-muted-foreground leading-relaxed">Across the whole stack, end to end, including compression.</p>
+      </div>
+    </div>
+  </div>
+</section>
+
+<!-- 02 — PACKET INSPECTOR -->
+<section id="inspector" class="relative border-b hairline">
+  <div class="mx-auto max-w-7xl px-6 py-24">
+    <div class="ref-eyebrow text-[11px] font-mono uppercase tracking-[0.18em] text-muted-foreground" data-ref="02"><span class="ref-rule"></span>Packet inspector</div>
+    <h2 class="mt-5 font-display font-medium text-3xl md:text-5xl tracking-tight max-w-4xl leading-[1.05]">
+      Open any packet. <span class="text-gradient-signal">Trace every claim.</span>
+    </h2>
+    <p class="mt-5 max-w-2xl text-[16px] leading-relaxed text-muted-foreground">
+      Click a row and Console reconstructs the packet end to end: the evidence bundle that went in, the synthesis that came out, and a provenance map showing exactly which claims shaped which spans of the answer. Nothing is a black box.
+    </p>
+
+    <div class="reveal mt-12 grid lg:grid-cols-[1fr_1fr] gap-4">
+      <div class="rounded-xl border hairline bg-graphite/40 overflow-hidden">
+        <div class="flex justify-between items-center px-5 py-3.5 border-b hairline bg-graphite-2/60 font-mono text-[11px] uppercase tracking-[0.12em] text-cyan">
+          <span>Input — Evidence bundle</span><span class="text-muted-foreground">from L4</span>
+        </div>
+<pre class="p-5 font-mono text-[12.5px] leading-relaxed overflow-x-auto" style="color:color-mix(in oklab,var(--foreground) 90%,transparent)"><span class="tok-k">{</span>
+  <span class="tok-k">"query"</span>: <span class="tok-s">"deployment risks for..."</span>,
+  <span class="tok-k">"candidates"</span>: [
+    <span class="tok-k">{</span> <span class="tok-k">"claim_id"</span>: <span class="tok-s">"clm_8f3a"</span>, <span class="tok-k">"confidence"</span>: <span class="tok-n">0.91</span> <span class="tok-k">}</span>,
+    <span class="tok-k">{</span> <span class="tok-k">"claim_id"</span>: <span class="tok-s">"clm_2a1c"</span>, <span class="tok-k">"confidence"</span>: <span class="tok-n">0.74</span> <span class="tok-k">}</span>,
+    <span class="tok-c">// 7 candidates survived L4</span>
+  ],
+  <span class="tok-k">"intent"</span>: <span class="tok-s">"summarize"</span>,
+  <span class="tok-k">"max_tokens"</span>: <span class="tok-n">600</span>
+<span class="tok-k">}</span></pre>
+      </div>
+      <div class="rounded-xl border border-signal/40 bg-graphite/40 overflow-hidden">
+        <div class="flex justify-between items-center px-5 py-3.5 border-b hairline bg-graphite-2/60 font-mono text-[11px] uppercase tracking-[0.12em] text-signal">
+          <span>Output — Compressed packet</span><span class="text-muted-foreground">compress-v1.4.2</span>
+        </div>
+<pre class="p-5 font-mono text-[12.5px] leading-relaxed overflow-x-auto" style="color:color-mix(in oklab,var(--foreground) 90%,transparent)"><span class="tok-k">{</span>
+  <span class="tok-k">"packet"</span>: <span class="tok-s">"..."</span>,
+  <span class="tok-k">"tokens"</span>: <span class="tok-n">487</span>,
+  <span class="tok-k">"confidence"</span>: <span class="tok-n">0.89</span>,
+  <span class="tok-k">"contradictions_surfaced"</span>: <span class="tok-n">1</span>,
+  <span class="tok-k">"input_hash"</span>: <span class="tok-s">"sha256:9c1f…"</span>,
+  <span class="tok-k">"output_hash"</span>: <span class="tok-s">"sha256:4be0…"</span>
+<span class="tok-k">}</span></pre>
+      </div>
+    </div>
+
+    <div class="reveal mt-4 rounded-xl border hairline bg-graphite/40 p-6 md:p-7">
+      <div class="font-mono text-[11px] uppercase tracking-[0.12em] text-signal mb-5">Provenance — which claim shaped which span</div>
+      <div class="flex flex-col gap-4">
+        <div class="grid grid-cols-[120px_1fr_52px] gap-4 items-center">
+          <span class="font-mono text-[12px] text-muted-foreground">clm_8f3a</span>
+          <div class="prov-bar"><div class="prov-fill" style="left:4%; width:42%"></div></div>
+          <span class="font-mono text-[12px] text-signal text-right">0.42</span>
+        </div>
+        <div class="grid grid-cols-[120px_1fr_52px] gap-4 items-center">
+          <span class="font-mono text-[12px] text-muted-foreground">clm_2a1c</span>
+          <div class="prov-bar"><div class="prov-fill" style="left:50%; width:28%"></div></div>
+          <span class="font-mono text-[12px] text-signal text-right">0.28</span>
+        </div>
+        <div class="grid grid-cols-[120px_1fr_52px] gap-4 items-center">
+          <span class="font-mono text-[12px] text-muted-foreground">clm_5d77</span>
+          <div class="prov-bar"><div class="prov-fill" style="left:62%; width:19%"></div></div>
+          <span class="font-mono text-[12px] text-signal text-right">0.19</span>
+        </div>
+      </div>
+      <p class="mt-6 pt-5 border-t border-dotted hairline text-[14px] text-muted-foreground leading-relaxed">Every span of the synthesis links back to a source claim with a weight. If an agent acted on a packet, you can see precisely what evidence drove it — and challenge it.</p>
+    </div>
+  </div>
+</section>
+
+<!-- 03 — REFACTOR DIFFS -->
+<section id="refactors" class="relative border-b hairline bg-graphite-2/60">
+  <div class="mx-auto max-w-7xl px-6 py-24">
+    <div class="ref-eyebrow text-[11px] font-mono uppercase tracking-[0.18em] text-muted-foreground" data-ref="03"><span class="ref-rule"></span>Refactor activity</div>
+    <h2 class="mt-5 font-display font-medium text-3xl md:text-5xl tracking-tight max-w-4xl leading-[1.05]">
+      Watch the memory <span class="text-gradient-signal">improve itself.</span>
+    </h2>
+    <p class="mt-5 max-w-2xl text-[16px] leading-relaxed text-muted-foreground">
+      Memory maintenance is software maintenance. Console shows the refactor feed — each diff that changed a claim, the evidence behind it, the validators who reviewed it, and the stake and payout that settled the market.
+    </p>
+
+    <div class="mt-12 grid lg:grid-cols-2 gap-4">
+      <div class="reveal rounded-xl border hairline bg-graphite/40 overflow-hidden shadow-card">
+        <div class="flex items-center justify-between px-4 h-10 border-b hairline bg-graphite-2">
+          <div class="text-[11px] font-mono text-muted-foreground">refactor/kv-cache · diff</div>
+          <div class="text-[11px] font-mono text-signal">+ stake 12 · validator ✓</div>
+        </div>
+<pre class="p-5 text-[12.5px] leading-relaxed font-mono overflow-x-auto"><span class="text-evidence-bad">- confidence: 0.72</span>
+<span class="text-evidence-good">+ confidence: 0.86</span>
+<span class="text-evidence-bad">- evidence: source-a</span>
+<span class="text-evidence-good">+ evidence: source-a, source-b</span>
+<span class="text-muted-foreground">  contradictions: []</span>
+<span class="text-evidence-good">+ refactor_notes: |</span>
+<span class="text-evidence-good">+   Added second independent source.</span>
+<span class="text-evidence-good">+   Promoted confidence after review.</span></pre>
+        <div class="px-5 py-4 border-t hairline flex items-center justify-between text-[12px] font-mono text-muted-foreground">
+          <span>review · 2 validators · 1 dissent resolved</span>
+          <span class="text-signal">accepted</span>
+        </div>
+      </div>
+
+      <div class="reveal rounded-xl border hairline overflow-hidden">
+        <div class="grid grid-cols-12 text-[11px] font-mono uppercase tracking-widest text-muted-foreground bg-graphite-2/60 px-5 py-3">
+          <div class="col-span-5">Trigger</div>
+          <div class="col-span-5">Action</div>
+          <div class="col-span-2 text-right">Status</div>
+        </div>
+        <div class="grid grid-cols-12 px-5 py-4 text-[13px] items-center border-b hairline">
+          <div class="col-span-5" style="color:color-mix(in oklab,var(--foreground) 90%,transparent)">New trusted evidence</div>
+          <div class="col-span-5 text-muted-foreground">Upgrade claim, link source</div>
+          <div class="col-span-2 text-right font-mono text-evidence-good">✓</div>
+        </div>
+        <div class="grid grid-cols-12 px-5 py-4 text-[13px] items-center border-b hairline">
+          <div class="col-span-5" style="color:color-mix(in oklab,var(--foreground) 90%,transparent)">Sources disagree</div>
+          <div class="col-span-5 text-muted-foreground">Add contradiction, demote</div>
+          <div class="col-span-2 text-right font-mono text-evidence-good">✓</div>
+        </div>
+        <div class="grid grid-cols-12 px-5 py-4 text-[13px] items-center border-b hairline">
+          <div class="col-span-5" style="color:color-mix(in oklab,var(--foreground) 90%,transparent)">Topic too large</div>
+          <div class="col-span-5 text-muted-foreground">Split file, preserve links</div>
+          <div class="col-span-2 text-right font-mono text-evidence-warn">review</div>
+        </div>
+        <div class="grid grid-cols-12 px-5 py-4 text-[13px] items-center border-b hairline">
+          <div class="col-span-5" style="color:color-mix(in oklab,var(--foreground) 90%,transparent)">Stale claim</div>
+          <div class="col-span-5 text-muted-foreground">Downgrade confidence</div>
+          <div class="col-span-2 text-right font-mono text-evidence-good">✓</div>
+        </div>
+        <div class="grid grid-cols-12 px-5 py-4 text-[13px] items-center">
+          <div class="col-span-5" style="color:color-mix(in oklab,var(--foreground) 90%,transparent)">Unsourced diff</div>
+          <div class="col-span-5 text-muted-foreground">Reject, slash stake</div>
+          <div class="col-span-2 text-right font-mono text-evidence-bad">✗</div>
+        </div>
+      </div>
+    </div>
+  </div>
+</section>
+
+<!-- 04 — AUDIT & COMPLIANCE -->
+<section id="audit" class="relative border-b hairline">
+  <div class="mx-auto max-w-7xl px-6 py-24">
+    <div class="ref-eyebrow text-[11px] font-mono uppercase tracking-[0.18em] text-muted-foreground" data-ref="04"><span class="ref-rule"></span>Audit &amp; compliance</div>
+    <h2 class="mt-5 font-display font-medium text-3xl md:text-5xl tracking-tight max-w-4xl leading-[1.05]">
+      Reconcile the invoice <span class="text-gradient-signal">line by line.</span>
+    </h2>
+    <p class="mt-5 max-w-2xl text-[16px] leading-relaxed text-muted-foreground">
+      Every compression is logged with an input hash, an output hash, and the model version that produced it. Finance can match our metered total against their own telemetry; security can replay any decision an agent made. Export the whole ledger as JSONL whenever you want.
+    </p>
+
+    <div class="mt-12 grid md:grid-cols-3 gap-4">
+      <div class="reveal rounded-xl border hairline p-7 bg-graphite/40 flex flex-col">
+        <div class="font-mono text-[11px] uppercase tracking-widest text-signal mb-3">Immutable log</div>
+        <h3 class="font-display font-semibold text-xl leading-tight mb-3">Hashed in, hashed out.</h3>
+        <p class="text-[14px] leading-relaxed text-muted-foreground flex-grow">Each packet carries the SHA-256 of its input bundle and its output. Tampering is detectable; replays are exact.</p>
+        <div class="mt-6 pt-4 border-t border-dotted hairline font-mono text-[11px] text-muted-foreground leading-relaxed">input_hash · output_hash · model_version</div>
+      </div>
+      <div class="reveal rounded-xl border hairline p-7 bg-graphite/40 flex flex-col">
+        <div class="font-mono text-[11px] uppercase tracking-widest text-signal mb-3">Billing reconciliation</div>
+        <h3 class="font-display font-semibold text-xl leading-tight mb-3">Our number, your number.</h3>
+        <p class="text-[14px] leading-relaxed text-muted-foreground flex-grow">Console totals packets and tokens the same way the invoice does. The calculator on Pricing and the ledger here agree to the cent.</p>
+        <div class="mt-6 pt-4 border-t border-dotted hairline font-mono text-[11px] text-muted-foreground leading-relaxed">packets × orchestration + tokens × rate</div>
+      </div>
+      <div class="reveal rounded-xl border hairline p-7 bg-graphite/40 flex flex-col">
+        <div class="font-mono text-[11px] uppercase tracking-widest text-signal mb-3">Export &amp; exit</div>
+        <h3 class="font-display font-semibold text-xl leading-tight mb-3">Nothing locked inside.</h3>
+        <p class="text-[14px] leading-relaxed text-muted-foreground flex-grow">Usage and settlement logs export as JSONL in one operation. Memory is Markdown and Git already; the audit trail leaves with you too.</p>
+        <div class="mt-6 pt-4 border-t border-dotted hairline font-mono text-[11px] text-muted-foreground leading-relaxed">GET /v1/audit/export → logs.jsonl</div>
+      </div>
+    </div>
+
+    <div class="reveal mt-4 rounded-xl border hairline bg-graphite/40 overflow-hidden">
+      <div class="flex items-center justify-between px-4 h-10 border-b hairline bg-graphite-2">
+        <div class="text-[11px] font-mono text-muted-foreground">audit/2026-05 · ledger</div>
+        <div class="text-[11px] font-mono text-evidence-good">● verified · 0 gaps</div>
+      </div>
+<pre class="p-5 font-mono text-[12px] leading-relaxed overflow-x-auto" style="color:color-mix(in oklab,var(--foreground) 90%,transparent)"><span class="tok-c">{"ts":"2026-05-22T14:02:04Z","packet":"pkt_8f3a","in":"sha256:9c1f…","out":"sha256:4be0…","ver":"compress-v1.4.2","tokens":487,"billed":0.0005}</span>
+<span class="tok-c">{"ts":"2026-05-22T14:01:47Z","packet":"pkt_2a1c","in":"sha256:1d77…","out":"sha256:ae42…","ver":"compress-v1.4.2","tokens":503,"billed":0.0005}</span></pre>
+    </div>
+  </div>
+</section>
+
+<!-- 05 — EVAL & DRIFT -->
+<section id="evals" class="relative border-b hairline bg-graphite-2/60">
+  <div class="mx-auto max-w-7xl px-6 py-24">
+    <div class="ref-eyebrow text-[11px] font-mono uppercase tracking-[0.18em] text-muted-foreground" data-ref="05"><span class="ref-rule"></span>Evals &amp; drift</div>
+    <h2 class="mt-5 font-display font-medium text-3xl md:text-5xl tracking-tight max-w-4xl leading-[1.05]">
+      Quality is <span class="text-gradient-signal">measured,</span> not asserted.
+    </h2>
+    <p class="mt-5 max-w-2xl text-[16px] leading-relaxed text-muted-foreground">
+      Console surfaces the same metrics the benchmark suite tracks — density, evidence precision, contradiction survival, and drift. When a new Compress checkpoint ships each Monday, the eval scores land here first, with the canary window and rollback state in view.
+    </p>
+
+    <div class="mt-12 grid sm:grid-cols-2 lg:grid-cols-3 gap-4">
+      <div class="reveal rounded-xl border hairline bg-graphite/40 p-6 flex items-center gap-5">
+        <svg width="72" height="72" viewBox="0 0 72 72" class="shrink-0">
+          <circle class="gauge-track" cx="36" cy="36" r="30" fill="none" stroke-width="6"/>
+          <circle class="gauge-fill" cx="36" cy="36" r="30" fill="none" stroke-width="6" stroke-dasharray="188.5" stroke-dashoffset="35" transform="rotate(-90 36 36)"/>
+        </svg>
+        <div>
+          <div class="font-mono text-[11px] text-signal">M01 · Density</div>
+          <div class="font-display font-medium text-2xl tracking-tight mt-0.5">0.81</div>
+          <p class="text-[12px] text-muted-foreground mt-1 leading-snug">Tokens avoided per task</p>
+        </div>
+      </div>
+      <div class="reveal rounded-xl border hairline bg-graphite/40 p-6 flex items-center gap-5">
+        <svg width="72" height="72" viewBox="0 0 72 72" class="shrink-0">
+          <circle class="gauge-track" cx="36" cy="36" r="30" fill="none" stroke-width="6"/>
+          <circle class="gauge-fill" cx="36" cy="36" r="30" fill="none" stroke-width="6" stroke-dasharray="188.5" stroke-dashoffset="11" transform="rotate(-90 36 36)"/>
+        </svg>
+        <div>
+          <div class="font-mono text-[11px] text-signal">M02 · Evidence</div>
+          <div class="font-display font-medium text-2xl tracking-tight mt-0.5">0.94</div>
+          <p class="text-[12px] text-muted-foreground mt-1 leading-snug">Claims that are source-backed</p>
+        </div>
+      </div>
+      <div class="reveal rounded-xl border hairline bg-graphite/40 p-6 flex items-center gap-5">
+        <svg width="72" height="72" viewBox="0 0 72 72" class="shrink-0">
+          <circle class="gauge-track" cx="36" cy="36" r="30" fill="none" stroke-width="6"/>
+          <circle class="gauge-fill" cx="36" cy="36" r="30" fill="none" stroke-width="6" stroke-dasharray="188.5" stroke-dashoffset="4" transform="rotate(-90 36 36)"/>
+        </svg>
+        <div>
+          <div class="font-mono text-[11px] text-signal">M03 · Contradiction</div>
+          <div class="font-display font-medium text-2xl tracking-tight mt-0.5">0.98</div>
+          <p class="text-[12px] text-muted-foreground mt-1 leading-snug">Nuance survives compression</p>
+        </div>
+      </div>
+    </div>
+
+    <div class="reveal mt-4 grid lg:grid-cols-[2fr_1fr] gap-4">
+      <div class="rounded-xl border hairline bg-graphite/40 p-6">
+        <div class="flex items-center justify-between mb-5">
+          <div class="font-mono text-[11px] uppercase tracking-widest text-muted-foreground">Packet fidelity — trailing 12 weeks</div>
+          <div class="font-mono text-[11px] text-evidence-good">▲ +0.04</div>
+        </div>
+        <svg class="spark" viewBox="0 0 600 120" preserveAspectRatio="none" width="100%" height="120">
+          <path class="area" d="M0,86 L50,82 L100,84 L150,72 L200,70 L250,64 L300,60 L350,58 L400,50 L450,46 L500,40 L550,34 L600,30 L600,120 L0,120 Z"/>
+          <path d="M0,86 L50,82 L100,84 L150,72 L200,70 L250,64 L300,60 L350,58 L400,50 L450,46 L500,40 L550,34 L600,30"/>
+        </svg>
+        <div class="flex justify-between mt-2 font-mono text-[10px] text-muted-foreground"><span>0.83</span><span>0.87 today</span></div>
+      </div>
+      <div class="rounded-xl border border-signal/40 p-6" style="background: color-mix(in oklab, var(--signal) 5%, transparent);">
+        <div class="font-mono text-[11px] uppercase tracking-widest text-signal mb-4">Current checkpoint</div>
+        <div class="flex items-center gap-2 font-mono text-[13px] mb-3"><span class="live-dot"></span>compress-v1.4.2</div>
+        <div class="flex flex-col gap-2.5 font-mono text-[12px] text-muted-foreground">
+          <div class="flex justify-between"><span>Shipped</span><span class="text-foreground">Mon 05.18</span></div>
+          <div class="flex justify-between"><span>Canary</span><span class="text-evidence-good">passed · 24h</span></div>
+          <div class="flex justify-between"><span>Rollback</span><span class="text-foreground">&lt; 90s armed</span></div>
+          <div class="flex justify-between"><span>Drift</span><span class="text-evidence-good">none flagged</span></div>
+        </div>
+      </div>
+    </div>
+  </div>
+</section>
+
+<!-- CTA -->
+<section id="cta" class="relative overflow-hidden border-b hairline">
+  <div class="absolute inset-0 grid-bg opacity-50 mask-radial-bottom"></div>
+  <div class="relative mx-auto max-w-7xl px-6 py-32 text-center">
+    <div class="flex justify-center text-[11px] font-mono uppercase tracking-[0.18em] text-muted-foreground">
+      <span class="flex items-center gap-2"><span class="w-1.5 h-1.5 rounded-full bg-signal shadow-signal"></span>06 / See it on your data</span>
+    </div>
+    <h2 class="mt-6 font-display font-medium text-4xl md:text-6xl tracking-tight max-w-3xl mx-auto leading-[1.05]">
+      Your memory, <span class="text-gradient-signal">fully observable.</span>
+    </h2>
+    <p class="mt-6 max-w-2xl mx-auto text-muted-foreground">
+      Point Console at your corpus and watch the stream fill in. Read-only by default, exportable always, and reconcilable against every line of your bill.
+    </p>
+    <div class="mt-9 flex flex-wrap items-center justify-center gap-3">
+      <a href="/#dashboard" class="inline-flex items-center gap-2 h-11 px-5 rounded-md bg-signal text-signal-foreground font-semibold text-sm shadow-signal hover:opacity-95 transition tracking-tight">Get Started →</a>
+      <a href="/pricing" class="inline-flex items-center gap-2 h-11 px-5 rounded-md border hairline text-sm font-medium hover:border-signal/60 hover:text-signal transition">See pricing</a>
+    </div>
+  </div>
+</section>
