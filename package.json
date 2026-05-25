@@ -1,0 +1,39 @@
+{
+  "name": "memrails",
+  "version": "0.1.0",
+  "private": true,
+  "scripts": {
+    "dev": "next dev",
+    "build": "next build",
+    "start": "next start",
+    "lint": "next lint",
+    "typecheck": "tsc --noEmit",
+    "test": "vitest run",
+    "test:watch": "vitest",
+    "memory:extract": "tsx scripts/extract-marketing.ts",
+    "memory:index": "tsx scripts/index-knowledge.ts",
+    "memory:query": "tsx scripts/run-query.ts",
+    "memory:inspect": "tsx scripts/inspect-packet.ts",
+    "ledger:export": "tsx scripts/export-ledger.ts"
+  },
+  "dependencies": {
+    "gray-matter": "^4.0.3",
+    "next": "14.2.15",
+    "react": "^18.3.1",
+    "react-dom": "^18.3.1",
+    "zod": "^3.23.8"
+  },
+  "devDependencies": {
+    "@types/node": "^20.14.10",
+    "@types/react": "^18.3.3",
+    "@types/react-dom": "^18.3.0",
+    "autoprefixer": "^10.4.20",
+    "eslint": "^8.57.0",
+    "eslint-config-next": "14.2.15",
+    "postcss": "^8.4.41",
+    "tailwindcss": "^3.4.16",
+    "tsx": "^4.19.0",
+    "typescript": "^5.5.4",
+    "vitest": "^2.0.5"
+  }
+}

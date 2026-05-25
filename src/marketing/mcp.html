@@ -1,0 +1,221 @@
+<!-- HERO -->
+<section class="relative overflow-hidden border-b hairline">
+  <div class="absolute inset-0 grid-bg opacity-60 mask-radial-center"></div>
+  <div class="relative mx-auto max-w-7xl px-6 pt-24 pb-20">
+    <div class="meta-bar text-[11px] font-mono uppercase tracking-[0.14em] text-muted-foreground">
+      <span><span class="text-signal mr-1.5">Protocol</span>Model Context Protocol</span>
+      <span><span class="text-signal mr-1.5">Transport</span>HTTP &middot; stdio</span>
+      <span><span class="text-signal mr-1.5">Default</span>Read-only, scoped</span>
+    </div>
+
+    <h1 class="mt-9 font-display font-medium text-5xl md:text-7xl leading-[1.0] tracking-[-0.03em] max-w-4xl">
+      Your memory, <span class="text-gradient-signal">one URL away.</span>
+    </h1>
+
+    <p class="mt-7 max-w-2xl text-[17px] leading-relaxed text-muted-foreground">
+      MemRails speaks MCP. Point any compatible client at one server URL and your memory shows up as tools your agent can call &mdash; query the stack, write a refactor, inspect a packet &mdash; with no glue code to write or integration to maintain. The same packet contract you already build against, exposed the way the rest of your stack expects it.
+    </p>
+
+    <div class="mt-9 flex flex-wrap items-center gap-3">
+      <a href="#server" class="inline-flex items-center gap-2 h-11 px-5 rounded-md bg-signal text-signal-foreground font-semibold text-sm shadow-signal hover:opacity-95 transition tracking-tight">Add the server &rarr;</a>
+      <a href="#tools" class="inline-flex items-center gap-2 h-11 px-5 rounded-md border hairline text-sm font-medium hover:border-signal/60 hover:text-signal transition">See the tools</a>
+    </div>
+  </div>
+</section>
+
+<!-- 01 — MEMORY AS AN MCP SERVER -->
+<section id="server" class="relative border-b hairline bg-graphite-2/60">
+  <div class="mx-auto max-w-7xl px-6 py-24">
+    <div class="ref-eyebrow text-[11px] font-mono uppercase tracking-[0.18em] text-muted-foreground" data-ref="01"><span class="ref-rule"></span>Memory as an MCP server</div>
+    <h2 class="mt-5 font-display font-medium text-3xl md:text-5xl tracking-tight max-w-4xl leading-[1.05]">
+      One endpoint, and memory <span class="text-gradient-signal">becomes a tool.</span>
+    </h2>
+    <p class="mt-5 max-w-2xl text-[16px] leading-relaxed text-muted-foreground">
+      Add the MemRails server to your client config and the retrieval stack registers itself as callable tools. No SDK to install in your agent, no adapter to keep in sync with the contract &mdash; the client discovers what's available and your model uses it.
+    </p>
+
+    <div class="reveal mt-12 grid lg:grid-cols-2 gap-4 items-stretch">
+      <div class="rounded-xl border hairline bg-graphite/40 overflow-hidden shadow-card flex flex-col">
+        <div class="flex items-center justify-between px-4 h-10 border-b hairline bg-graphite-2">
+          <div class="text-[11px] font-mono text-muted-foreground">~/.config/mcp/mcp.json</div>
+          <div class="text-[11px] font-mono text-signal">client config</div>
+        </div>
+<pre class="p-5 font-mono text-[12.5px] leading-relaxed overflow-x-auto flex-grow" style="color:color-mix(in oklab,var(--foreground) 90%,transparent)"><span class="tok-k">{</span>
+  <span class="tok-k">"mcpServers"</span>: <span class="tok-k">{</span>
+    <span class="tok-k">"memrails"</span>: <span class="tok-k">{</span>
+      <span class="tok-k">"url"</span>: <span class="tok-s">"https://mcp.memrails.dev"</span>,
+      <span class="tok-k">"transport"</span>: <span class="tok-s">"http"</span>,
+      <span class="tok-k">"scope"</span>: <span class="tok-s">"read"</span>
+    <span class="tok-k">}</span>
+  <span class="tok-k">}</span>
+<span class="tok-k">}</span></pre>
+      </div>
+      <div class="rounded-xl border border-signal/40 bg-graphite/40 overflow-hidden flex flex-col">
+        <div class="flex items-center justify-between px-4 h-10 border-b hairline bg-graphite-2">
+          <div class="text-[11px] font-mono text-muted-foreground">discovery</div>
+          <div class="text-[11px] font-mono text-evidence-good inline-flex items-center gap-2"><span class="live-dot"></span>connected</div>
+        </div>
+<pre class="p-5 font-mono text-[12.5px] leading-relaxed overflow-x-auto flex-grow" style="color:color-mix(in oklab,var(--foreground) 90%,transparent)"><span class="tok-c"># client handshakes, lists capabilities</span>
+&rarr; initialize
+&larr; tools: <span class="tok-n">3</span>  resources: <span class="tok-n">1</span>
+  <span class="tok-k">memory.query</span>     <span class="tok-c"># read</span>
+  <span class="tok-k">memory.write</span>     <span class="tok-c"># write</span>
+  <span class="tok-k">memory.inspect</span>   <span class="tok-c"># read</span>
+  <span class="tok-k">memory://files</span>   <span class="tok-c"># resource</span>
+
+<span class="tok-c"># ready &mdash; no code shipped</span></pre>
+      </div>
+    </div>
+  </div>
+</section>
+
+<!-- 02 — THE TOOLS IT EXPOSES -->
+<section id="tools" class="relative border-b hairline">
+  <div class="mx-auto max-w-7xl px-6 py-24">
+    <div class="ref-eyebrow text-[11px] font-mono uppercase tracking-[0.18em] text-muted-foreground" data-ref="02"><span class="ref-rule"></span>The tools it exposes</div>
+    <h2 class="mt-5 font-display font-medium text-3xl md:text-5xl tracking-tight max-w-4xl leading-[1.05]">
+      Three tools, the <span class="text-gradient-signal">whole contract.</span>
+    </h2>
+    <p class="mt-5 max-w-2xl text-[16px] leading-relaxed text-muted-foreground">
+      The server exposes the protocol as a small, legible tool surface. Each maps directly to the packet contract you already know &mdash; query returns a compressed packet, write proposes a refactor into the market, inspect opens provenance. Nothing new to learn.
+    </p>
+
+    <div class="reveal mt-12 rounded-xl border hairline bg-graphite/40 overflow-hidden shadow-card">
+      <div class="tool-row">
+        <div>
+          <div class="tool-name">memory.query</div>
+          <span class="tool-tag read">read</span>
+        </div>
+        <div>
+          <p class="text-[14px] text-muted-foreground leading-relaxed">Run a query through L1&ndash;L5 and return a compressed packet with confidence, token count, and provenance. The same synthesis the library and harness produce.</p>
+          <div class="mt-2.5 font-mono text-[11.5px] text-muted-foreground">in: <span class="text-cyan">query, intent, max_tokens</span> &rarr; out: <span class="text-signal">packet</span></div>
+        </div>
+      </div>
+      <div class="tool-row">
+        <div>
+          <div class="tool-name">memory.write</div>
+          <span class="tool-tag write">write</span>
+        </div>
+        <div>
+          <p class="text-[14px] text-muted-foreground leading-relaxed">Propose a refactor &mdash; a new claim, a confidence change, a contradiction &mdash; into the refactor market. Staked, reviewed by validators, never silently applied.</p>
+          <div class="mt-2.5 font-mono text-[11.5px] text-muted-foreground">in: <span class="text-cyan">claim, evidence, stake</span> &rarr; out: <span class="text-signal">refactor_id</span></div>
+        </div>
+      </div>
+      <div class="tool-row">
+        <div>
+          <div class="tool-name">memory.inspect</div>
+          <span class="tool-tag read">read</span>
+        </div>
+        <div>
+          <p class="text-[14px] text-muted-foreground leading-relaxed">Open a packet's lineage: the evidence bundle, the provenance weights, the input and output hashes. The Console inspector, available to your agent at call time.</p>
+          <div class="mt-2.5 font-mono text-[11.5px] text-muted-foreground">in: <span class="text-cyan">packet_id</span> &rarr; out: <span class="text-signal">provenance, hashes</span></div>
+        </div>
+      </div>
+    </div>
+  </div>
+</section>
+
+<!-- 03 — WORKS WITH ANY MCP CLIENT -->
+<section id="clients" class="relative border-b hairline bg-graphite-2/60">
+  <div class="mx-auto max-w-7xl px-6 py-24">
+    <div class="ref-eyebrow text-[11px] font-mono uppercase tracking-[0.18em] text-muted-foreground" data-ref="03"><span class="ref-rule"></span>Works with any MCP client</div>
+    <h2 class="mt-5 font-display font-medium text-3xl md:text-5xl tracking-tight max-w-4xl leading-[1.05]">
+      If it speaks MCP, <span class="text-gradient-signal">it speaks to your memory.</span>
+    </h2>
+    <p class="mt-5 max-w-2xl text-[16px] leading-relaxed text-muted-foreground">
+      The server is a standard MCP implementation, so it works with any compliant client out of the box. No per-client adapters, no bespoke plugins &mdash; the same URL drops into all of them.
+    </p>
+
+    <div class="reveal mt-10">
+      <div class="flex flex-wrap gap-2">
+        <span class="integ-chip prewired">Claude Code</span>
+        <span class="integ-chip prewired">Claude Desktop</span>
+        <span class="integ-chip">Cursor</span>
+        <span class="integ-chip">Windsurf</span>
+        <span class="integ-chip">Cline</span>
+        <span class="integ-chip">Zed</span>
+        <span class="integ-chip">VS Code</span>
+        <span class="integ-chip">LangGraph</span>
+        <span class="integ-chip">Custom client</span>
+      </div>
+    </div>
+
+    <div class="mt-4 grid sm:grid-cols-3 gap-4">
+      <div class="reveal rounded-xl border hairline bg-graphite/40 p-5">
+        <div class="font-mono text-[10px] uppercase tracking-widest text-muted-foreground mb-2">Adapters to maintain</div>
+        <div class="font-display font-medium text-3xl tracking-tight">0</div>
+        <p class="mt-2 text-[13px] text-muted-foreground leading-relaxed">One server speaks to every client. Nothing per-integration.</p>
+      </div>
+      <div class="reveal rounded-xl border hairline bg-graphite/40 p-5">
+        <div class="font-mono text-[10px] uppercase tracking-widest text-muted-foreground mb-2">Lines to add a client</div>
+        <div class="font-display font-medium text-3xl tracking-tight">5</div>
+        <p class="mt-2 text-[13px] text-muted-foreground leading-relaxed">One JSON block in the client's config. That's the whole install.</p>
+      </div>
+      <div class="reveal rounded-xl border hairline bg-graphite/40 p-5">
+        <div class="font-mono text-[10px] uppercase tracking-widest text-muted-foreground mb-2">Contract drift</div>
+        <div class="font-display font-medium text-3xl tracking-tight">None</div>
+        <p class="mt-2 text-[13px] text-muted-foreground leading-relaxed">Tools are discovered live, so they can't fall out of sync.</p>
+      </div>
+    </div>
+  </div>
+</section>
+
+<!-- 04 — RESOURCES & SCOPING -->
+<section id="scoping" class="relative border-b hairline">
+  <div class="mx-auto max-w-7xl px-6 py-24">
+    <div class="ref-eyebrow text-[11px] font-mono uppercase tracking-[0.18em] text-muted-foreground" data-ref="04"><span class="ref-rule"></span>Resources &amp; scoping</div>
+    <h2 class="mt-5 font-display font-medium text-3xl md:text-5xl tracking-tight max-w-4xl leading-[1.05]">
+      Exposed on purpose, <span class="text-gradient-signal">scoped by default.</span>
+    </h2>
+    <p class="mt-5 max-w-2xl text-[16px] leading-relaxed text-muted-foreground">
+      Memory files surface as MCP resources, so a client can read the corpus directly when it needs to. Access is read-only until you grant write, and every scope maps to the same audit trail you see in Console.
+    </p>
+
+    <div class="mt-12 grid md:grid-cols-3 gap-4">
+      <div class="reveal rounded-xl border hairline p-7 bg-graphite/40 flex flex-col hover:border-signal/50 transition">
+        <div class="font-mono text-[11px] uppercase tracking-widest text-signal mb-3">Resources</div>
+        <h3 class="font-display font-semibold text-xl leading-tight mb-3">Files, not a black box.</h3>
+        <p class="text-[14px] leading-relaxed text-muted-foreground flex-grow">Markdown memory is published as <code class="font-mono text-[12px] text-cyan">memory://</code> resources. A client can list and read them directly &mdash; the source of truth, not a derived index.</p>
+        <div class="mt-6 flex flex-wrap gap-2">
+          <span class="res-pill">memory://files</span>
+          <span class="res-pill">memory://keys</span>
+        </div>
+      </div>
+      <div class="reveal rounded-xl border hairline p-7 bg-graphite/40 flex flex-col hover:border-signal/50 transition">
+        <div class="font-mono text-[11px] uppercase tracking-widest text-signal mb-3">Scopes</div>
+        <h3 class="font-display font-semibold text-xl leading-tight mb-3">Read-only until you say so.</h3>
+        <p class="text-[14px] leading-relaxed text-muted-foreground flex-grow">A server starts read. Granting <code class="font-mono text-[12px] text-cyan">write</code> opens <code class="font-mono text-[12px] text-signal">memory.write</code> into the refactor market &mdash; an explicit choice, never a default.</p>
+        <div class="mt-6 flex flex-wrap gap-2">
+          <span class="res-pill">scope: read</span>
+          <span class="res-pill">scope: write</span>
+        </div>
+      </div>
+      <div class="reveal rounded-xl border hairline p-7 bg-graphite/40 flex flex-col hover:border-signal/50 transition">
+        <div class="font-mono text-[11px] uppercase tracking-widest text-signal mb-3">Audit</div>
+        <h3 class="font-display font-semibold text-xl leading-tight mb-3">Every call, on the ledger.</h3>
+        <p class="text-[14px] leading-relaxed text-muted-foreground flex-grow">Tool calls through MCP log exactly like every other packet &mdash; hashed in, hashed out, reconcilable. The transport changes; the audit trail doesn't.</p>
+        <div class="mt-6 pt-4 border-t border-dotted hairline"><a href="/console" class="font-mono text-[12px] text-signal hover:underline">View in Console &rarr;</a></div>
+      </div>
+    </div>
+  </div>
+</section>
+
+<!-- CTA -->
+<section id="cta" class="relative overflow-hidden border-b hairline">
+  <div class="absolute inset-0 grid-bg opacity-50 mask-radial-bottom"></div>
+  <div class="relative mx-auto max-w-7xl px-6 py-32 text-center">
+    <div class="flex justify-center text-[11px] font-mono uppercase tracking-[0.18em] text-muted-foreground">
+      <span class="flex items-center gap-2"><span class="w-1.5 h-1.5 rounded-full bg-signal shadow-signal"></span>One URL &middot; every client</span>
+    </div>
+    <h2 class="mt-6 font-display font-medium text-4xl md:text-6xl tracking-tight max-w-3xl mx-auto leading-[1.05]">
+      Add it once, <span class="text-gradient-signal">use it everywhere.</span>
+    </h2>
+    <p class="mt-6 max-w-2xl mx-auto text-muted-foreground">
+      Drop the server into your client config and your agent has memory as a tool in five lines. Read-only by default, exportable always, audited the same as everything else.
+    </p>
+    <div class="mt-9 flex flex-wrap items-center justify-center gap-3">
+      <a href="/#dashboard" class="inline-flex items-center gap-2 h-11 px-5 rounded-md bg-signal text-signal-foreground font-semibold text-sm shadow-signal hover:opacity-95 transition tracking-tight">Get Started &rarr;</a>
+      <a href="/#docs" class="inline-flex items-center gap-2 h-11 px-5 rounded-md border hairline text-sm font-medium hover:border-signal/60 hover:text-signal transition">Read the MCP docs</a>
+    </div>
+  </div>
+</section>
