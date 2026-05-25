@@ -1,6 +1,6 @@
 import { NextResponse } from 'next/server';
-import { z } from 'zod';
 import { query } from '@/lib/memory';
+import { QueryInputSchema } from '@/lib/memory/schema';
 
 export const runtime = 'nodejs';
 
@@ -15,13 +15,6 @@ const QUERY_TIMEOUT_MS = 15_000;
  *  - 504 `timeout` query exceeded 15s
  *  - 500 `internal_error` unexpected failure
  */
-const Body = z.object({
-  query: z.string().min(1).max(2000),
-  intent: z
-    .enum(['answer', 'summarize', 'compare', 'extract', 'refactor', 'route'])
-    .optional(),
-  max_tokens: z.number().int().positive().max(2000).optional(),
-});
 
 function withTimeout<T>(p: Promise<T>, ms: number): Promise<T> {
   return new Promise<T>((resolveFn, rejectFn) => {
@@ -52,7 +45,7 @@ export async function POST(req: Request) {
     return NextResponse.json({ error: 'invalid_json' }, { status: 400 });
   }
 
-  const parsed = Body.safeParse(json);
+  const parsed = QueryInputSchema.safeParse(json);
   if (!parsed.success) {
     return NextResponse.json(
       { error: 'invalid_input', issues: parsed.error.issues },

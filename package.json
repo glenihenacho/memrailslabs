@@ -14,9 +14,11 @@
     "memory:index": "tsx scripts/index-knowledge.ts",
     "memory:query": "tsx scripts/run-query.ts",
     "memory:inspect": "tsx scripts/inspect-packet.ts",
-    "ledger:export": "tsx scripts/export-ledger.ts"
+    "ledger:export": "tsx scripts/export-ledger.ts",
+    "mcp:stdio": "tsx scripts/mcp-stdio.ts"
   },
   "dependencies": {
+    "@modelcontextprotocol/sdk": "^1.29.0",
     "gray-matter": "^4.0.3",
     "next": "14.2.15",
     "react": "^18.3.1",

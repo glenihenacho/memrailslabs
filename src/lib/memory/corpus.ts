@@ -20,6 +20,21 @@ function walkMarkdown(dir: string): string[] {
   return out;
 }
 
+export function knowledgeDir(): string {
+  return KNOWLEDGE_DIR;
+}
+
+export function listKnowledgeFiles(): string[] {
+  return walkMarkdown(KNOWLEDGE_DIR).map((p) =>
+    relative(process.cwd(), p).replace(/\\/g, '/'),
+  );
+}
+
+export function findClaim(id: string): EvidenceClaim | null {
+  const hit = loadCorpus().find((entry) => entry.claim.id === id);
+  return hit ? hit.claim : null;
+}
+
 export type CorpusEntry = {
   claim: EvidenceClaim;
   body: string;
