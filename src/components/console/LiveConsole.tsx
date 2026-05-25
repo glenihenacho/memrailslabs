@@ -11,6 +11,7 @@ export function LiveConsole() {
   const [query, setQuery] = useState('what is the packet contract?');
   const [intent, setIntent] = useState<MemoryPacket['intent']>('answer');
   const [packet, setPacket] = useState<MemoryPacket | null>(null);
+  const [selectedId, setSelectedId] = useState<string | null>(null);
   const [events, setEvents] = useState<LedgerEvent[]>([]);
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);
@@ -46,11 +47,28 @@ export function LiveConsole() {
       }
       const data = (await res.json()) as MemoryPacket;
       setPacket(data);
+      setSelectedId(data.packet_id);
       refreshLedger();
     } catch (err) {
       setError(err instanceof Error ? err.message : String(err));
     } finally {
       setLoading(false);
+    }
+  };
+
+  const loadPast = async (packetId: string) => {
+    setSelectedId(packetId);
+    setError(null);
+    try {
+      const res = await fetch(`/api/memory/packet/${packetId}`, { cache: 'no-store' });
+      if (!res.ok) {
+        setError(`packet ${packetId} not found in store`);
+        return;
+      }
+      const data = (await res.json()) as MemoryPacket;
+      setPacket(data);
+    } catch (err) {
+      setError(err instanceof Error ? err.message : String(err));
     }
   };
 
@@ -141,8 +159,15 @@ export function LiveConsole() {
                     confidence: number;
                     latency_ms: number;
                   };
+                  const isSelected = e.packet_id === selectedId;
                   return (
-                    <tr key={e.event_id} className="border-b hairline align-top">
+                    <tr
+                      key={e.event_id}
+                      onClick={() => e.packet_id && loadPast(e.packet_id)}
+                      className={`border-b hairline align-top cursor-pointer hover:bg-graphite-2/40 transition ${
+                        isSelected ? 'bg-graphite-2/60 border-l-2 border-l-signal' : ''
+                      }`}
+                    >
                       <td className="py-2 pr-3 text-muted-foreground">
                         {new Date(e.created_at).toLocaleTimeString()}
                       </td>
@@ -171,7 +196,7 @@ export function LiveConsole() {
         </div>
         {!packet ? (
           <div className="p-8 text-[13px] text-muted-foreground">
-            Run a query to populate the inspector.
+            Run a query, or click a past packet in the stream to inspect it.
           </div>
         ) : (
           <div className="p-5 space-y-5 text-[13px]">

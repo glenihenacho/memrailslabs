@@ -15,7 +15,7 @@ export function compressLayer(
   const compressor = 'compress-v1-stub';
 
   if (candidates.length === 0) {
-    const packet = `No evidence above the confidence floor was found for the query "${query}". Add a claim to /knowledge or lower the evidence floor to surface lower-confidence material.`;
+    const packet = `[uncertain] No evidence above the confidence floor was found for the query "${query}". Add a claim to /knowledge or lower the evidence floor to surface lower-confidence material.`;
     return { packet, tokens: estimateTokens(packet), compressor };
   }
 

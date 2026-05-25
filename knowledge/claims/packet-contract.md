@@ -3,6 +3,7 @@ id: clm_packet_contract
 confidence: 0.97
 tags: [packet, contract, protocol]
 aliases: [packet contract, memorypacket, packet schema]
+contradictions: [clm_contradiction_example]
 created_at: 2026-05-25
 updated_at: 2026-05-25
 claim: A MemRails packet is a billable answer unit that must include answer text, confidence, token count, provenance references, evidence IDs, contradictions surfaced, input hash, output hash, and the model or compressor version. No packet ships as anonymous prose.

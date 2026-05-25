@@ -9,6 +9,10 @@ import { evidenceLayer } from './evidence';
 import { compressLayer } from './compress';
 import { buildPacket, buildPacketFromCandidates } from './packet';
 import { logPacket } from '@/lib/ledger/events';
+import { savePacket, loadPacket } from './store';
+
+const HIGH_CONFIDENCE = 0.85;
+const SYNTHESIS_INTENTS = new Set(['summarize', 'compare', 'extract']);
 
 function mergeUnique(existing: EvidenceClaim[], next: EvidenceClaim[]): EvidenceClaim[] {
   const seen = new Set(existing.map((c) => c.id));
@@ -43,17 +47,17 @@ export async function query(input: QueryInput): Promise<MemoryPacket> {
   const evidenceResult = evidenceLayer(input.query, candidates);
   const filtered = evidenceResult.candidates;
 
-  // L5 — only when low-tier retrieval didn't resolve, or the intent requires
-  // synthesis (§7 L5 acceptance, §2 Rule 2).
+  // L5 — fire only when the cheap layers didn't resolve, the intent demands
+  // synthesis, or no candidate clears the high-confidence bar (§2 Rule 2).
+  // Single high-confidence answers stay at L1/L2 and skip the compressor.
+  const topConfidence = filtered.reduce((max, c) => Math.max(max, c.confidence), 0);
   const needsCompress =
     !earlyResolved ||
-    intent === 'summarize' ||
-    intent === 'compare' ||
-    intent === 'extract' ||
-    filtered.length > 1;
+    SYNTHESIS_INTENTS.has(intent) ||
+    topConfidence < HIGH_CONFIDENCE;
 
   let packet: MemoryPacket;
-  if (needsCompress && filtered.length > 0) {
+  if (needsCompress) {
     const { packet: body, compressor } = compressLayer(input.query, filtered, maxTokens);
     packet = buildPacket({
       query: input.query,
@@ -73,13 +77,11 @@ export async function query(input: QueryInput): Promise<MemoryPacket> {
   }
 
   const latency = Date.now() - overallStart;
+  savePacket(packet);
   logPacket(packet, latency);
   return packet;
 }
 
 export function inspect(packet_id: string): MemoryPacket | null {
-  // Phase 1 stores packets only via the JSONL ledger. For inspection we walk
-  // the ledger and reconstruct the packet from the recorded event metadata
-  // (the packet body itself isn't persisted server-side yet — see Phase 3).
-  return null;
+  return loadPacket(packet_id);
 }
