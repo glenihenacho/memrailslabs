@@ -40,13 +40,14 @@ The project ships as two artifacts that work together:
 docker build -t memrails-backend .
 docker run --rm -p 3000:3000 \
   -e DATA_DIR=/app/data \
-  -e ALLOWED_ORIGINS='https://memrails.dev,https://*.vercel.app' \
+  -e ALLOWED_ORIGINS='https://*.vercel.app' \
   -v memrails-data:/app/data memrails-backend
 curl http://localhost:3000/api/health
 # → { "ok": true, "commit": "...", "data_dir": "/app/data", "corpus_keys": 8 }
 
 # Marketing (Vercel)
-# 1. Replace the literal "BACKEND_URL" in vercel.json with your backend host.
+# 1. Replace BACKEND_URL in vercel.json with your Fly app host
+#    (e.g., memrails-backend.fly.dev).
 # 2. npx vercel --prod
 ```
 
@@ -55,12 +56,27 @@ curl http://localhost:3000/api/health
 | Var | Default | Meaning |
 |---|---|---|
 | `DATA_DIR` | `<cwd>/data` | Where sessions, endpoints, refactors, packets, and the JSONL ledger live. Set to a mounted volume in Docker. |
-| `ALLOWED_ORIGINS` | `*` | Comma-separated CORS allowlist for `/api/*`. In production, set to your Vercel + custom domains. |
+| `ALLOWED_ORIGINS` | `*` | Comma-separated CORS allowlist for `/api/*`. In production, set to your Vercel deploy URL(s). |
 | `NEXT_OUTPUT` | unset | Set to `standalone` for the Docker build (auto-set by the `Dockerfile`). |
 | `GIT_COMMIT` | `dev` | Surfaced in `/api/health` for deploy verification. |
 
 The MCP server (`scripts/mcp-stdio.ts`) is stdio-only and never deploys
 — agents run it locally against their cloned repo.
+
+### Custom domains (optional)
+
+Out of the box you ship on `<project>.vercel.app` and `<app>.fly.dev`,
+both TLS-secured automatically. If you later want branded URLs:
+
+- **Vercel** — Project → Settings → Domains → add e.g.
+  `memrails.example.com` and follow the CNAME/ALIAS instructions at
+  your registrar.
+- **Fly** — `fly certs add backend.example.com` and add the CNAME at
+  your registrar pointing to `<app>.fly.dev`.
+
+Once the new hostnames resolve, update the `destination` in
+`vercel.json` rewrites and the `ALLOWED_ORIGINS` env var on the
+backend.
 
 ## Use MemRails from Claude Code (MCP)
 
