@@ -1,10 +1,11 @@
 import { NextResponse } from 'next/server';
 import { loadSession } from '@/lib/payments/store';
+import { withCors, corsOptions } from '@/lib/cors';
 
 export const runtime = 'nodejs';
 export const dynamic = 'force-dynamic';
 
-export async function GET(
+async function _GET(
   _req: Request,
   { params }: { params: { session_id: string } },
 ) {
@@ -17,3 +18,6 @@ export async function GET(
     remaining_cents: session.budget_cents - session.spent_cents,
   });
 }
+
+export const GET = withCors(_GET);
+export const OPTIONS = () => corsOptions();

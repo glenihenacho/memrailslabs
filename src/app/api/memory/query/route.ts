@@ -6,6 +6,7 @@ import {
   EndpointNotLive,
 } from '@/lib/memory';
 import { QueryInputSchema } from '@/lib/memory/schema';
+import { withCors, corsOptions } from '@/lib/cors';
 
 export const runtime = 'nodejs';
 
@@ -40,7 +41,7 @@ function withTimeout<T>(p: Promise<T>, ms: number): Promise<T> {
   });
 }
 
-export async function POST(req: Request) {
+async function _POST(req: Request) {
   const declaredSize = Number(req.headers.get('content-length') ?? '0');
   if (declaredSize > MAX_BODY_BYTES) {
     return NextResponse.json({ error: 'payload_too_large' }, { status: 413 });
@@ -93,3 +94,6 @@ export async function POST(req: Request) {
     return NextResponse.json({ error: 'internal_error' }, { status: 500 });
   }
 }
+
+export const POST = withCors(_POST);
+export const OPTIONS = () => corsOptions();

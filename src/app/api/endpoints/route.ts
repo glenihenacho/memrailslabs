@@ -2,17 +2,18 @@ import { NextResponse } from 'next/server';
 import { deployEndpoint, InvalidCorpusPath } from '@/lib/endpoints/deploy';
 import { listEndpoints } from '@/lib/endpoints/store';
 import { EndpointDeployInputSchema } from '@/lib/memory/schema';
+import { withCors, corsOptions } from '@/lib/cors';
 
 export const runtime = 'nodejs';
 export const dynamic = 'force-dynamic';
 
 const MAX_BODY_BYTES = 64 * 1024;
 
-export async function GET() {
+async function _GET() {
   return NextResponse.json({ endpoints: listEndpoints() });
 }
 
-export async function POST(req: Request) {
+async function _POST(req: Request) {
   const declaredSize = Number(req.headers.get('content-length') ?? '0');
   if (declaredSize > MAX_BODY_BYTES) {
     return NextResponse.json({ error: 'payload_too_large' }, { status: 413 });
@@ -52,3 +53,7 @@ export async function POST(req: Request) {
     );
   }
 }
+
+export const GET = withCors(_GET);
+export const POST = withCors(_POST);
+export const OPTIONS = () => corsOptions();

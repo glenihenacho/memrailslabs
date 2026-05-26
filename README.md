@@ -17,11 +17,50 @@ npm run dev   # then visit /console-live
 ## Verification commands
 
 ```sh
-npm test           # 125 passing across retrieval, packet, ledger, refactor, payments, endpoints, API, MCP
+npm test           # 131 passing across retrieval, packet, ledger, refactor, payments, endpoints, runtime, API, MCP
 npm run typecheck
 npm run lint
 npm run build
 ```
+
+## Deployment
+
+The project ships as two artifacts that work together:
+
+- **Vercel** — static marketing pages (`/`, `/harness`, `/pricing`,
+  `/compress`, `/streaming`, `/mcp`, `/console`, etc.). Configured via
+  `vercel.json`; rewrites `/api/*` and `/console-live` to the backend.
+- **Docker** — the stateful backend (full Next.js app with API routes,
+  `/console-live`, persistent volume at `/app/data`, read-only
+  `knowledge/` corpus baked into the image). Multi-stage `Dockerfile`,
+  runs as `nextjs` non-root user, ships the Next.js standalone build.
+
+```sh
+# Backend (Docker → Fly.io recommended)
+docker build -t memrails-backend .
+docker run --rm -p 3000:3000 \
+  -e DATA_DIR=/app/data \
+  -e ALLOWED_ORIGINS='https://memrails.dev,https://*.vercel.app' \
+  -v memrails-data:/app/data memrails-backend
+curl http://localhost:3000/api/health
+# → { "ok": true, "commit": "...", "data_dir": "/app/data", "corpus_keys": 8 }
+
+# Marketing (Vercel)
+# 1. Replace the literal "BACKEND_URL" in vercel.json with your backend host.
+# 2. npx vercel --prod
+```
+
+### Env vars
+
+| Var | Default | Meaning |
+|---|---|---|
+| `DATA_DIR` | `<cwd>/data` | Where sessions, endpoints, refactors, packets, and the JSONL ledger live. Set to a mounted volume in Docker. |
+| `ALLOWED_ORIGINS` | `*` | Comma-separated CORS allowlist for `/api/*`. In production, set to your Vercel + custom domains. |
+| `NEXT_OUTPUT` | unset | Set to `standalone` for the Docker build (auto-set by the `Dockerfile`). |
+| `GIT_COMMIT` | `dev` | Surfaced in `/api/health` for deploy verification. |
+
+The MCP server (`scripts/mcp-stdio.ts`) is stdio-only and never deploys
+— agents run it locally against their cloned repo.
 
 ## Use MemRails from Claude Code (MCP)
 

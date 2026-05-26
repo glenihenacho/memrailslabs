@@ -1,10 +1,11 @@
 import { NextResponse } from 'next/server';
 import { closeSession, SessionNotFound } from '@/lib/payments/sessions';
+import { withCors, corsOptions } from '@/lib/cors';
 
 export const runtime = 'nodejs';
 export const dynamic = 'force-dynamic';
 
-export async function POST(
+async function _POST(
   _req: Request,
   { params }: { params: { session_id: string } },
 ) {
@@ -24,3 +25,6 @@ export async function POST(
     );
   }
 }
+
+export const POST = withCors(_POST);
+export const OPTIONS = () => corsOptions();

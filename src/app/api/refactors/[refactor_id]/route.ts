@@ -1,10 +1,11 @@
 import { NextResponse } from 'next/server';
 import { loadRefactor } from '@/lib/refactor/store';
+import { withCors, corsOptions } from '@/lib/cors';
 
 export const runtime = 'nodejs';
 export const dynamic = 'force-dynamic';
 
-export async function GET(
+async function _GET(
   _req: Request,
   { params }: { params: { refactor_id: string } },
 ) {
@@ -14,3 +15,6 @@ export async function GET(
   }
   return NextResponse.json(proposal);
 }
+
+export const GET = withCors(_GET);
+export const OPTIONS = () => corsOptions();

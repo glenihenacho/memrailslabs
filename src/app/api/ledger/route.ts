@@ -1,10 +1,11 @@
 import { NextResponse } from 'next/server';
 import { readAllEvents } from '@/lib/ledger/jsonl';
+import { withCors, corsOptions } from '@/lib/cors';
 
 export const runtime = 'nodejs';
 export const dynamic = 'force-dynamic';
 
-export async function GET(req: Request) {
+async function _GET(req: Request) {
   const url = new URL(req.url);
   const format = url.searchParams.get('format');
 
@@ -27,3 +28,6 @@ export async function GET(req: Request) {
 
   return NextResponse.json({ events });
 }
+
+export const GET = withCors(_GET);
+export const OPTIONS = () => corsOptions();

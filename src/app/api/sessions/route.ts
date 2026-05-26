@@ -2,13 +2,14 @@ import { NextResponse } from 'next/server';
 import { authorizeSession } from '@/lib/payments/sessions';
 import { listSessions } from '@/lib/payments/store';
 import { SessionAuthorizeInputSchema } from '@/lib/memory/schema';
+import { withCors, corsOptions } from '@/lib/cors';
 
 export const runtime = 'nodejs';
 export const dynamic = 'force-dynamic';
 
 const MAX_BODY_BYTES = 64 * 1024;
 
-export async function GET() {
+async function _GET() {
   const sessions = listSessions().map((s) => ({
     ...s,
     remaining_cents: s.budget_cents - s.spent_cents,
@@ -16,7 +17,7 @@ export async function GET() {
   return NextResponse.json({ sessions });
 }
 
-export async function POST(req: Request) {
+async function _POST(req: Request) {
   const declaredSize = Number(req.headers.get('content-length') ?? '0');
   if (declaredSize > MAX_BODY_BYTES) {
     return NextResponse.json({ error: 'payload_too_large' }, { status: 413 });
@@ -43,3 +44,7 @@ export async function POST(req: Request) {
     { status: 201 },
   );
 }
+
+export const GET = withCors(_GET);
+export const POST = withCors(_POST);
+export const OPTIONS = () => corsOptions();

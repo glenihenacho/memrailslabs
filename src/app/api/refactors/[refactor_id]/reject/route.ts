@@ -4,13 +4,14 @@ import {
   RefactorNotFound,
   rejectRefactor,
 } from '@/lib/refactor/proposals';
+import { withCors, corsOptions } from '@/lib/cors';
 
 export const runtime = 'nodejs';
 export const dynamic = 'force-dynamic';
 
 const MAX_BODY_BYTES = 64 * 1024;
 
-export async function POST(
+async function _POST(
   req: Request,
   { params }: { params: { refactor_id: string } },
 ) {
@@ -52,3 +53,6 @@ export async function POST(
     );
   }
 }
+
+export const POST = withCors(_POST);
+export const OPTIONS = () => corsOptions();

@@ -1,0 +1,19 @@
+{
+  "$schema": "https://openapi.vercel.sh/vercel.json",
+  "framework": "nextjs",
+  "regions": ["iad1"],
+  "rewrites": [
+    {
+      "source": "/api/:path*",
+      "destination": "https://BACKEND_URL/api/:path*"
+    },
+    {
+      "source": "/console-live",
+      "destination": "https://BACKEND_URL/console-live"
+    },
+    {
+      "source": "/console-live/:path*",
+      "destination": "https://BACKEND_URL/console-live/:path*"
+    }
+  ]
+}

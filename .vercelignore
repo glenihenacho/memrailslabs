@@ -1,0 +1,10 @@
+data
+tests
+scripts
+Dockerfile
+docker-compose.yml
+.dockerignore
+.github
+.idea
+.vscode
+*.log

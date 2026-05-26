@@ -1,0 +1,16 @@
+services:
+  backend:
+    build:
+      context: .
+      dockerfile: Dockerfile
+    ports:
+      - "3000:3000"
+    environment:
+      - DATA_DIR=/app/data
+      - ALLOWED_ORIGINS=*
+    volumes:
+      - memrails-data:/app/data
+    restart: unless-stopped
+
+volumes:
+  memrails-data:
