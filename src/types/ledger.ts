@@ -4,6 +4,7 @@ export type LedgerEventType =
   | 'MCP_TOOL_CALL'
   | 'REFACTOR_PROPOSED'
   | 'REFACTOR_ACCEPTED'
+  | 'REFACTOR_REJECTED'
   | 'PAYMENT_AUTHORIZED'
   | 'PACKET_BILLED';
 

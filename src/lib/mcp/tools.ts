@@ -7,6 +7,7 @@ import {
   InspectInputShape,
   WriteInputShape,
 } from '@/lib/memory/schema';
+import { proposeRefactor } from '@/lib/refactor/proposals';
 
 type ToolResult = {
   content: Array<{ type: 'text'; text: string }>;
@@ -82,15 +83,24 @@ export async function handleWrite(args: WriteArgs): Promise<ToolResult> {
     claim_preview: args.claim.slice(0, 200),
     target_file: args.target_file,
   });
-  return {
-    content: [
-      {
-        type: 'text',
-        text: 'memory.write is not implemented yet. Refactor proposals land in Phase 3 (constitution §14). Until then this tool is registered so MCP clients see the contract, but invocation returns this notice.',
-      },
-    ],
-    isError: true,
-  };
+  try {
+    const proposal = proposeRefactor({
+      claim: args.claim,
+      evidence: args.evidence,
+      target_file: args.target_file,
+      stake: args.stake,
+    });
+    const body = {
+      refactor_id: proposal.refactor_id,
+      status: proposal.status,
+      type: proposal.type,
+      target_file: proposal.target_file,
+      validator: proposal.validator,
+    };
+    return { content: [{ type: 'text', text: JSON.stringify(body, null, 2) }] };
+  } catch (err) {
+    return errorResult(err);
+  }
 }
 
 function errorResult(err: unknown): ToolResult {
@@ -126,7 +136,7 @@ export function registerTools(server: McpServer): void {
     'memory.write',
     {
       description:
-        'Propose a refactor of canonical memory (Phase 3). Registered for contract visibility; currently returns a 501-style error.',
+        'Propose a refactor of canonical memory. Creates a reviewable ADD_CLAIM proposal; does not silently mutate.',
       inputSchema: WriteInputShape,
     },
     async (args) => handleWrite(args as WriteArgs),

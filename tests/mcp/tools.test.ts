@@ -1,5 +1,5 @@
 import { describe, it, expect } from 'vitest';
-import { handleQuery, handleInspect, handleWrite } from '@/lib/mcp/tools';
+import { handleQuery, handleInspect } from '@/lib/mcp/tools';
 import type { MemoryPacket } from '@/types/packet';
 import type { EvidenceClaim } from '@/types/evidence';
 
@@ -55,10 +55,3 @@ describe('memory.inspect MCP handler', () => {
   });
 });
 
-describe('memory.write MCP handler', () => {
-  it('returns the Phase-3 stub error', async () => {
-    const result = await handleWrite({ claim: 'a proposed claim' });
-    expect(result.isError).toBe(true);
-    expect(result.content[0].text).toMatch(/Phase 3/);
-  });
-});

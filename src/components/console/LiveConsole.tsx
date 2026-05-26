@@ -4,6 +4,7 @@ import { useCallback, useEffect, useState } from 'react';
 import type { MemoryPacket } from '@/types/packet';
 import type { LedgerEvent } from '@/types/ledger';
 import { calculateOrchestrationCost, formatUsd } from '@/lib/pricing/calculator';
+import { RefactorFeed } from './RefactorFeed';
 
 type LedgerResponse = { events: LedgerEvent[] };
 
@@ -76,6 +77,7 @@ export function LiveConsole() {
   const packetCount = queryEvents.length;
 
   return (
+    <>
     <div className="mt-12 grid lg:grid-cols-[1.1fr_1fr] gap-4">
       <div className="rounded-xl border hairline bg-graphite/40 shadow-card overflow-hidden">
         <div className="flex items-center justify-between px-4 h-10 border-b hairline bg-graphite-2">
@@ -243,6 +245,8 @@ export function LiveConsole() {
         )}
       </div>
     </div>
+    <RefactorFeed />
+    </>
   );
 }
 

@@ -17,7 +17,7 @@ npm run dev   # then visit /console-live
 ## Verification commands
 
 ```sh
-npm test           # 39 passing across retrieval, packet, ledger, API, MCP
+npm test           # 69 passing across retrieval, packet, ledger, refactor, API, MCP
 npm run typecheck
 npm run lint
 npm run build
@@ -45,9 +45,18 @@ Register the server in your Claude Code settings:
 ```
 
 Then `/mcp` inside Claude Code should list `memrails` with three tools
-and two resource roots. `memory.write` is registered for contract
-visibility but returns a Phase-3 stub error — refactor proposals ship
-in the next phase.
+and two resource roots. `memory.write` returns a reviewable refactor
+proposal (per §2 Rule 4 it never mutates canonical memory silently).
+
+## Refactor proposals
+
+`memory.write` creates an `ADD_CLAIM` proposal under `data/refactors/`
+and emits a `REFACTOR_PROPOSED` ledger event. Review the unified diff
+in the Console (`/console-live` → refactor feed) or via
+`GET /api/refactors`, then `POST /api/refactors/<id>/accept` to write
+the markdown file into `knowledge/claims/`, or
+`POST /api/refactors/<id>/reject` to dismiss it. Accept reloads the
+corpus in place so the next query sees the new claim.
 
 ### Smoke test without Claude Code
 
@@ -70,5 +79,8 @@ where `smoke.jsonl` contains an `initialize` request, the
 | `src/app/console-live/` | Functional console with query + inspector |
 | `src/marketing/` | Extracted marketing HTML (rendered by `/app/*`) |
 | `scripts/mcp-stdio.ts` | Stdio entry point for the MCP server |
+| `src/lib/refactor/` | Proposal builder, validator, store, unified-diff renderer |
+| `src/app/api/refactors/` | List, fetch, accept, reject HTTP routes |
 | `data/packets/` | One JSON file per packet (gitignored) |
+| `data/refactors/` | One JSON file per refactor proposal (gitignored) |
 | `data/logs/ledger.jsonl` | Append-only event ledger (gitignored) |
