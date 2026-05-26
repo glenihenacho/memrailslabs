@@ -6,6 +6,7 @@ import type { LedgerEvent } from '@/types/ledger';
 import { calculateOrchestrationCost, formatUsd } from '@/lib/pricing/calculator';
 import { RefactorFeed } from './RefactorFeed';
 import { BillingPanel } from './BillingPanel';
+import { HarnessPanel } from './HarnessPanel';
 
 type LedgerResponse = { events: LedgerEvent[] };
 
@@ -19,6 +20,8 @@ export function LiveConsole() {
   const [error, setError] = useState<string | null>(null);
   const [selectedSessionId, setSelectedSessionId] = useState<string | null>(null);
   const [billAgainstSession, setBillAgainstSession] = useState(false);
+  const [selectedEndpointId, setSelectedEndpointId] = useState<string | null>(null);
+  const [routeThroughEndpoint, setRouteThroughEndpoint] = useState(false);
 
   const refreshLedger = useCallback(async () => {
     try {
@@ -40,12 +43,20 @@ export function LiveConsole() {
     setLoading(true);
     setError(null);
     try {
-      const body: { query: string; intent: MemoryPacket['intent']; session_id?: string } = {
+      const body: {
+        query: string;
+        intent: MemoryPacket['intent'];
+        session_id?: string;
+        endpoint_id?: string;
+      } = {
         query,
         intent,
       };
       if (billAgainstSession && selectedSessionId) {
         body.session_id = selectedSessionId;
+      }
+      if (routeThroughEndpoint && selectedEndpointId) {
+        body.endpoint_id = selectedEndpointId;
       }
       const res = await fetch('/api/memory/query', {
         method: 'POST',
@@ -55,6 +66,16 @@ export function LiveConsole() {
       if (res.status === 402) {
         const errBody = (await res.json()) as { reason: string; session_id: string };
         throw new Error(`402 payment_required: ${errBody.reason} (${errBody.session_id})`);
+      }
+      if (res.status === 409) {
+        const errBody = (await res.json()) as {
+          error: string;
+          endpoint_id: string;
+          status?: string;
+        };
+        throw new Error(
+          `409 ${errBody.error}: ${errBody.endpoint_id}${errBody.status ? ` (${errBody.status})` : ''}`,
+        );
       }
       if (!res.ok) {
         const text = await res.text();
@@ -148,6 +169,20 @@ export function LiveConsole() {
               bill against session{' '}
               <span className="text-signal">
                 {selectedSessionId ?? '— select one below'}
+              </span>
+            </span>
+          </label>
+          <label className="flex items-center gap-2 text-[11px] font-mono text-muted-foreground">
+            <input
+              type="checkbox"
+              checked={routeThroughEndpoint}
+              onChange={(e) => setRouteThroughEndpoint(e.target.checked)}
+              disabled={!selectedEndpointId}
+            />
+            <span>
+              route through endpoint{' '}
+              <span className="text-cyan">
+                {selectedEndpointId ?? '— deploy one below'}
               </span>
             </span>
           </label>
@@ -279,6 +314,14 @@ export function LiveConsole() {
       onSelectSession={(id) => {
         setSelectedSessionId(id);
         if (id) setBillAgainstSession(true);
+      }}
+    />
+    <HarnessPanel
+      events={events}
+      selectedEndpointId={selectedEndpointId}
+      onSelectEndpoint={(id) => {
+        setSelectedEndpointId(id);
+        if (id) setRouteThroughEndpoint(true);
       }}
     />
     <RefactorFeed />

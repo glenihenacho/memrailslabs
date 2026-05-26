@@ -11,6 +11,7 @@ import { compressLayer } from './compress';
 import { buildPacket, buildPacketFromCandidates } from './packet';
 import { logPacket } from '@/lib/ledger/events';
 import { billPacket } from '@/lib/payments/sessions';
+import { loadEndpoint } from '@/lib/endpoints/store';
 import { savePacket, loadPacket } from './store';
 
 const HIGH_CONFIDENCE = 0.85;
@@ -24,6 +25,12 @@ function mergeUnique(existing: EvidenceClaim[], next: EvidenceClaim[]): Evidence
 export async function query(input: QueryInput): Promise<MemoryPacket> {
   const intent = input.intent ?? 'answer';
   const maxTokens = input.max_tokens ?? 600;
+
+  if (input.endpoint_id) {
+    const ep = loadEndpoint(input.endpoint_id);
+    if (!ep) throw new EndpointNotFound(input.endpoint_id);
+    if (ep.status !== 'live') throw new EndpointNotLive(ep.endpoint_id, ep.status);
+  }
 
   const corpus = loadCorpus();
   const overallStart = Date.now();
@@ -86,7 +93,7 @@ export async function query(input: QueryInput): Promise<MemoryPacket> {
     throw new PaymentRequired(voucher.reason, voucher.session_id);
   }
   savePacket(packet);
-  logPacket(packet, latency, voucher && voucher.ok ? voucher : null);
+  logPacket(packet, latency, voucher && voucher.ok ? voucher : null, input.endpoint_id);
   return packet;
 }
 
@@ -98,6 +105,26 @@ export class PaymentRequired extends Error {
     this.name = 'PaymentRequired';
     this.reason = reason;
     this.session_id = session_id;
+  }
+}
+
+export class EndpointNotFound extends Error {
+  endpoint_id: string;
+  constructor(endpoint_id: string) {
+    super(`endpoint_not_found: ${endpoint_id}`);
+    this.name = 'EndpointNotFound';
+    this.endpoint_id = endpoint_id;
+  }
+}
+
+export class EndpointNotLive extends Error {
+  endpoint_id: string;
+  status: string;
+  constructor(endpoint_id: string, status: string) {
+    super(`endpoint_not_live: ${endpoint_id} is ${status}`);
+    this.name = 'EndpointNotLive';
+    this.endpoint_id = endpoint_id;
+    this.status = status;
   }
 }
 

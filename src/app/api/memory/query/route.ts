@@ -1,5 +1,10 @@
 import { NextResponse } from 'next/server';
-import { query, PaymentRequired } from '@/lib/memory';
+import {
+  query,
+  PaymentRequired,
+  EndpointNotFound,
+  EndpointNotLive,
+} from '@/lib/memory';
 import { QueryInputSchema } from '@/lib/memory/schema';
 
 export const runtime = 'nodejs';
@@ -12,6 +17,8 @@ const QUERY_TIMEOUT_MS = 15_000;
  *  - 400 `invalid_json`  malformed JSON body
  *  - 400 `invalid_input` Zod parse failure; see `issues[]`
  *  - 402 `payment_required` session_id supplied but billing refused
+ *  - 409 `endpoint_not_live` endpoint_id resolves but is paused/closed
+ *  - 409 `endpoint_not_found` endpoint_id does not exist
  *  - 413 `payload_too_large` body exceeds 64KB
  *  - 504 `timeout` query exceeded 15s
  *  - 500 `internal_error` unexpected failure
@@ -62,6 +69,22 @@ export async function POST(req: Request) {
       return NextResponse.json(
         { error: 'payment_required', reason: err.reason, session_id: err.session_id },
         { status: 402 },
+      );
+    }
+    if (err instanceof EndpointNotFound) {
+      return NextResponse.json(
+        { error: 'endpoint_not_found', endpoint_id: err.endpoint_id },
+        { status: 409 },
+      );
+    }
+    if (err instanceof EndpointNotLive) {
+      return NextResponse.json(
+        {
+          error: 'endpoint_not_live',
+          endpoint_id: err.endpoint_id,
+          status: err.status,
+        },
+        { status: 409 },
       );
     }
     if (err instanceof Error && err.message === 'timeout') {

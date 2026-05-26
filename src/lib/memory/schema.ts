@@ -7,6 +7,7 @@ export const QueryInputShape = {
     .optional(),
   max_tokens: z.number().int().positive().max(2000).optional(),
   session_id: z.string().min(1).max(128).optional(),
+  endpoint_id: z.string().min(1).max(128).optional(),
 };
 
 export const QueryInputSchema = z.object(QueryInputShape);
@@ -41,4 +42,15 @@ export const SessionAuthorizeInputSchema = z.object(SessionAuthorizeInputShape);
 
 export const SessionStatusInputShape = {
   session_id: z.string().min(1).max(128),
+};
+
+export const EndpointDeployInputShape = {
+  corpus_path: z.string().min(1).max(256).optional(),
+  payer_agent_id: z.string().min(1).max(128).optional(),
+};
+
+export const EndpointDeployInputSchema = z.object(EndpointDeployInputShape);
+
+export const EndpointStatusInputShape = {
+  endpoint_id: z.string().min(1).max(128),
 };

@@ -24,8 +24,15 @@ export function logPacket(
   packet: MemoryPacket,
   latency_ms: number,
   voucher?: Voucher | null,
+  endpoint_id?: string | null,
 ): void {
-  logEvent('QUERY', { query: packet.query, latency_ms, layer: packet.resolved_layer });
+  const queryExtra: Partial<LedgerEvent> = {};
+  if (endpoint_id) queryExtra.endpoint_id = endpoint_id;
+  logEvent(
+    'QUERY',
+    { query: packet.query, latency_ms, layer: packet.resolved_layer },
+    queryExtra,
+  );
   const packetExtra: Partial<LedgerEvent> = {
     packet_id: packet.packet_id,
     input_hash: packet.input_hash,
@@ -35,6 +42,7 @@ export function logPacket(
     packetExtra.session_id = voucher.session_id;
     packetExtra.cost_cents = voucher.debit_cents;
   }
+  if (endpoint_id) packetExtra.endpoint_id = endpoint_id;
   logEvent(
     'PACKET_CREATED',
     {

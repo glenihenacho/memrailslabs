@@ -5,4 +5,5 @@ export type QueryInput = {
   intent?: PacketIntent;
   max_tokens?: number;
   session_id?: string;
+  endpoint_id?: string;
 };

@@ -1,6 +1,7 @@
 import { describe, it, expect } from 'vitest';
 import { POST } from '@/app/api/memory/query/route';
 import { authorizeSession } from '@/lib/payments/sessions';
+import { deployEndpoint, closeEndpoint } from '@/lib/endpoints/deploy';
 
 function makeRequest(body: string, headers: Record<string, string> = {}): Request {
   return new Request('http://localhost/api/memory/query', {
@@ -88,6 +89,58 @@ describe('POST /api/memory/query', () => {
         JSON.stringify({
           query: 'what is the packet contract?',
           session_id: session.session_id,
+        }),
+      ),
+    );
+    expect(res.status).toBe(200);
+    const packet = (await res.json()) as { packet_id: string };
+    expect(packet.packet_id).toMatch(/^pkt_/);
+  });
+
+  it('409s when the endpoint is closed', async () => {
+    const ep = await deployEndpoint();
+    closeEndpoint(ep.endpoint_id);
+    const res = await POST(
+      makeRequest(
+        JSON.stringify({
+          query: 'what is the packet contract?',
+          endpoint_id: ep.endpoint_id,
+        }),
+      ),
+    );
+    expect(res.status).toBe(409);
+    const body = (await res.json()) as {
+      error: string;
+      endpoint_id: string;
+      status: string;
+    };
+    expect(body.error).toBe('endpoint_not_live');
+    expect(body.endpoint_id).toBe(ep.endpoint_id);
+    expect(body.status).toBe('closed');
+  });
+
+  it('409s when the endpoint is unknown', async () => {
+    const res = await POST(
+      makeRequest(
+        JSON.stringify({
+          query: 'what is the packet contract?',
+          endpoint_id: 'ep_doesnotexist',
+        }),
+      ),
+    );
+    expect(res.status).toBe(409);
+    const body = (await res.json()) as { error: string; endpoint_id: string };
+    expect(body.error).toBe('endpoint_not_found');
+    expect(body.endpoint_id).toBe('ep_doesnotexist');
+  });
+
+  it('routes a query through a live endpoint and tags the packet', async () => {
+    const ep = await deployEndpoint();
+    const res = await POST(
+      makeRequest(
+        JSON.stringify({
+          query: 'what is the packet contract?',
+          endpoint_id: ep.endpoint_id,
         }),
       ),
     );

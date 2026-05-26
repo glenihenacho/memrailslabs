@@ -17,7 +17,7 @@ npm run dev   # then visit /console-live
 ## Verification commands
 
 ```sh
-npm test           # 98 passing across retrieval, packet, ledger, refactor, payments, API, MCP
+npm test           # 125 passing across retrieval, packet, ledger, refactor, payments, endpoints, API, MCP
 npm run typecheck
 npm run lint
 npm run build
@@ -47,6 +47,41 @@ Register the server in your Claude Code settings:
 Then `/mcp` inside Claude Code should list `memrails` with three tools
 and two resource roots. `memory.write` returns a reviewable refactor
 proposal (per §2 Rule 4 it never mutates canonical memory silently).
+
+## Managed harness
+
+A managed harness binds the corpus to a stateful `Endpoint`. Deploy
+runs the §10 ceremony — provision OpenClaw, index `knowledge/`, apply
+the pre-tuned config, bind Compress-v1, wire the 9 integration
+runtimes — and persists the result under `data/endpoints/<id>.json`.
+Queries routed through an endpoint tag every `QUERY` and
+`PACKET_CREATED` ledger event with `endpoint_id` so the audit trail
+attributes them back.
+
+```sh
+# 1. deploy from the CLI (matches the harness page mock)
+npm run memrails:deploy -- --managed
+# → prints the 5-stage timeline + https://hx.memrails.dev/<id>
+
+# 2. or via HTTP — same result
+curl -s -X POST http://localhost:3000/api/endpoints -H 'content-type: application/json' -d '{}'
+
+# 3. route a query through it
+curl -s -X POST http://localhost:3000/api/memory/query \
+  -H 'content-type: application/json' \
+  -d '{"query":"what is the packet contract?","endpoint_id":"ep_…"}'
+
+# 4. close it; subsequent queries return HTTP 409 endpoint_not_live
+curl -s -X POST http://localhost:3000/api/endpoints/ep_…/close
+```
+
+Agents reach the same surface over MCP via `memory.harness.deploy`
+and `memory.harness.status`, then attach `endpoint_id` to
+`memory.query`. The Console (`/console-live` → "managed harness"
+panel) renders the deploy form, the endpoint list, the full deploy
+log in the marketing-mock format, the 9 integration chips with
+Claude Code / OpenClaw / OpenCode marked prewired, and the filtered
+packet stream for the selected endpoint.
 
 ## Sessions & billing
 
@@ -120,9 +155,12 @@ where `smoke.jsonl` contains an `initialize` request, the
 | `scripts/mcp-stdio.ts` | Stdio entry point for the MCP server |
 | `src/lib/refactor/` | Proposal builder, validator, store, unified-diff renderer |
 | `src/lib/payments/` | Payment session lifecycle, voucher debits, cost source |
+| `src/lib/endpoints/` | Managed harness deploy ceremony, endpoint store, baseline config |
 | `src/app/api/refactors/` | List, fetch, accept, reject HTTP routes |
 | `src/app/api/sessions/` | Authorize, list, fetch, close session HTTP routes |
+| `src/app/api/endpoints/` | Deploy, list, fetch, close endpoint HTTP routes |
 | `data/packets/` | One JSON file per packet (gitignored) |
 | `data/refactors/` | One JSON file per refactor proposal (gitignored) |
 | `data/sessions/` | One JSON file per payment session (gitignored) |
+| `data/endpoints/` | One JSON file per deployed endpoint (gitignored) |
 | `data/logs/ledger.jsonl` | Append-only event ledger (gitignored) |

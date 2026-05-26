@@ -1,5 +1,11 @@
 import type { McpServer } from '@modelcontextprotocol/sdk/server/mcp.js';
-import { query, inspect, PaymentRequired } from '@/lib/memory';
+import {
+  query,
+  inspect,
+  PaymentRequired,
+  EndpointNotFound,
+  EndpointNotLive,
+} from '@/lib/memory';
 import { findClaim } from '@/lib/memory/corpus';
 import { logEvent } from '@/lib/ledger/events';
 import {
@@ -8,10 +14,14 @@ import {
   WriteInputShape,
   SessionAuthorizeInputShape,
   SessionStatusInputShape,
+  EndpointDeployInputShape,
+  EndpointStatusInputShape,
 } from '@/lib/memory/schema';
 import { proposeRefactor } from '@/lib/refactor/proposals';
 import { authorizeSession } from '@/lib/payments/sessions';
 import { loadSession } from '@/lib/payments/store';
+import { deployEndpoint } from '@/lib/endpoints/deploy';
+import { loadEndpoint } from '@/lib/endpoints/store';
 import type { PaymentRail } from '@/types/payments';
 
 type ToolResult = {
@@ -24,6 +34,7 @@ export type QueryArgs = {
   intent?: 'answer' | 'summarize' | 'compare' | 'extract' | 'refactor' | 'route';
   max_tokens?: number;
   session_id?: string;
+  endpoint_id?: string;
 };
 
 export type InspectArgs = { packet_id: string };
@@ -44,12 +55,20 @@ export type SessionAuthorizeArgs = {
 
 export type SessionStatusArgs = { session_id: string };
 
+export type HarnessDeployArgs = {
+  corpus_path?: string;
+  payer_agent_id?: string;
+};
+
+export type HarnessStatusArgs = { endpoint_id: string };
+
 export async function handleQuery(args: QueryArgs): Promise<ToolResult> {
   logEvent('MCP_TOOL_CALL', {
     tool: 'memory.query',
     input_preview: args.query.slice(0, 200),
     intent: args.intent ?? 'answer',
     session_id: args.session_id,
+    endpoint_id: args.endpoint_id,
   });
   try {
     const packet = await query(args);
@@ -70,8 +89,82 @@ export async function handleQuery(args: QueryArgs): Promise<ToolResult> {
         isError: true,
       };
     }
+    if (err instanceof EndpointNotFound) {
+      return {
+        content: [
+          {
+            type: 'text',
+            text: JSON.stringify(
+              { error: 'endpoint_not_found', endpoint_id: err.endpoint_id },
+              null,
+              2,
+            ),
+          },
+        ],
+        isError: true,
+      };
+    }
+    if (err instanceof EndpointNotLive) {
+      return {
+        content: [
+          {
+            type: 'text',
+            text: JSON.stringify(
+              {
+                error: 'endpoint_not_live',
+                endpoint_id: err.endpoint_id,
+                status: err.status,
+              },
+              null,
+              2,
+            ),
+          },
+        ],
+        isError: true,
+      };
+    }
     return errorResult(err);
   }
+}
+
+export async function handleHarnessDeploy(
+  args: HarnessDeployArgs,
+): Promise<ToolResult> {
+  logEvent('MCP_TOOL_CALL', {
+    tool: 'memory.harness.deploy',
+    corpus_path: args.corpus_path ?? 'knowledge/',
+  });
+  try {
+    const endpoint = await deployEndpoint(args);
+    const body = {
+      endpoint_id: endpoint.endpoint_id,
+      url: endpoint.url,
+      status: endpoint.status,
+      corpus_keys: endpoint.corpus_keys,
+      integrations: endpoint.integrations.map((i) => i.id),
+      deploy_log: endpoint.deploy_log,
+    };
+    return { content: [{ type: 'text', text: JSON.stringify(body, null, 2) }] };
+  } catch (err) {
+    return errorResult(err);
+  }
+}
+
+export async function handleHarnessStatus(args: HarnessStatusArgs): Promise<ToolResult> {
+  logEvent('MCP_TOOL_CALL', {
+    tool: 'memory.harness.status',
+    endpoint_id: args.endpoint_id,
+  });
+  const endpoint = loadEndpoint(args.endpoint_id);
+  if (!endpoint) {
+    return {
+      content: [{ type: 'text', text: `endpoint_not_found: ${args.endpoint_id}` }],
+      isError: true,
+    };
+  }
+  return {
+    content: [{ type: 'text', text: JSON.stringify(endpoint, null, 2) }],
+  };
 }
 
 export async function handleSessionAuthorize(
@@ -240,5 +333,25 @@ export function registerTools(server: McpServer): void {
       inputSchema: SessionStatusInputShape,
     },
     async (args) => handleSessionStatus(args as SessionStatusArgs),
+  );
+
+  server.registerTool(
+    'memory.harness.deploy',
+    {
+      description:
+        'Deploy a managed harness endpoint: provisions OpenClaw, indexes the knowledge corpus, applies the pre-tuned config, binds Compress-v1, and wires the integration runtimes. Returns an Endpoint that memory.query can be routed through.',
+      inputSchema: EndpointDeployInputShape,
+    },
+    async (args) => handleHarnessDeploy(args as HarnessDeployArgs),
+  );
+
+  server.registerTool(
+    'memory.harness.status',
+    {
+      description:
+        'Read a deployed Endpoint (url, status, corpus_keys, config, integrations, deploy log). Read-only.',
+      inputSchema: EndpointStatusInputShape,
+    },
+    async (args) => handleHarnessStatus(args as HarnessStatusArgs),
   );
 }
