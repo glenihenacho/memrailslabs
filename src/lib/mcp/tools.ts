@@ -1,13 +1,18 @@
 import type { McpServer } from '@modelcontextprotocol/sdk/server/mcp.js';
-import { query, inspect } from '@/lib/memory';
+import { query, inspect, PaymentRequired } from '@/lib/memory';
 import { findClaim } from '@/lib/memory/corpus';
 import { logEvent } from '@/lib/ledger/events';
 import {
   QueryInputShape,
   InspectInputShape,
   WriteInputShape,
+  SessionAuthorizeInputShape,
+  SessionStatusInputShape,
 } from '@/lib/memory/schema';
 import { proposeRefactor } from '@/lib/refactor/proposals';
+import { authorizeSession } from '@/lib/payments/sessions';
+import { loadSession } from '@/lib/payments/store';
+import type { PaymentRail } from '@/types/payments';
 
 type ToolResult = {
   content: Array<{ type: 'text'; text: string }>;
@@ -18,6 +23,7 @@ export type QueryArgs = {
   query: string;
   intent?: 'answer' | 'summarize' | 'compare' | 'extract' | 'refactor' | 'route';
   max_tokens?: number;
+  session_id?: string;
 };
 
 export type InspectArgs = { packet_id: string };
@@ -29,18 +35,92 @@ export type WriteArgs = {
   stake?: number;
 };
 
+export type SessionAuthorizeArgs = {
+  budget_cents: number;
+  rail: PaymentRail;
+  payer_agent_id?: string;
+  endpoint_id?: string;
+};
+
+export type SessionStatusArgs = { session_id: string };
+
 export async function handleQuery(args: QueryArgs): Promise<ToolResult> {
   logEvent('MCP_TOOL_CALL', {
     tool: 'memory.query',
     input_preview: args.query.slice(0, 200),
     intent: args.intent ?? 'answer',
+    session_id: args.session_id,
   });
   try {
     const packet = await query(args);
     return { content: [{ type: 'text', text: JSON.stringify(packet, null, 2) }] };
   } catch (err) {
+    if (err instanceof PaymentRequired) {
+      return {
+        content: [
+          {
+            type: 'text',
+            text: JSON.stringify(
+              { error: 'payment_required', reason: err.reason, session_id: err.session_id },
+              null,
+              2,
+            ),
+          },
+        ],
+        isError: true,
+      };
+    }
     return errorResult(err);
   }
+}
+
+export async function handleSessionAuthorize(
+  args: SessionAuthorizeArgs,
+): Promise<ToolResult> {
+  logEvent('MCP_TOOL_CALL', {
+    tool: 'memory.session.authorize',
+    rail: args.rail,
+    budget_cents: args.budget_cents,
+  });
+  try {
+    const session = authorizeSession(args);
+    const body = {
+      session_id: session.session_id,
+      status: session.status,
+      rail: session.rail,
+      budget_cents: session.budget_cents,
+      remaining_cents: session.budget_cents - session.spent_cents,
+    };
+    return { content: [{ type: 'text', text: JSON.stringify(body, null, 2) }] };
+  } catch (err) {
+    return errorResult(err);
+  }
+}
+
+export async function handleSessionStatus(args: SessionStatusArgs): Promise<ToolResult> {
+  logEvent('MCP_TOOL_CALL', {
+    tool: 'memory.session.status',
+    session_id: args.session_id,
+  });
+  const session = loadSession(args.session_id);
+  if (!session) {
+    return {
+      content: [{ type: 'text', text: `session_not_found: ${args.session_id}` }],
+      isError: true,
+    };
+  }
+  return {
+    content: [
+      {
+        type: 'text',
+        text: JSON.stringify(
+          { ...session, remaining_cents: session.budget_cents - session.spent_cents },
+          null,
+          2,
+        ),
+      },
+    ],
+  };
 }
 
 export async function handleInspect(args: InspectArgs): Promise<ToolResult> {
@@ -140,5 +220,25 @@ export function registerTools(server: McpServer): void {
       inputSchema: WriteInputShape,
     },
     async (args) => handleWrite(args as WriteArgs),
+  );
+
+  server.registerTool(
+    'memory.session.authorize',
+    {
+      description:
+        'Authorize a payment session against a packet endpoint. Returns a session_id the agent can attach to subsequent memory.query calls; each packet is debited as an off-chain voucher.',
+      inputSchema: SessionAuthorizeInputShape,
+    },
+    async (args) => handleSessionAuthorize(args as SessionAuthorizeArgs),
+  );
+
+  server.registerTool(
+    'memory.session.status',
+    {
+      description:
+        'Read the current PaymentSession (budget, spent, remaining, rail, status). Read-only.',
+      inputSchema: SessionStatusInputShape,
+    },
+    async (args) => handleSessionStatus(args as SessionStatusArgs),
   );
 }

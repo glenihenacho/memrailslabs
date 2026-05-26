@@ -1,5 +1,5 @@
 import { NextResponse } from 'next/server';
-import { query } from '@/lib/memory';
+import { query, PaymentRequired } from '@/lib/memory';
 import { QueryInputSchema } from '@/lib/memory/schema';
 
 export const runtime = 'nodejs';
@@ -11,6 +11,7 @@ const QUERY_TIMEOUT_MS = 15_000;
  * Error contract:
  *  - 400 `invalid_json`  malformed JSON body
  *  - 400 `invalid_input` Zod parse failure; see `issues[]`
+ *  - 402 `payment_required` session_id supplied but billing refused
  *  - 413 `payload_too_large` body exceeds 64KB
  *  - 504 `timeout` query exceeded 15s
  *  - 500 `internal_error` unexpected failure
@@ -57,6 +58,12 @@ export async function POST(req: Request) {
     const packet = await withTimeout(query(parsed.data), QUERY_TIMEOUT_MS);
     return NextResponse.json(packet);
   } catch (err) {
+    if (err instanceof PaymentRequired) {
+      return NextResponse.json(
+        { error: 'payment_required', reason: err.reason, session_id: err.session_id },
+        { status: 402 },
+      );
+    }
     if (err instanceof Error && err.message === 'timeout') {
       return NextResponse.json({ error: 'timeout' }, { status: 504 });
     }

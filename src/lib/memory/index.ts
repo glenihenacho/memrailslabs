@@ -1,6 +1,7 @@
 import type { EvidenceClaim } from '@/types/evidence';
 import type { MemoryPacket, RetrievalLayer } from '@/types/packet';
 import type { QueryInput } from '@/types/memory';
+import type { VoucherResult } from '@/types/payments';
 import { loadCorpus } from './corpus';
 import { grepLayer } from './grep';
 import { keyLayer } from './key';
@@ -9,6 +10,7 @@ import { evidenceLayer } from './evidence';
 import { compressLayer } from './compress';
 import { buildPacket, buildPacketFromCandidates } from './packet';
 import { logPacket } from '@/lib/ledger/events';
+import { billPacket } from '@/lib/payments/sessions';
 import { savePacket, loadPacket } from './store';
 
 const HIGH_CONFIDENCE = 0.85;
@@ -77,9 +79,26 @@ export async function query(input: QueryInput): Promise<MemoryPacket> {
   }
 
   const latency = Date.now() - overallStart;
+  const voucher: VoucherResult | null = input.session_id
+    ? billPacket({ session_id: input.session_id, packet_id: packet.packet_id })
+    : null;
+  if (voucher && !voucher.ok) {
+    throw new PaymentRequired(voucher.reason, voucher.session_id);
+  }
   savePacket(packet);
-  logPacket(packet, latency);
+  logPacket(packet, latency, voucher && voucher.ok ? voucher : null);
   return packet;
+}
+
+export class PaymentRequired extends Error {
+  reason: string;
+  session_id: string;
+  constructor(reason: string, session_id: string) {
+    super(`payment_required: ${reason}`);
+    this.name = 'PaymentRequired';
+    this.reason = reason;
+    this.session_id = session_id;
+  }
 }
 
 export function inspect(packet_id: string): MemoryPacket | null {

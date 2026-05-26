@@ -5,6 +5,7 @@ import type { MemoryPacket } from '@/types/packet';
 import type { LedgerEvent } from '@/types/ledger';
 import { calculateOrchestrationCost, formatUsd } from '@/lib/pricing/calculator';
 import { RefactorFeed } from './RefactorFeed';
+import { BillingPanel } from './BillingPanel';
 
 type LedgerResponse = { events: LedgerEvent[] };
 
@@ -16,6 +17,8 @@ export function LiveConsole() {
   const [events, setEvents] = useState<LedgerEvent[]>([]);
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);
+  const [selectedSessionId, setSelectedSessionId] = useState<string | null>(null);
+  const [billAgainstSession, setBillAgainstSession] = useState(false);
 
   const refreshLedger = useCallback(async () => {
     try {
@@ -37,11 +40,22 @@ export function LiveConsole() {
     setLoading(true);
     setError(null);
     try {
+      const body: { query: string; intent: MemoryPacket['intent']; session_id?: string } = {
+        query,
+        intent,
+      };
+      if (billAgainstSession && selectedSessionId) {
+        body.session_id = selectedSessionId;
+      }
       const res = await fetch('/api/memory/query', {
         method: 'POST',
         headers: { 'content-type': 'application/json' },
-        body: JSON.stringify({ query, intent }),
+        body: JSON.stringify(body),
       });
+      if (res.status === 402) {
+        const errBody = (await res.json()) as { reason: string; session_id: string };
+        throw new Error(`402 payment_required: ${errBody.reason} (${errBody.session_id})`);
+      }
       if (!res.ok) {
         const text = await res.text();
         throw new Error(text || `HTTP ${res.status}`);
@@ -123,6 +137,20 @@ export function LiveConsole() {
               {loading ? 'querying…' : 'run query →'}
             </button>
           </div>
+          <label className="flex items-center gap-2 text-[11px] font-mono text-muted-foreground">
+            <input
+              type="checkbox"
+              checked={billAgainstSession}
+              onChange={(e) => setBillAgainstSession(e.target.checked)}
+              disabled={!selectedSessionId}
+            />
+            <span>
+              bill against session{' '}
+              <span className="text-signal">
+                {selectedSessionId ?? '— select one below'}
+              </span>
+            </span>
+          </label>
           {error && (
             <div className="text-[12px] font-mono text-evidence-bad">{error}</div>
           )}
@@ -245,6 +273,14 @@ export function LiveConsole() {
         )}
       </div>
     </div>
+    <BillingPanel
+      events={events}
+      selectedSessionId={selectedSessionId}
+      onSelectSession={(id) => {
+        setSelectedSessionId(id);
+        if (id) setBillAgainstSession(true);
+      }}
+    />
     <RefactorFeed />
     </>
   );

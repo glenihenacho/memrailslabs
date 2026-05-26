@@ -4,4 +4,5 @@ export type QueryInput = {
   query: string;
   intent?: PacketIntent;
   max_tokens?: number;
+  session_id?: string;
 };

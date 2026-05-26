@@ -7,9 +7,11 @@ data/logs/*.jsonl
 data/generated/*.json
 data/packets/*.json
 data/refactors/*.json
+data/sessions/*.json
 !data/logs/.gitkeep
 !data/generated/.gitkeep
 !data/packets/.gitkeep
 !data/refactors/.gitkeep
+!data/sessions/.gitkeep
 next-env.d.ts
 *.tsbuildinfo

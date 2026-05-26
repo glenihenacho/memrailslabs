@@ -17,7 +17,7 @@ npm run dev   # then visit /console-live
 ## Verification commands
 
 ```sh
-npm test           # 69 passing across retrieval, packet, ledger, refactor, API, MCP
+npm test           # 98 passing across retrieval, packet, ledger, refactor, payments, API, MCP
 npm run typecheck
 npm run lint
 npm run build
@@ -47,6 +47,45 @@ Register the server in your Claude Code settings:
 Then `/mcp` inside Claude Code should list `memrails` with three tools
 and two resource roots. `memory.write` returns a reviewable refactor
 proposal (per §2 Rule 4 it never mutates canonical memory silently).
+
+## Sessions & billing
+
+Packets are priced at the orchestration baseline ($5/10K = $0.0005 per
+packet, per §11). Agents authorize a payment session up front and stream
+packets against it; each billed packet emits an off-chain voucher into
+the same JSONL ledger.
+
+```sh
+# 1. authorize a $2 session paid on the stripe_card rail
+curl -s -X POST http://localhost:3000/api/sessions \
+  -H 'content-type: application/json' \
+  -d '{"budget_cents": 200, "rail": "stripe_card"}'
+# → { "session_id": "sess_…", "remaining_cents": 200, ... }
+
+# 2. query with the session_id — the packet response stays unchanged
+curl -s -X POST http://localhost:3000/api/memory/query \
+  -H 'content-type: application/json' \
+  -d '{"query":"what is the packet contract?","session_id":"sess_…"}'
+
+# 3. inspect the voucher trail
+npm run ledger:export | grep PACKET_BILLED
+# → debit_cents 0.05, remaining_cents 199.95, rail stripe_card
+```
+
+Over MCP, agents call `memory.session.authorize` to mint the session,
+then attach `session_id` to every `memory.query`. `memory.session.status`
+returns the current `PaymentSession`. When remaining drops below the
+per-packet cost, the session flips to `exhausted` and the next call
+returns HTTP `402 payment_required` (or `isError: true` over MCP).
+`POST /api/sessions/<id>/close` terminates an active session. Sessions
+persist as plain JSON under `data/sessions/<id>.json` — no opaque
+storage.
+
+The Console (`/console-live`) renders the live billing ledger:
+authorize from the form, click a session to inspect its voucher rows
+(packet · debit · remaining · time), toggle "bill against session" on
+the query form to start streaming, and export the full audit trail
+via the JSONL link.
 
 ## Refactor proposals
 
@@ -80,7 +119,10 @@ where `smoke.jsonl` contains an `initialize` request, the
 | `src/marketing/` | Extracted marketing HTML (rendered by `/app/*`) |
 | `scripts/mcp-stdio.ts` | Stdio entry point for the MCP server |
 | `src/lib/refactor/` | Proposal builder, validator, store, unified-diff renderer |
+| `src/lib/payments/` | Payment session lifecycle, voucher debits, cost source |
 | `src/app/api/refactors/` | List, fetch, accept, reject HTTP routes |
+| `src/app/api/sessions/` | Authorize, list, fetch, close session HTTP routes |
 | `data/packets/` | One JSON file per packet (gitignored) |
 | `data/refactors/` | One JSON file per refactor proposal (gitignored) |
+| `data/sessions/` | One JSON file per payment session (gitignored) |
 | `data/logs/ledger.jsonl` | Append-only event ledger (gitignored) |
