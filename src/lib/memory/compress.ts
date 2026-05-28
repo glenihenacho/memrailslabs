@@ -29,12 +29,15 @@ export function compressLayer(
     .join('\n');
 
   let body = `${header}\n\n${findings}`;
-  body = clampToTokens(body, maxTokens);
 
   const lowCoverage = candidates.every((c) => c.confidence < 0.85);
   if (lowCoverage) {
     body += '\n\n[uncertain] All cited evidence sits below 0.85 confidence. Treat as provisional.';
   }
+
+  // Clamp last so the packet never exceeds the requested budget, including the
+  // uncertainty note (§7 L5 acceptance: ~500–600 tokens max by default).
+  body = clampToTokens(body, maxTokens);
 
   return { packet: body, tokens: estimateTokens(body), compressor };
 }

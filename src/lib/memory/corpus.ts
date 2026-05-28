@@ -3,7 +3,15 @@ import { join, relative, resolve } from 'node:path';
 import matter from 'gray-matter';
 import type { EvidenceClaim } from '@/types/evidence';
 
-const KNOWLEDGE_DIR = resolve(process.cwd(), 'knowledge');
+/**
+ * Canonical memory lives in `knowledge/` by default. Override via
+ * `MEMRAILS_KNOWLEDGE_DIR` for self-host layouts and test fixtures (§7 no
+ * lock-in). Resolved per call so the env can change between `force` reloads.
+ */
+function knowledgeDir(): string {
+  const override = process.env.MEMRAILS_KNOWLEDGE_DIR;
+  return override ? resolve(override) : resolve(process.cwd(), 'knowledge');
+}
 
 function walkMarkdown(dir: string): string[] {
   const out: string[] = [];
@@ -30,7 +38,7 @@ let cache: CorpusEntry[] | null = null;
 export function loadCorpus(opts: { force?: boolean } = {}): CorpusEntry[] {
   if (cache && !opts.force) return cache;
 
-  const files = walkMarkdown(KNOWLEDGE_DIR);
+  const files = walkMarkdown(knowledgeDir());
   const entries: CorpusEntry[] = [];
 
   for (const path of files) {
