@@ -37,6 +37,20 @@ export type IntentCluster = {
   last_observed: string;
 };
 
+export type IntentStakeStatus = 'active' | 'slashed' | 'released';
+export type IntentStakeSlashReason = 'sybil' | 'rate_abuse' | 'fabricated';
+
+export type IntentStake = {
+  stake_id: string;
+  actor_id: string;
+  cluster_id: string;
+  amount_cents: number;
+  status: IntentStakeStatus;
+  reason_if_slashed?: IntentStakeSlashReason;
+  created_at: string;
+  updated_at: string;
+};
+
 export type Window = { since: string; until: string };
 
 export type PopularityScore = {

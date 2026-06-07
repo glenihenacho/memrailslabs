@@ -10,6 +10,8 @@ data/refactors/*.json
 data/sessions/*.json
 data/endpoints/*.json
 data/demand/*.jsonl
+data/demand/stakes/*.json
+data/demand/registrations/*.json
 !data/logs/.gitkeep
 !data/generated/.gitkeep
 !data/packets/.gitkeep
@@ -17,5 +19,7 @@ data/demand/*.jsonl
 !data/sessions/.gitkeep
 !data/endpoints/.gitkeep
 !data/demand/.gitkeep
+!data/demand/stakes/.gitkeep
+!data/demand/registrations/.gitkeep
 next-env.d.ts
 *.tsbuildinfo

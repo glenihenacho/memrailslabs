@@ -9,7 +9,9 @@ export type LedgerEventType =
   | 'PACKET_BILLED'
   | 'HARNESS_DEPLOYED'
   | 'INTENT_OBSERVED'
-  | 'INTENT_FULFILLED';
+  | 'INTENT_FULFILLED'
+  | 'INTENT_STAKE_POSTED'
+  | 'INTENT_STAKE_SLASHED';
 
 export type LedgerEvent = {
   event_id: string;

@@ -77,4 +77,42 @@ describe('GET /api/demand/index', () => {
     expect(texts).toContain('public');
     expect(texts).not.toContain('private');
   });
+
+  it('reorders the ranking when genuineness is toggled on vs off (sybil collapse)', async () => {
+    // Cluster X — 50 observations from one bot in 1 second (sybil).
+    for (let i = 0; i < 50; i += 1) {
+      observeIntent({ raw_text: 'sybil packets', source: 'memory_query', actor_id: 'bot' });
+    }
+    // Cluster Y — 3 observations from 3 distinct actors over time.
+    observeIntent({ raw_text: 'evidence floor', source: 'memory_query', actor_id: 'alice' });
+    observeIntent({ raw_text: 'evidence floor', source: 'memory_query', actor_id: 'bob' });
+    observeIntent({ raw_text: 'evidence floor', source: 'memory_query', actor_id: 'charlie' });
+
+    // With genuineness OFF: raw frequency wins → sybil cluster ranks first.
+    const { body: off } = await getIndex('?genuineness=off');
+    expect(off.clusters[0].canonical_text).toBe('sybil packets');
+
+    // With genuineness ON: sybil is penalized → organic cluster ranks higher
+    // (or at least the sybil composite has fallen).
+    const { body: on } = await getIndex('?genuineness=on');
+    const sybilRow = on.clusters.find((c: { canonical_text: string }) => c.canonical_text === 'sybil packets');
+    expect(sybilRow.genuineness).toBeLessThan(0.3);
+    expect(sybilRow.composite).toBeLessThan(
+      off.clusters.find((c: { canonical_text: string }) => c.canonical_text === 'sybil packets').composite,
+    );
+  });
+
+  it('surfaces active_stakes count in totals', async () => {
+    observeIntent({ raw_text: 'packet contract', source: 'memory_query', actor_id: 'a' });
+    const { body: before } = await getIndex();
+    expect(before.totals.active_stakes).toBe(0);
+
+    const { clusterIntents, loadObservations } = await import('@/lib/demand/aggregate');
+    const { postStake } = await import('@/lib/demand/stake');
+    const cluster = clusterIntents(loadObservations())[0];
+    postStake({ actor_id: 'staker', cluster_id: cluster.cluster_id, amount_cents: 500 });
+
+    const { body: after } = await getIndex();
+    expect(after.totals.active_stakes).toBe(1);
+  });
 });
