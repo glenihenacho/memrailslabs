@@ -16,7 +16,8 @@
     "memory:inspect": "tsx scripts/inspect-packet.ts",
     "ledger:export": "tsx scripts/export-ledger.ts",
     "mcp:stdio": "tsx scripts/mcp-stdio.ts",
-    "memrails:deploy": "tsx scripts/deploy-endpoint.ts"
+    "memrails:deploy": "tsx scripts/deploy-endpoint.ts",
+    "intent:index": "tsx scripts/intent-index.ts"
   },
   "dependencies": {
     "@modelcontextprotocol/sdk": "^1.29.0",

@@ -26,3 +26,28 @@ export type SocketRegistration = {
   consent: { share_intents: boolean };
   registered_at: string;
 };
+
+export type IntentCluster = {
+  cluster_id: string;
+  canonical_text: string;
+  observation_ids: string[];
+  actor_ids: string[];
+  identity_mix: { authenticated: number; anonymous: number };
+  first_observed: string;
+  last_observed: string;
+};
+
+export type Window = { since: string; until: string };
+
+export type PopularityScore = {
+  cluster_id: string;
+  canonical_text: string;
+  observations: number;
+  frequency: number;
+  velocity: number;
+  breadth: number;
+  genuineness: number;
+  composite: number;
+  actor_ids: string[];
+  window: Window;
+};
