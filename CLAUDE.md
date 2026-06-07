@@ -29,21 +29,21 @@ MemRails is **knowledge density infrastructure for agentic software**. Treat mem
 
 ### One-line positioning
 
-MemRails turns messy knowledge into compact, evidence-graded packets that agents can query, inspect, stream, and pay for.
+MemRails is the demand-signal layer for agentic software — it observes intent at the source, aggregates it into a priced index, and clears a market between agents that produce demand and operators that serve it.
+
+> Marketing copy continues to lead with packets, evidence-graded retrieval, and provenance (§13 governs the storefront and is unchanged). The positioning above governs the **constitution** — what the product actually is underneath. Do not propagate this language to marketing surfaces without an explicit rewrite ask.
 
 ### Core thesis
 
-Agents do not need more raw context. They need denser, inspectable memory packets.
+The product is the **aggregated intent signal** and the **market that prices it**. Memory is the sensor, not the asset. The substrate runs in four layers:
 
-The product value is not “we store memories.” The product value is:
+```
+socket  →  lake     →   index           →  exchange
+sensor    aggregate    price discovery    clear & settle
+(L1–L5)   (clusters)   (freq×vel×breadth) (auctions + payouts)
+```
 
-1. retrieve cheaply first,
-2. filter evidence,
-3. compress only when necessary,
-4. return a structured packet,
-5. expose provenance,
-6. log the decision trail,
-7. make the packet billable.
+The packet contract, retrieval orchestration, provenance, and JSONL ledger remain the substrate that makes attribution and payouts possible — necessary, but not value-capture. The two things that decide whether this pays out: **liquidity** (volume of real intent) and **proof-of-genuine-demand** (the moat that makes the index investable).
 
 ### Product primitives
 
@@ -56,21 +56,25 @@ The product value is not “we store memories.” The product value is:
 | MCP | Agent tool surface | Expose `memory.query`, `memory.write`, `memory.inspect` |
 | MPP/x402-style payments | Monetization rail | Session/budget authorization before paid packet streaming |
 | Compress-v1 | Specialized L5 synthesis layer | Compression is last resort and value layer |
+| DemandIntent | Single observation of intent at the sensor | One record per query; carries `actor_id`, `content_hash`, normalized text |
+| IntentCluster | Group of `DemandIntent`s representing the same underlying demand | Lexical/embedding similarity; carries breadth, frequency, velocity |
+| PopularityIndex | Priced ranking of `IntentCluster`s over a window | `composite = frequency × velocity × breadth × genuineness` |
 
 ---
 
 ## 2. Non-Negotiable Product Rules
 
-### Rule 1 — Memory is file-canonical
+### Rule 1 — Memory is file-canonical (per actor)
 
-The system must preserve a plain-text, Git-versionable source of truth.
+Each participant's memory remains a plain-text, Git-versionable source of truth, namespaced by `actor_id`.
 
 Required:
 
-- `/knowledge/**/*.md` as canonical content.
+- `corpora/<actor_id>/knowledge/**/*.md` (or the legacy global `/knowledge/**/*.md` when no actor is supplied) is the canonical content for that actor.
 - Structured frontmatter where useful.
 - Generated indexes are derived artifacts, not the canonical source.
 - No opaque-only memory graph.
+- **Source files never leave a participant's namespace.** The opt-in shared **lake** aggregates contributed *intent observations* (`DemandIntent`) — not source markdown. Participants control sharing per-actor via the consent flag on `MemorySocket.register`.
 
 ### Rule 2 — Cheap filters before expensive synthesis
 
@@ -138,21 +142,22 @@ Log:
 - cost attribution,
 - refactor events.
 
-### Rule 6 — Keep the protocol model-agnostic
+### Rule 6 — Keep the substrate model-agnostic; the product is the demand index
 
-The packet contract must survive model swaps.
+The packet contract must survive model swaps. Claude, OpenAI, local models, and MemRails Compress-v1 can all produce packets.
 
-Claude, OpenAI, local models, and MemRails Compress-v1 can all produce packets, but the product is the packet contract plus retrieval/evidence orchestration.
+**The product is the aggregated intent index and the exchange that prices it.** The packet contract is the substrate that makes attribution and payouts possible — it is necessary but not value-capture. Model-agnostic packets keep the substrate portable; demand aggregation is what the substrate enables.
 
-### Rule 7 — No lock-in story
+### Rule 7 — Opt-in contribution with attribution payout
 
-Users must be able to:
+Participants plug in voluntarily and are revenue-shared on the intents and trajectories they surface. Provenance is the **attribution rail for payouts**, not a lock-in safeguard.
 
-- read their memory files,
-- export logs as JSONL,
-- self-host the harness,
-- bring their own model key,
-- eject from managed infrastructure.
+Required:
+
+- Contribution to the lake is opt-in per `actor_id` (consent flag on `MemorySocket.register`).
+- Every contributed `DemandIntent` carries provenance back to the contributing actor so attribution math can settle later.
+- Self-host, JSONL export, BYO model key, and eject paths remain available — but they are now portability promises, not the marketing wedge.
+- Payout eligibility requires `identity_type: 'authenticated_account'`. Anonymous fingerprints contribute signal without payout.
 
 ---
 
@@ -1037,7 +1042,7 @@ If choosing between two implementations:
 
 Choose the one that makes the demo sharper.
 
-The killer demo is:
+### Marketing demo (public surfaces)
 
 ```txt
 messy knowledge in
@@ -1050,15 +1055,32 @@ messy knowledge in
 → write path improves the memory
 ```
 
-Anything outside this loop is secondary.
+This is what the storefront sells and what §13 vocabulary supports. Keep it.
+
+### Founder / internal demo (constitution surface, not for marketing yet)
+
+```txt
+query observed
+→ DemandIntent emitted on the lake
+→ clusters re-rank
+→ popularity index shifts (freq × velocity × breadth)
+→ genuineness gate weights the change
+→ Console shows the index moved
+```
+
+This is the demo that proves the pivot has landed. It runs on internal/dev surfaces (Console + CLI + `/api/demand/index`); it does not appear on marketing pages until a separate rewrite is commissioned.
+
+Anything outside these two loops is secondary.
 
 ---
 
 ## 20. Current Strategic Wedge
 
-The wedge is **Claude Code fulfillment**.
+The wedge is **the aggregated demand index**.
 
-Build MemRails first as the memory layer a Claude Code-powered team would actually use:
+Per-packet billing (`src/lib/pricing/calculator.ts`, `$5/10k packets`) is already wired and is both the monetization rail and the demand-flow generator: every fulfilled query emits `INTENT_OBSERVED` + `INTENT_FULFILLED` + `PACKET_BILLED` on the same ledger. The wedge is **making per-query demand legible, priced, and genuine-resistant** — not inventing a new marketplace product.
+
+The Claude Code fulfillment story remains the **public-facing acquisition message**:
 
 - project-level memory,
 - repo-aware context,
@@ -1069,6 +1091,34 @@ Build MemRails first as the memory layer a Claude Code-powered team would actual
 - MCP access,
 - console audit trail.
 
-The first buyer does not need an abstract memory market. They need Claude Code to stop losing context, stop bloating prompts, and stop making untraceable implementation decisions.
+Acquisition pulls users in via the substrate they need (packets, console, MCP). The substrate then emits the demand signal that is the actual asset. The first buyer experiences "Claude Code that stops losing context"; what the business sells underneath is the priced demand index. Both are true; both ship.
 
-Ship that.
+---
+
+## 21. Demand Layer
+
+The north star: **the asset is the priced demand signal, not the substrate that produces it.**
+
+### Four layers, one direction
+
+```
+socket  →  lake     →   index           →  exchange
+sensor    aggregate    price discovery    clear & settle
+(L1–L5)   (clusters)   (freq×vel×breadth) (auctions + payouts)
+```
+
+- **Socket** (substrate, today): every `query()` emits a `DemandIntent` tagged with `actor_id`, `content_hash`, normalized text. The retrieval orchestrator is the sensor.
+- **Lake** (Phase 1–2): append-only `data/demand/intents.jsonl`, per-actor namespaced, opt-in shared across participants who consent.
+- **Index** (Phase 3): clusters scored as `composite = frequency × velocity × breadth × genuineness`. Exposed via `/api/demand/index` and `npm run intent:index`.
+- **Exchange** (Phase 5 stubs, future): auctions on cluster supply; attribution payouts via provenance.
+
+### Two things that decide the payout
+
+1. **Liquidity.** Volume of real intent flowing through. Per-packet billing is the rail; growth in `INTENT_OBSERVED` is the leading indicator.
+2. **Proof-of-genuine-demand.** Sybil resistance, per-actor identity, rate limits, intent stake + slashing. The moat. Cannot be retrofitted into a gamed market — must be built in alongside the index, not after.
+
+### Guardrails
+
+- **This section governs the constitution. It does not govern marketing copy.** §13 "Message discipline" stays byte-identical until a separate marketing rewrite is commissioned. Do not propagate "demand index" / "intent cluster" / "popularity index" vocabulary onto landing pages, pricing, harness, or any other public surface without an explicit ask.
+- **Memory is the sensor, not the product.** If a proposal frames "better memory" as the value capture rather than the observation surface, it is reverting toward the old constitution. Stop and re-read §1, §6, §20.
+- **Do not invent a bootstrap on-ramp.** Per-packet billing is the demand-flow rail; do not add a manufactured marketplace, trajectory store, or log exchange before real adoption demands one. If adoption ever surfaces such a need, the schema for it is decided then, from evidence.
