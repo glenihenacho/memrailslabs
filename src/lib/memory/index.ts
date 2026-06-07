@@ -13,6 +13,7 @@ import { logPacket } from '@/lib/ledger/events';
 import { billPacket } from '@/lib/payments/sessions';
 import { loadEndpoint } from '@/lib/endpoints/store';
 import { savePacket, loadPacket } from './store';
+import { observeIntent, markFulfilled } from '@/lib/demand/observe';
 
 const HIGH_CONFIDENCE = 0.85;
 const SYNTHESIS_INTENTS = new Set(['summarize', 'compare', 'extract']);
@@ -31,6 +32,14 @@ export async function query(input: QueryInput): Promise<MemoryPacket> {
     if (!ep) throw new EndpointNotFound(input.endpoint_id);
     if (ep.status !== 'live') throw new EndpointNotLive(ep.endpoint_id, ep.status);
   }
+
+  const observation = observeIntent({
+    raw_text: input.query,
+    source: 'memory_query',
+    actor_id: input.actor_id,
+    identity_type: input.identity_type,
+    session_id: input.session_id,
+  });
 
   const corpus = loadCorpus();
   const overallStart = Date.now();
@@ -94,6 +103,7 @@ export async function query(input: QueryInput): Promise<MemoryPacket> {
   }
   savePacket(packet);
   logPacket(packet, latency, voucher && voucher.ok ? voucher : null, input.endpoint_id);
+  markFulfilled(observation.intent_id, packet.packet_id, observation.actor_id, observation.session_id);
   return packet;
 }
 

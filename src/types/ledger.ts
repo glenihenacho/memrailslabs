@@ -7,7 +7,9 @@ export type LedgerEventType =
   | 'REFACTOR_REJECTED'
   | 'PAYMENT_AUTHORIZED'
   | 'PACKET_BILLED'
-  | 'HARNESS_DEPLOYED';
+  | 'HARNESS_DEPLOYED'
+  | 'INTENT_OBSERVED'
+  | 'INTENT_FULFILLED';
 
 export type LedgerEvent = {
   event_id: string;

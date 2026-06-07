@@ -1,20 +1,7 @@
 import type { EvidenceClaim } from '@/types/evidence';
 import type { RetrievalResult } from '@/types/packet';
 import type { CorpusEntry } from './corpus';
-
-const STOPWORDS = new Set([
-  'a', 'an', 'and', 'are', 'as', 'at', 'be', 'by', 'for', 'from', 'has',
-  'have', 'in', 'is', 'it', 'of', 'on', 'or', 'the', 'to', 'was', 'were',
-  'with', 'what', 'how', 'when', 'why', 'do', 'does', 'this', 'that', 'i',
-]);
-
-function tokenize(s: string): string[] {
-  return s
-    .toLowerCase()
-    .replace(/[^a-z0-9\s_-]/g, ' ')
-    .split(/\s+/)
-    .filter((t) => t.length > 1 && !STOPWORDS.has(t));
-}
+import { tokenize } from '@/lib/text/normalize';
 
 /**
  * L3 — Deterministic token-overlap fallback. Real embeddings live behind this

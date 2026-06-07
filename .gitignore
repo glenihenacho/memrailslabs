@@ -9,11 +9,13 @@ data/packets/*.json
 data/refactors/*.json
 data/sessions/*.json
 data/endpoints/*.json
+data/demand/*.jsonl
 !data/logs/.gitkeep
 !data/generated/.gitkeep
 !data/packets/.gitkeep
 !data/refactors/.gitkeep
 !data/sessions/.gitkeep
 !data/endpoints/.gitkeep
+!data/demand/.gitkeep
 next-env.d.ts
 *.tsbuildinfo

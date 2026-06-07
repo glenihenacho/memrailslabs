@@ -8,6 +8,8 @@ export const QueryInputShape = {
   max_tokens: z.number().int().positive().max(2000).optional(),
   session_id: z.string().min(1).max(128).optional(),
   endpoint_id: z.string().min(1).max(128).optional(),
+  actor_id: z.string().min(1).max(128).optional(),
+  identity_type: z.enum(['anonymous_fingerprint', 'authenticated_account']).optional(),
 };
 
 export const QueryInputSchema = z.object(QueryInputShape);
