@@ -41,7 +41,8 @@ export async function query(input: QueryInput): Promise<MemoryPacket> {
     session_id: input.session_id,
   });
 
-  const corpus = loadCorpus();
+  // Per-actor corpus when registered; falls back to global knowledge/ otherwise.
+  const corpus = loadCorpus({ actor_id: observation.actor_id });
   const overallStart = Date.now();
 
   // L1 → L2 → L3 — cheapest filters first (§2 Rule 2).

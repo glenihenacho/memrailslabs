@@ -1,9 +1,27 @@
-import { readdirSync, readFileSync, statSync } from 'node:fs';
+import { existsSync, readdirSync, readFileSync, statSync } from 'node:fs';
 import { join, relative, resolve } from 'node:path';
 import matter from 'gray-matter';
 import type { EvidenceClaim } from '@/types/evidence';
+import { dataRoot } from '@/lib/runtime';
 
-const KNOWLEDGE_DIR = resolve(process.cwd(), 'knowledge');
+const ACTOR_ID_PATTERN = /^[a-z0-9_:.-]{1,128}$/i;
+const GLOBAL_KEY = '_global';
+
+function globalKnowledgeDir(): string {
+  return resolve(process.cwd(), 'knowledge');
+}
+
+function actorKnowledgeDir(actor_id: string): string {
+  return resolve(dataRoot(), 'corpora', actor_id, 'knowledge');
+}
+
+function resolveCorpusDir(actor_id?: string): { dir: string; key: string } {
+  if (actor_id && ACTOR_ID_PATTERN.test(actor_id)) {
+    const dir = actorKnowledgeDir(actor_id);
+    if (existsSync(dir)) return { dir, key: actor_id };
+  }
+  return { dir: globalKnowledgeDir(), key: GLOBAL_KEY };
+}
 
 function walkMarkdown(dir: string): string[] {
   const out: string[] = [];
@@ -20,18 +38,20 @@ function walkMarkdown(dir: string): string[] {
   return out;
 }
 
-export function knowledgeDir(): string {
-  return KNOWLEDGE_DIR;
+export function knowledgeDir(actor_id?: string): string {
+  return resolveCorpusDir(actor_id).dir;
 }
 
-export function listKnowledgeFiles(): string[] {
-  return walkMarkdown(KNOWLEDGE_DIR).map((p) =>
+export function listKnowledgeFiles(actor_id?: string): string[] {
+  const { dir } = resolveCorpusDir(actor_id);
+  if (!existsSync(dir)) return [];
+  return walkMarkdown(dir).map((p) =>
     relative(process.cwd(), p).replace(/\\/g, '/'),
   );
 }
 
-export function findClaim(id: string): EvidenceClaim | null {
-  const hit = loadCorpus().find((entry) => entry.claim.id === id);
+export function findClaim(id: string, actor_id?: string): EvidenceClaim | null {
+  const hit = loadCorpus({ actor_id }).find((entry) => entry.claim.id === id);
   return hit ? hit.claim : null;
 }
 
@@ -40,12 +60,22 @@ export type CorpusEntry = {
   body: string;
 };
 
-let cache: CorpusEntry[] | null = null;
+const caches: Map<string, CorpusEntry[]> = new Map();
 
-export function loadCorpus(opts: { force?: boolean } = {}): CorpusEntry[] {
-  if (cache && !opts.force) return cache;
+export type LoadCorpusOpts = { actor_id?: string; force?: boolean };
 
-  const files = walkMarkdown(KNOWLEDGE_DIR);
+export function loadCorpus(opts: LoadCorpusOpts = {}): CorpusEntry[] {
+  const { dir, key } = resolveCorpusDir(opts.actor_id);
+  if (!opts.force) {
+    const hit = caches.get(key);
+    if (hit) return hit;
+  }
+  if (!existsSync(dir)) {
+    caches.set(key, []);
+    return [];
+  }
+
+  const files = walkMarkdown(dir);
   const entries: CorpusEntry[] = [];
 
   for (const path of files) {
@@ -85,8 +115,8 @@ export function loadCorpus(opts: { force?: boolean } = {}): CorpusEntry[] {
     entries.push({ claim, body: parsed.content });
   }
 
-  cache = entries;
-  return cache;
+  caches.set(key, entries);
+  return entries;
 }
 
 function extractFirstParagraph(content: string): string {

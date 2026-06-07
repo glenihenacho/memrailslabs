@@ -62,8 +62,21 @@ async function _POST(req: Request) {
     );
   }
 
+  // Header overrides body — middleware/proxies can set actor identity more
+  // reliably than a client-controlled body field.
+  const headerActorId = req.headers.get('x-memrails-actor-id') ?? undefined;
+  const headerIdentityType = req.headers.get('x-memrails-identity-type') ?? undefined;
+  const input = {
+    ...parsed.data,
+    actor_id: headerActorId ?? parsed.data.actor_id,
+    identity_type:
+      headerIdentityType === 'anonymous_fingerprint' || headerIdentityType === 'authenticated_account'
+        ? headerIdentityType
+        : parsed.data.identity_type,
+  };
+
   try {
-    const packet = await withTimeout(query(parsed.data), QUERY_TIMEOUT_MS);
+    const packet = await withTimeout(query(input), QUERY_TIMEOUT_MS);
     return NextResponse.json(packet);
   } catch (err) {
     if (err instanceof PaymentRequired) {

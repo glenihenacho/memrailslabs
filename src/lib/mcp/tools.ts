@@ -35,6 +35,7 @@ export type QueryArgs = {
   max_tokens?: number;
   session_id?: string;
   endpoint_id?: string;
+  actor_id?: string;
 };
 
 export type InspectArgs = { packet_id: string };
@@ -62,16 +63,28 @@ export type HarnessDeployArgs = {
 
 export type HarnessStatusArgs = { endpoint_id: string };
 
+function mcpActorId(args: QueryArgs): string {
+  if (args.actor_id) return args.actor_id;
+  const envActor = process.env.MEMRAILS_MCP_ACTOR_ID;
+  if (envActor && envActor.length > 0) return envActor;
+  return 'mcp:default';
+}
+
 export async function handleQuery(args: QueryArgs): Promise<ToolResult> {
-  logEvent('MCP_TOOL_CALL', {
-    tool: 'memory.query',
-    input_preview: args.query.slice(0, 200),
-    intent: args.intent ?? 'answer',
-    session_id: args.session_id,
-    endpoint_id: args.endpoint_id,
-  });
+  const actor_id = mcpActorId(args);
+  logEvent(
+    'MCP_TOOL_CALL',
+    {
+      tool: 'memory.query',
+      input_preview: args.query.slice(0, 200),
+      intent: args.intent ?? 'answer',
+      session_id: args.session_id,
+      endpoint_id: args.endpoint_id,
+    },
+    { actor_id, session_id: args.session_id },
+  );
   try {
-    const packet = await query(args);
+    const packet = await query({ ...args, actor_id });
     return { content: [{ type: 'text', text: JSON.stringify(packet, null, 2) }] };
   } catch (err) {
     if (err instanceof PaymentRequired) {

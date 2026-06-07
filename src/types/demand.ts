@@ -12,9 +12,17 @@ export type DemandIntent = {
   source: DemandSource;
   packet_id?: string;
   embedding?: number[];
+  consent_share: boolean;
   observed_at: string;
 };
 
 export type IntentObservation = DemandIntent & {
   _v: 1;
+};
+
+export type SocketRegistration = {
+  actor_id: string;
+  identity_type: IdentityType;
+  consent: { share_intents: boolean };
+  registered_at: string;
 };

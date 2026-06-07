@@ -4,6 +4,7 @@ import { randomUUID } from 'node:crypto';
 import { dataRoot } from '@/lib/runtime';
 import { logEvent } from '@/lib/ledger/events';
 import { contentHash, normalize } from '@/lib/text/normalize';
+import { isOptedIn } from './socket';
 import type {
   DemandIntent,
   DemandSource,
@@ -45,6 +46,8 @@ export function observeIntent(input: ObserveInput): DemandIntent {
   const intent_id = `ti_${randomUUID().replace(/-/g, '').slice(0, 12)}`;
   const { actor_id, identity_type } = ensureActor(input.actor_id);
 
+  const consent_share = isOptedIn(actor_id, 'intents');
+
   const observation: IntentObservation = {
     _v: 1,
     intent_id,
@@ -55,6 +58,7 @@ export function observeIntent(input: ObserveInput): DemandIntent {
     identity_type: input.identity_type ?? identity_type,
     session_id: input.session_id,
     source: input.source,
+    consent_share,
     observed_at,
   };
 
@@ -66,6 +70,7 @@ export function observeIntent(input: ObserveInput): DemandIntent {
       intent_id,
       content_hash: hash,
       source: input.source,
+      consent_share,
       normalized_preview: normalized.slice(0, 120),
     },
     { actor_id, session_id: input.session_id },
