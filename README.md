@@ -49,6 +49,18 @@ npm run dev   # → http://localhost:3000/console-live
 | GET | `/api/memory/map` | Project MemoryIndex tree |
 | GET | `/api/retrievals/:id/trace` | Replay a retrieval's trace |
 | POST | `/api/feedback` | Rate a retrieval / memory |
+| POST | `/api/enroll` | Provision an isolated tenant (one email → one account + credits) |
+| GET | `/api/usage` | Metered usage summary for an owner |
+
+## Pricing — metered by retrieval
+
+The commercial primitive is the metered retrieval: **one successful
+`memory.retrieve()` = one billable retrieval** (default `$0.002`, i.e. `$2` per
+1,000). Writes are cheap; context tokens are the model provider's charge, not
+MemRails'. No arbitrary quotas — the free tier ships **retrieval credits**, and
+backend rails are MemRails-managed and invisible (no BYO). Every retrieval
+returns minimal `usage` on the bundle and logs a billing + internal-cost event.
+See `knowledge/billing-model.md` and `knowledge/rails.md`.
 
 ## SDKs & MCP
 

@@ -19,11 +19,13 @@ scoped, explainable **context bundle**. The packet/L1–L5 path is the synthesis
 surface beneath it (see `architecture.md`).
 
 - `governed-retrieval.md` — `memory.retrieve()` pipeline, modes, ranking.
+- `billing-model.md` — metered-by-retrieval commercial model.
+- `rails.md` — managed backend rails (no BYO, internal pools).
 - `data-model.md` — registry / index / telemetry schema (Postgres ↔ MVP).
 - `roadmap.md` — phased build plan.
 - `non-goals.md` — what MemRails is deliberately not.
 - `product.md` — primitives, positioning, wedge.
 - `architecture.md` — packet/L1 → L5 synthesis stack.
-- `pricing.md` — packet-based billing.
+- `pricing.md` — retrieval-based billing (legacy packet price retained).
 - `claims/` — atomic, confidence-graded claims (memory-retrieve, context-bundle,
   governed-scope, memory-index, memory-supersession, packet-contract, …).

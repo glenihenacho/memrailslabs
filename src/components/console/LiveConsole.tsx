@@ -242,6 +242,18 @@ export function LiveConsole() {
               policy: {bundle.retrieval_trace.policy_filters_applied.join(' · ')}
             </div>
 
+            <div className="flex items-center justify-between rounded-md border hairline bg-graphite-2/60 px-3 py-2 font-mono text-[11px]">
+              <span className="text-muted-foreground">
+                billable: <span className="text-signal">{bundle.usage.billable_retrievals}</span> retrieval
+                {bundle.usage.billable_units !== 1 ? ` · ${bundle.usage.billable_units}u` : ''}
+              </span>
+              <span className={bundle.usage.credit_exhausted ? 'text-evidence-bad' : 'text-evidence-good'}>
+                {Number.isFinite(bundle.usage.credits_remaining)
+                  ? `${bundle.usage.credits_remaining} credits left`
+                  : 'usage billing'}
+              </span>
+            </div>
+
             {bundle.packet && (
               <div>
                 <div className="text-[10px] font-mono uppercase tracking-[0.18em] text-muted-foreground mb-2">

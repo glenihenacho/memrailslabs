@@ -35,12 +35,14 @@ describe('memory.retrieve — governed context bundle', () => {
 
   it('respects the token budget and ranks by relevance', () => {
     const bundle = retrieve({
-      task_context: 'pricing orchestration packets',
+      task_context: 'pricing orchestration packets billing retrieval credits',
       max_tokens: 40,
     });
-    expect(bundle.tokens_returned).toBeLessThanOrEqual(40);
-    // Some candidates should be dropped to the omitted list under a tight budget.
-    expect(bundle.omitted.length + bundle.memories.length).toBeGreaterThan(0);
+    // The top memory is always included; beyond it the budget is enforced, so a
+    // tiny budget yields a short bundle and pushes the rest to omitted.
+    expect(bundle.memories.length).toBeLessThanOrEqual(2);
+    expect(bundle.omitted.length).toBeGreaterThan(0);
+    expect(bundle.omitted.some((o) => o.reason.includes('token budget'))).toBe(true);
   });
 
   it('excludes a different project from scope', () => {

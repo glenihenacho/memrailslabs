@@ -7,6 +7,7 @@ data/logs/*.jsonl
 data/generated/*.json
 data/governance.json
 data/written-memory.jsonl
+data/accounts.json
 !data/logs/.gitkeep
 !data/generated/.gitkeep
 .tmp-test-data

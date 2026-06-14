@@ -12,7 +12,8 @@ export type LedgerEventType =
   | 'MEMORY_SUPERSEDED'
   | 'MEMORY_DISPUTED'
   | 'MEMORY_DELETED'
-  | 'FEEDBACK_RECORDED';
+  | 'FEEDBACK_RECORDED'
+  | 'RETRIEVAL_BILLED';
 
 export type LedgerEvent = {
   event_id: string;

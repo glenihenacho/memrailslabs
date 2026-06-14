@@ -11,6 +11,7 @@
 
 import type { MemoryStatus } from './governed';
 import type { MemoryPacket } from './packet';
+import type { RetrievalUsage } from './billing';
 
 export type RetrievalMode =
   | 'exact' // SQL/entity lookup
@@ -79,6 +80,8 @@ export type ContextBundle = {
   retrieval_trace: RetrievalTrace;
   /** Present only when synthesis was requested (`include_packet: true`). */
   packet?: MemoryPacket;
+  /** Metered usage — 1 successful retrieve = 1 billable retrieval. */
+  usage: RetrievalUsage;
   latency_ms: number;
   created_at: string;
 };

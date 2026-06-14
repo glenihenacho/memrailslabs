@@ -7,15 +7,20 @@ index_path: /project/project_memrails/pricing
 memory_type: claim
 created_at: 2026-05-25
 updated_at: 2026-05-25
-claim: MemRails orchestration is priced at $5 per 10,000 packets, with no seat fees. Bring-your-own model means the provider is paid directly; managed Compress-v1 means MemRails handles compression model serving as a separate line item.
+claim: MemRails is priced by memory retrieval — one successful memory.retrieve() is one billable unit, default $0.002 ($2 per 1,000), with no seat fees and no arbitrary quotas. The legacy packet orchestration price ($5 per 10,000 packets) applies only to the packet synthesis path. See billing-model.md.
 ---
 
 # Pricing
 
-- One packet = one completed evidence-graded synthesis.
-- Default packet size ≈ 500 output tokens.
+**Primary (the product):** metered by retrieval — see `billing-model.md`.
+
+- One successful `memory.retrieve()` = one billable retrieval.
+- Default `$0.002` / retrieval (`$2` per 1,000).
+- Free tier = retrieval credits, not caps. No seat fees, no arbitrary quotas.
+- Writes are cheap; context tokens are the model provider's charge, not ours.
+
+**Legacy (packet synthesis path):**
+
+- One packet = one completed evidence-graded synthesis (~500 output tokens).
 - Orchestration: $5 / 10,000 packets.
-- Model inference is a separate line item.
-- BYO model: pay the provider directly.
-- Managed Compress-v1: MemRails serves the compression model.
-- No seat fees.
+- BYO model: pay the provider directly. Managed Compress-v1: MemRails serves it.

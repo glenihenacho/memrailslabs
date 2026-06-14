@@ -54,7 +54,17 @@ How the two framings reconcile:
 Primary retrieval is a **PageIndex-inspired MemoryIndex** tree (not vector
 top-k). pgvector / Qdrant are optional fallback rails. Authority is PostgreSQL
 in production; the MVP runs file-canonical (`data/governance.json`,
-`data/written-memory.jsonl`, `data/logs/*.jsonl`).
+`data/written-memory.jsonl`, `data/accounts.json`, `data/logs/*.jsonl`).
+
+**Commercial primitive = the metered retrieval.** One successful
+`memory.retrieve()` = one billable retrieval (default `$0.002`). Writes are
+cheap; context tokens are the model provider's charge, not MemRails'. No
+arbitrary user-facing quotas — the free tier is **retrieval credits**, and
+backend rails are MemRails-managed and invisible (no BYO; `RailRouter` is the
+seam, internal pools are a cost strategy). Billing code: `src/lib/billing/`,
+`src/lib/accounts/`, `src/lib/rails/`, types in `src/types/billing.ts`, API at
+`/api/{enroll,usage}`. Canonical: `knowledge/billing-model.md`,
+`knowledge/rails.md`.
 
 Canonical knowledge: `knowledge/governed-retrieval.md`, `knowledge/memory-index.md`
 (claim), `knowledge/data-model.md`, `knowledge/roadmap.md`, `knowledge/non-goals.md`.
