@@ -4,7 +4,7 @@ import { randomUUID } from 'node:crypto';
 import { dataPath } from '@/lib/paths';
 import { logEvent } from '@/lib/ledger/events';
 import { debit } from '@/lib/accounts/store';
-import { railRouter, type RailContext } from '@/lib/rails/router';
+import { federation } from '@/lib/federation/accounts';
 import {
   PRICE_PER_RETRIEVAL_USD,
   RETRIEVAL_MULTIPLIERS,
@@ -36,7 +36,6 @@ function estimateInternalCost(bundle: ContextBundle): RetrievalCostEvent {
   const index = Number((t.root_nodes_visited * 0.001).toFixed(4));
   const reasoning = bundle.mode === 'debug' ? 0.01 : 0;
   const telemetry = 0.002;
-  const rails = railRouter.retrievalRails().map((r) => `${r.kind}:${r.pool}:${r.provider}`);
   return {
     retrieval_id: bundle.retrieval_id,
     sql_cost_units: sql,
@@ -46,7 +45,7 @@ function estimateInternalCost(bundle: ContextBundle): RetrievalCostEvent {
     reasoning_cost_units: reasoning,
     telemetry_cost_units: telemetry,
     estimated_total_cost: Number((sql + cache + storage + index + reasoning + telemetry).toFixed(4)),
-    rails_used: rails,
+    storage_accounts: federation.touchedByRetrieval(),
     created_at: new Date().toISOString(),
   };
 }
@@ -56,7 +55,7 @@ function estimateInternalCost(bundle: ContextBundle): RetrievalCostEvent {
  * Writes the public billing event + the internal cost event, debits the
  * account's credits, and returns the minimal usage surfaced on the bundle.
  */
-export function meterRetrieval(bundle: ContextBundle, _ctx: RailContext = {}): RetrievalUsage {
+export function meterRetrieval(bundle: ContextBundle): RetrievalUsage {
   const units = billableUnits(bundle.mode);
   const price = Number((units * PRICE_PER_RETRIEVAL_USD).toFixed(6));
   const cost = estimateInternalCost(bundle);

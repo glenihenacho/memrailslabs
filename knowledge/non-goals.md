@@ -24,7 +24,8 @@ product.
 - building provider actions before memory retrieval,
 - forcing local agents to manage keys or decryption,
 - **BYO rails** — making the user bring/manage Neon, Upstash, R2, or Qdrant
-  (rails are MemRails-managed and invisible; see `rails.md`),
+  (infrastructure is a MemRails-governed federation of NoSQL accounts, invisible
+  to the user; see `federation.md`),
 - billing by stored memories, agent count, or context tokens (meter retrieval),
 - arbitrary user-facing quotas (use retrieval credits + usage pricing),
 - returning raw memory dumps,

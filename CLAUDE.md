@@ -59,12 +59,14 @@ in production; the MVP runs file-canonical (`data/governance.json`,
 **Commercial primitive = the metered retrieval.** One successful
 `memory.retrieve()` = one billable retrieval (default `$0.002`). Writes are
 cheap; context tokens are the model provider's charge, not MemRails'. No
-arbitrary user-facing quotas — the free tier is **retrieval credits**, and
-backend rails are MemRails-managed and invisible (no BYO; `RailRouter` is the
-seam, internal pools are a cost strategy). Billing code: `src/lib/billing/`,
-`src/lib/accounts/`, `src/lib/rails/`, types in `src/types/billing.ts`, API at
+arbitrary user-facing quotas — the free tier is **retrieval credits**.
+Infrastructure is three planes: **SQL = government** (authority/placement),
+**MemoryIndex = protocol** (retrieval), **federated NoSQL accounts =
+infrastructure** (storage). No tiers/pools; the user never brings or sees
+accounts. Billing code: `src/lib/billing/`, `src/lib/accounts/`,
+`src/lib/federation/`, types in `src/types/billing.ts`, API at
 `/api/{enroll,usage}`. Canonical: `knowledge/billing-model.md`,
-`knowledge/rails.md`.
+`knowledge/federation.md`.
 
 Canonical knowledge: `knowledge/governed-retrieval.md`, `knowledge/memory-index.md`
 (claim), `knowledge/data-model.md`, `knowledge/roadmap.md`, `knowledge/non-goals.md`.

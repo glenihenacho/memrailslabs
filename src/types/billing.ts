@@ -55,7 +55,8 @@ export type RetrievalCostEvent = {
   reasoning_cost_units: number;
   telemetry_cost_units: number;
   estimated_total_cost: number;
-  rails_used: string[];
+  /** Federated NoSQL accounts touched by this retrieval. */
+  storage_accounts: string[];
   created_at: string;
 };
 

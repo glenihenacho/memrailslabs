@@ -57,10 +57,12 @@ npm run dev   # → http://localhost:3000/console-live
 The commercial primitive is the metered retrieval: **one successful
 `memory.retrieve()` = one billable retrieval** (default `$0.002`, i.e. `$2` per
 1,000). Writes are cheap; context tokens are the model provider's charge, not
-MemRails'. No arbitrary quotas — the free tier ships **retrieval credits**, and
-backend rails are MemRails-managed and invisible (no BYO). Every retrieval
-returns minimal `usage` on the bundle and logs a billing + internal-cost event.
-See `knowledge/billing-model.md` and `knowledge/rails.md`.
+MemRails'. No arbitrary quotas — the free tier ships **retrieval credits**.
+Infrastructure is three planes: **SQL = government** (authority/placement),
+**MemoryIndex = protocol** (retrieval), **federated NoSQL accounts =
+infrastructure** (storage) — managed and invisible, no BYO. Every retrieval
+returns minimal `usage` and logs a billing + internal-cost event.
+See `knowledge/billing-model.md` and `knowledge/federation.md`.
 
 ## SDKs & MCP
 

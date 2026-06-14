@@ -20,7 +20,7 @@ surface beneath it (see `architecture.md`).
 
 - `governed-retrieval.md` — `memory.retrieve()` pipeline, modes, ranking.
 - `billing-model.md` — metered-by-retrieval commercial model.
-- `rails.md` — managed backend rails (no BYO, internal pools).
+- `federation.md` — three planes: SQL government · MemoryIndex protocol · federated NoSQL infrastructure.
 - `data-model.md` — registry / index / telemetry schema (Postgres ↔ MVP).
 - `roadmap.md` — phased build plan.
 - `non-goals.md` — what MemRails is deliberately not.
