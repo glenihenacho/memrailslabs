@@ -4,6 +4,8 @@ import { beforeEach, describe, it, expect } from 'vitest';
 import { retrieve } from '@/lib/memory/retrieve';
 import { invalidateRegistry } from '@/lib/memory/registry';
 import { enroll, getAccount, ownerIdForEmail, invalidateAccounts } from '@/lib/accounts/store';
+import { write } from '@/lib/memory/write';
+import { federation } from '@/lib/federation/accounts';
 import { calculateRetrievalCost } from '@/lib/pricing/calculator';
 
 function resetData() {
@@ -46,6 +48,29 @@ describe('retrieval metering', () => {
     const bundle = retrieve({ task_context: 'retrieval architecture', owner_id: acct.owner_id });
     expect(bundle.memories.length).toBe(0);
     expect(bundle.usage.billable_retrievals).toBe(1); // still a billable event
+  });
+});
+
+describe('federated NoSQL accounts — one namespace per owner', () => {
+  beforeEach(resetData);
+
+  it('provisions a namespace per owner and isolates memory physically', () => {
+    const alice = enroll('alice@example.com');
+    const bob = enroll('bob@example.com');
+
+    write({ content: 'Alice prefers terse answers.', owner_id: alice.owner_id, memory_type: 'preference', tags: ['preference'] });
+    write({ content: 'Bob prefers verbose answers.', owner_id: bob.owner_id, memory_type: 'preference', tags: ['preference'] });
+
+    const aSees = retrieve({ task_context: 'user preference', owner_id: alice.owner_id });
+    const bSees = retrieve({ task_context: 'user preference', owner_id: bob.owner_id });
+
+    expect(aSees.memories.map((m) => m.summary).join()).toContain('Alice');
+    expect(aSees.memories.map((m) => m.summary).join()).not.toContain('Bob');
+    expect(bSees.memories.map((m) => m.summary).join()).toContain('Bob');
+
+    const accounts = federation.list().map((a) => a.account_id);
+    expect(accounts).toContain(`acct_${alice.owner_id}`);
+    expect(accounts).toContain(`acct_${bob.owner_id}`);
   });
 });
 

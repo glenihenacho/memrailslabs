@@ -45,7 +45,7 @@ function estimateInternalCost(bundle: ContextBundle): RetrievalCostEvent {
     reasoning_cost_units: reasoning,
     telemetry_cost_units: telemetry,
     estimated_total_cost: Number((sql + cache + storage + index + reasoning + telemetry).toFixed(4)),
-    storage_accounts: federation.touchedByRetrieval(),
+    storage_accounts: federation.touchedByRetrieval(bundle.scope.owner_id),
     created_at: new Date().toISOString(),
   };
 }

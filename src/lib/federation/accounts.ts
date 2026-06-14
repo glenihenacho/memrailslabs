@@ -1,70 +1,79 @@
 /**
- * Federated NoSQL infrastructure plane.
+ * Federated NoSQL infrastructure plane — one account namespace per owner.
  *
- * Three planes, cleanly separated:
+ * Three planes:
  *   - SQL = government   — authority: registry, scope, policy, audit, metering,
- *                          and placement (which account holds a memory body).
- *   - MemoryIndex = protocol — the retrieval contract; selects relevant memory
- *                          independent of where it physically lives.
- *   - Federated NoSQL accounts = infrastructure — memory bodies live across a
- *                          federation of NoSQL accounts, stitched into one
- *                          logical store.
+ *                          and placement (owner → namespace mapping).
+ *   - MemoryIndex = protocol — the retrieval contract; reads within a namespace.
+ *   - Federated NoSQL accounts = infrastructure — one NoSQL account namespace
+ *                          per owner/email, stitched into one logical store.
  *
- * The user never sees or brings accounts. SQL decides placement; the protocol
- * reads across the federation; this layer just holds bytes. The default is
- * file-canonical — real NoSQL accounts (Mongo, Couchbase, Scylla, …) join the
- * federation by implementing a provider, with nothing above this line changing.
+ * Each owner (keyed by email at enrollment) gets an isolated account namespace.
+ * Government resolves the namespace; the protocol retrieves inside it; the user
+ * never brings or sees accounts. The MVP backs each namespace with a file
+ * directory; a real NoSQL account (Mongo/Couchbase/Scylla per-tenant database)
+ * joins by implementing a provider — nothing above this plane changes.
  *
- * No tiers, no pools — a flat federation governed from above.
+ * No tiers, no pools — a flat per-owner federation governed from above.
  */
+
+import { existsSync, mkdirSync, readdirSync } from 'node:fs';
+import { dataPath } from '@/lib/paths';
 
 export type FederatedAccountStatus = 'active' | 'readonly' | 'draining';
 
 export type FederatedAccount = {
   account_id: string;
-  /** Backend locator, e.g. `file:knowledge`, later `mongo:atlas-xxx`. */
+  owner_id: string;
+  /** Logical namespace locator. */
+  namespace: string;
+  /** Backend provider, e.g. `file:federation/<owner>`, later `mongo:<db>`. */
   provider: string;
-  /** `canonical` = curated corpus; `writable` = agent-written memory. */
-  role: 'canonical' | 'writable';
   status: FederatedAccountStatus;
 };
 
-/**
- * The federation membership. SQL (government) is authority over *placement*;
- * these accounts are the infrastructure that physically stores memory bodies.
- */
-const DEFAULT_FEDERATION: FederatedAccount[] = [
-  { account_id: 'acct_canonical', provider: 'file:knowledge', role: 'canonical', status: 'active' },
-  { account_id: 'acct_written', provider: 'file:written-memory.jsonl', role: 'writable', status: 'active' },
-];
+function accountId(owner_id: string): string {
+  return `acct_${owner_id}`;
+}
+
+export function namespaceDir(owner_id: string): string {
+  return dataPath('federation', owner_id);
+}
 
 export class Federation {
-  constructor(private readonly accounts: FederatedAccount[] = DEFAULT_FEDERATION) {}
+  /** The owner's account (pure mapping; does not touch disk). */
+  accountFor(owner_id: string): FederatedAccount {
+    return {
+      account_id: accountId(owner_id),
+      owner_id,
+      namespace: `federation/${owner_id}`,
+      provider: `file:federation/${owner_id}`,
+      status: 'active',
+    };
+  }
 
+  /** Provision the owner's namespace (idempotent). Called at enrollment. */
+  provision(owner_id: string): FederatedAccount {
+    const dir = namespaceDir(owner_id);
+    if (!existsSync(dir)) mkdirSync(dir, { recursive: true });
+    return this.accountFor(owner_id);
+  }
+
+  /** SQL governs placement; a record lives in its owner's namespace. */
+  resolve(record: { scope: { owner_id: string } }): FederatedAccount {
+    return this.accountFor(record.scope.owner_id);
+  }
+
+  /** All provisioned namespaces in the federation. */
   list(): FederatedAccount[] {
-    return this.accounts;
+    const base = dataPath('federation');
+    if (!existsSync(base)) return [];
+    return readdirSync(base).map((owner) => this.accountFor(owner));
   }
 
-  byRole(role: FederatedAccount['role']): FederatedAccount {
-    const account = this.accounts.find((a) => a.role === role && a.status !== 'draining');
-    if (!account) throw new Error(`no_federated_account_for_role:${role}`);
-    return account;
-  }
-
-  /**
-   * Resolve which NoSQL account physically holds a record's body. In production
-   * this is read from the SQL `storage_ref`; in the MVP it is derived from the
-   * record's source.
-   */
-  resolve(record: { source_file: string }): FederatedAccount {
-    return record.source_file.includes('written-memory')
-      ? this.byRole('writable')
-      : this.byRole('canonical');
-  }
-
-  /** Accounts a retrieval reads across — used for internal cost accounting. */
-  touchedByRetrieval(): string[] {
-    return this.accounts.filter((a) => a.status === 'active').map((a) => a.account_id);
+  /** Accounts a retrieval reads across — one owner namespace. */
+  touchedByRetrieval(owner_id: string): string[] {
+    return [accountId(owner_id)];
   }
 }
 

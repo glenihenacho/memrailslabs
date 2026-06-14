@@ -3,6 +3,7 @@ import { dirname } from 'node:path';
 import { randomUUID, createHash } from 'node:crypto';
 import { dataPath } from '@/lib/paths';
 import { STARTER_RETRIEVAL_CREDITS } from '@/types/billing';
+import { federation } from '@/lib/federation/accounts';
 
 /**
  * Account / credit ledger.
@@ -91,6 +92,7 @@ export function enroll(email: string, plan: Plan = 'free'): EnrollResult {
   };
   store[owner_id] = account;
   save(store);
+  federation.provision(owner_id); // allocate the owner's NoSQL account namespace
   return { owner_id, email: account.email, plan, api_key, credits_remaining: account.credits_remaining };
 }
 
@@ -110,6 +112,7 @@ export function ensureAccount(owner_id: string): Account {
   };
   store[owner_id] = account;
   save(store);
+  federation.provision(owner_id); // allocate the owner's NoSQL account namespace
   return account;
 }
 

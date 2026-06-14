@@ -109,7 +109,7 @@ export function write(input: WriteInput): WriteResult {
     summary: input.summary ?? content.split(/(?<=[.!?])\s/)[0].slice(0, 220),
     tags,
     aliases: [],
-    source_file: 'data/written-memory.jsonl',
+    source_file: `data/federation/${scope.owner_id}/written.jsonl`,
     source_refs: [
       input.source ?? { type: 'api' },
       { type: 'conversation', hash: `sha256:${sha256(content)}` },

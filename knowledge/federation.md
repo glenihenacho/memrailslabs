@@ -8,7 +8,7 @@ index_path: /project/project_memrails/data_model
 summary: Three planes — SQL is government (authority/placement), MemoryIndex is protocol (retrieval), federated NoSQL accounts are infrastructure (storage). No tiers.
 created_at: 2026-06-14
 updated_at: 2026-06-14
-claim: MemRails separates three planes. SQL is the government plane — registry, scope, policy, audit, metering, and placement authority. MemoryIndex is the protocol plane — the reasoning-tree retrieval contract, independent of where memory is stored. Federated NoSQL accounts are the infrastructure plane — memory bodies live across a federation of NoSQL accounts stitched into one logical store. SQL governs placement, the protocol retrieves across the federation, and the user never brings or sees accounts. There are no infrastructure tiers or pools.
+claim: MemRails separates three planes. SQL is the government plane — registry, scope, policy, audit, metering, and placement authority. MemoryIndex is the protocol plane — the reasoning-tree retrieval contract, independent of where memory is stored. Federated NoSQL accounts are the infrastructure plane — one NoSQL account namespace per owner/email, provisioned at enrollment, stitched into one logical store. SQL governs placement, the protocol retrieves within the owner's namespace, and the user never brings or sees accounts. Tenant isolation is physical, not just a scope filter. There are no infrastructure tiers or pools.
 ---
 
 # Three Planes
@@ -31,22 +31,24 @@ claim: MemRails separates three planes. SQL is the government plane — registry
    └──────────┬────────────┘
               │ reads bodies
    ┌──────────┴────────────┐
-   │ Federated NoSQL = infra│  acct_canonical · acct_written · …
+   │ Federated NoSQL = infra│  acct_<ownerA> · acct_<ownerB> · …
    └───────────────────────┘
 ```
 
-## The federation
+## The federation — one namespace per owner
 
-The infrastructure plane is a **flat federation of NoSQL accounts** — no tiers,
-no pools. SQL is authority over which account holds which memory body (the
-`storage_ref`); the protocol reads across accounts to assemble a bundle.
+The infrastructure plane is a **per-owner federation** — one NoSQL account
+namespace per owner/email, provisioned at enrollment. No tiers, no pools. SQL is
+authority over placement (owner → namespace); the protocol retrieves *within*
+the owner's namespace. Tenant isolation is physical: two owners cannot see each
+other's memory because their bodies live in different accounts.
 
-MVP federation (file-canonical):
+MVP (file-canonical): each owner's namespace is a directory.
 
-- `acct_canonical` → curated corpus (`file:knowledge`)
-- `acct_written` → agent-written memory (`file:written-memory.jsonl`)
+- `acct_<owner>` → `data/federation/<owner>/written.jsonl` (agent-written memory)
+- the curated seed corpus (`/knowledge/**.md`) is the platform owner's namespace
 
-Real NoSQL accounts (Mongo, Couchbase, Scylla, …) join the federation by
-implementing a provider behind `Federation`; nothing above the infrastructure
-plane changes. The user does not bring accounts and never sees them — managed,
-governed, invisible.
+Real NoSQL accounts (a per-tenant Mongo/Couchbase/Scylla database) join the
+federation by implementing a provider behind `Federation` — nothing above the
+infrastructure plane changes. The user does not bring accounts and never sees
+them; enrollment (one email) provisions one namespace, managed and invisible.
