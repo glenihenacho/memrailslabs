@@ -14,6 +14,11 @@
     "memory:index": "tsx scripts/index-knowledge.ts",
     "memory:query": "tsx scripts/run-query.ts",
     "memory:inspect": "tsx scripts/inspect-packet.ts",
+    "memory:retrieve": "tsx scripts/memrails.ts retrieve",
+    "memory:write": "tsx scripts/memrails.ts write",
+    "memory:map": "tsx scripts/memrails.ts map",
+    "memrails": "tsx scripts/memrails.ts",
+    "mcp:server": "tsx scripts/mcp-server.ts",
     "ledger:export": "tsx scripts/export-ledger.ts"
   },
   "dependencies": {

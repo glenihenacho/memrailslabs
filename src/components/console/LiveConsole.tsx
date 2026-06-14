@@ -1,16 +1,22 @@
 'use client';
 
 import { useCallback, useEffect, useState } from 'react';
-import type { MemoryPacket } from '@/types/packet';
+import type { ContextBundle, RetrievalMode } from '@/types/bundle';
 import type { LedgerEvent } from '@/types/ledger';
 import { calculateOrchestrationCost, formatUsd } from '@/lib/pricing/calculator';
 
 type LedgerResponse = { events: LedgerEvent[] };
 
+const MODES: RetrievalMode[] = ['tree', 'hybrid', 'exact', 'hot', 'debug'];
+
 export function LiveConsole() {
-  const [query, setQuery] = useState('what is the packet contract?');
-  const [intent, setIntent] = useState<MemoryPacket['intent']>('answer');
-  const [packet, setPacket] = useState<MemoryPacket | null>(null);
+  const [taskContext, setTaskContext] = useState(
+    'Detail the technical requirements and retrieval architecture for MemRails.',
+  );
+  const [mode, setMode] = useState<RetrievalMode>('tree');
+  const [includeEvidence, setIncludeEvidence] = useState(false);
+  const [includePacket, setIncludePacket] = useState(false);
+  const [bundle, setBundle] = useState<ContextBundle | null>(null);
   const [events, setEvents] = useState<LedgerEvent[]>([]);
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);
@@ -22,7 +28,7 @@ export function LiveConsole() {
       const data = (await res.json()) as LedgerResponse;
       setEvents(data.events.reverse());
     } catch {
-      // Network failure here shouldn't disturb the query view.
+      // Network failure here shouldn't disturb the bundle view.
     }
   }, []);
 
@@ -35,17 +41,18 @@ export function LiveConsole() {
     setLoading(true);
     setError(null);
     try {
-      const res = await fetch('/api/memory/query', {
+      const res = await fetch('/api/memory/retrieve', {
         method: 'POST',
         headers: { 'content-type': 'application/json' },
-        body: JSON.stringify({ query, intent }),
+        body: JSON.stringify({
+          task_context: taskContext,
+          retrieval_mode: mode,
+          include_evidence: includeEvidence,
+          include_packet: includePacket,
+        }),
       });
-      if (!res.ok) {
-        const text = await res.text();
-        throw new Error(text || `HTTP ${res.status}`);
-      }
-      const data = (await res.json()) as MemoryPacket;
-      setPacket(data);
+      if (!res.ok) throw new Error((await res.text()) || `HTTP ${res.status}`);
+      setBundle((await res.json()) as ContextBundle);
       refreshLedger();
     } catch (err) {
       setError(err instanceof Error ? err.message : String(err));
@@ -54,105 +61,108 @@ export function LiveConsole() {
     }
   };
 
-  const queryEvents = events.filter((e) => e.event_type === 'PACKET_CREATED');
-  const packetCount = queryEvents.length;
+  const retrievalEvents = events.filter((e) => e.event_type === 'MEMORY_RETRIEVED');
 
   return (
-    <div className="mt-12 grid lg:grid-cols-[1.1fr_1fr] gap-4">
+    <div className="mt-12 grid lg:grid-cols-[1.05fr_1fr] gap-4">
       <div className="rounded-xl border hairline bg-graphite/40 shadow-card overflow-hidden">
         <div className="flex items-center justify-between px-4 h-10 border-b hairline bg-graphite-2">
-          <div className="text-[11px] font-mono text-muted-foreground">memory.query()</div>
+          <div className="text-[11px] font-mono text-muted-foreground">memory.retrieve()</div>
           <div className="text-[11px] font-mono text-signal flex items-center gap-2">
-            <span className="live-dot" /> live
+            <span className="live-dot" /> governed
           </div>
         </div>
         <form className="p-5 space-y-4" onSubmit={submit}>
           <label className="block">
             <span className="text-[11px] font-mono uppercase tracking-[0.14em] text-muted-foreground">
-              query
+              task_context
             </span>
             <textarea
               className="mt-2 w-full rounded-md border hairline bg-graphite-2/60 px-3 py-2 font-mono text-[13px] leading-relaxed focus:border-signal/60 focus:outline-none"
               rows={3}
-              value={query}
-              onChange={(e) => setQuery(e.target.value)}
+              value={taskContext}
+              onChange={(e) => setTaskContext(e.target.value)}
             />
           </label>
-          <div className="flex items-center gap-3">
-            <label className="block flex-1">
+          <div className="flex items-center gap-3 flex-wrap">
+            <label className="block flex-1 min-w-[120px]">
               <span className="text-[11px] font-mono uppercase tracking-[0.14em] text-muted-foreground">
-                intent
+                mode
               </span>
               <select
                 className="mt-2 w-full rounded-md border hairline bg-graphite-2/60 px-3 py-2 font-mono text-[13px] focus:border-signal/60 focus:outline-none"
-                value={intent}
-                onChange={(e) => setIntent(e.target.value as MemoryPacket['intent'])}
+                value={mode}
+                onChange={(e) => setMode(e.target.value as RetrievalMode)}
               >
-                <option value="answer">answer</option>
-                <option value="summarize">summarize</option>
-                <option value="compare">compare</option>
-                <option value="extract">extract</option>
-                <option value="route">route</option>
+                {MODES.map((m) => (
+                  <option key={m} value={m}>
+                    {m}
+                  </option>
+                ))}
               </select>
+            </label>
+            <label className="flex items-center gap-2 text-[12px] font-mono text-muted-foreground self-end mb-2">
+              <input type="checkbox" checked={includeEvidence} onChange={(e) => setIncludeEvidence(e.target.checked)} />
+              evidence
+            </label>
+            <label className="flex items-center gap-2 text-[12px] font-mono text-muted-foreground self-end mb-2">
+              <input type="checkbox" checked={includePacket} onChange={(e) => setIncludePacket(e.target.checked)} />
+              packet
             </label>
             <button
               type="submit"
-              disabled={loading || query.trim().length === 0}
+              disabled={loading || taskContext.trim().length === 0}
               className="self-end inline-flex items-center gap-2 h-10 px-5 rounded-md bg-signal text-signal-foreground font-semibold text-[13px] shadow-signal hover:opacity-95 transition disabled:opacity-50"
             >
-              {loading ? 'querying…' : 'run query →'}
+              {loading ? 'retrieving…' : 'retrieve →'}
             </button>
           </div>
-          {error && (
-            <div className="text-[12px] font-mono text-evidence-bad">{error}</div>
-          )}
+          {error && <div className="text-[12px] font-mono text-evidence-bad">{error}</div>}
         </form>
 
         <div className="border-t hairline px-5 py-4">
           <div className="text-[10px] font-mono uppercase tracking-[0.18em] text-muted-foreground mb-3">
-            Query stream &middot; {queryEvents.length} packets &middot; orchestration{' '}
-            {formatUsd(calculateOrchestrationCost(packetCount))}
+            Retrieval stream &middot; {retrievalEvents.length} retrievals &middot; orchestration{' '}
+            {formatUsd(calculateOrchestrationCost(retrievalEvents.length))}
           </div>
           <div className="overflow-x-auto">
             <table className="w-full text-left text-[12px] font-mono">
               <thead className="text-muted-foreground">
                 <tr className="border-b hairline">
                   <th className="py-2 pr-3 font-normal">time</th>
-                  <th className="py-2 pr-3 font-normal">layer</th>
+                  <th className="py-2 pr-3 font-normal">mode</th>
                   <th className="py-2 pr-3 font-normal">ms</th>
+                  <th className="py-2 pr-3 font-normal">ret/cons</th>
                   <th className="py-2 pr-3 font-normal">tokens</th>
-                  <th className="py-2 pr-3 font-normal">conf</th>
-                  <th className="py-2 pr-3 font-normal">query</th>
                 </tr>
               </thead>
               <tbody>
-                {queryEvents.length === 0 && (
+                {retrievalEvents.length === 0 && (
                   <tr>
-                    <td colSpan={6} className="py-6 text-muted-foreground">
-                      No packets yet. Submit a query above.
+                    <td colSpan={5} className="py-6 text-muted-foreground">
+                      No retrievals yet. Run one above.
                     </td>
                   </tr>
                 )}
-                {queryEvents.slice(0, 20).map((e) => {
+                {retrievalEvents.slice(0, 20).map((e) => {
                   const m = e.metadata as {
-                    query: string;
-                    layer: string;
-                    tokens: number;
-                    confidence: number;
+                    mode: string;
                     latency_ms: number;
+                    memories_considered: number;
+                    memories_returned: number;
+                    tokens_returned: number;
                   };
                   return (
                     <tr key={e.event_id} className="border-b hairline align-top">
                       <td className="py-2 pr-3 text-muted-foreground">
                         {new Date(e.created_at).toLocaleTimeString()}
                       </td>
-                      <td className="py-2 pr-3 text-signal">{m.layer}</td>
+                      <td className="py-2 pr-3 text-signal">{m.mode}</td>
                       <td className="py-2 pr-3 tabular-nums">{m.latency_ms}</td>
-                      <td className="py-2 pr-3 tabular-nums">{m.tokens}</td>
-                      <td className="py-2 pr-3 tabular-nums">{m.confidence?.toFixed?.(2)}</td>
-                      <td className="py-2 pr-3 text-muted-foreground truncate max-w-[24ch]">
-                        {m.query}
+                      <td className="py-2 pr-3 tabular-nums">
+                        {m.memories_returned}/{m.memories_considered}
                       </td>
+                      <td className="py-2 pr-3 tabular-nums">{m.tokens_returned}</td>
                     </tr>
                   );
                 })}
@@ -164,56 +174,84 @@ export function LiveConsole() {
 
       <div className="rounded-xl border hairline bg-graphite/40 shadow-card overflow-hidden">
         <div className="flex items-center justify-between px-4 h-10 border-b hairline bg-graphite-2">
-          <div className="text-[11px] font-mono text-muted-foreground">packet inspector</div>
-          {packet && (
-            <div className="text-[11px] font-mono text-signal">{packet.packet_id}</div>
-          )}
+          <div className="text-[11px] font-mono text-muted-foreground">context bundle</div>
+          {bundle && <div className="text-[11px] font-mono text-signal">{bundle.context_bundle_id}</div>}
         </div>
-        {!packet ? (
-          <div className="p-8 text-[13px] text-muted-foreground">
-            Run a query to populate the inspector.
-          </div>
+        {!bundle ? (
+          <div className="p-8 text-[13px] text-muted-foreground">Run a retrieval to populate the bundle.</div>
         ) : (
           <div className="p-5 space-y-5 text-[13px]">
+            <div className="flex flex-wrap gap-2">
+              {bundle.retrieval_trace.branches_selected.map((b) => (
+                <span
+                  key={b}
+                  className="px-2 py-1 rounded border hairline bg-graphite-2/60 font-mono text-[11px] text-cyan"
+                >
+                  {b}
+                </span>
+              ))}
+            </div>
+
             <div>
               <div className="text-[10px] font-mono uppercase tracking-[0.18em] text-muted-foreground mb-2">
-                Packet
+                Memories ({bundle.memories.length}) &middot; {bundle.tokens_returned}/{bundle.token_budget} tokens
               </div>
-              <pre className="font-mono text-[12.5px] leading-relaxed whitespace-pre-wrap text-foreground">
-{packet.packet}
-              </pre>
-            </div>
-            <div className="grid grid-cols-2 gap-3 text-[11.5px] font-mono">
-              <Meta label="layer" value={packet.resolved_layer} />
-              <Meta label="intent" value={packet.intent} />
-              <Meta label="tokens" value={String(packet.tokens)} />
-              <Meta label="confidence" value={packet.confidence.toFixed(3)} />
-              <Meta label="contradictions" value={String(packet.contradictions_surfaced)} />
-              <Meta label="compressor" value={packet.model_or_compressor} />
-            </div>
-            <div>
-              <div className="text-[10px] font-mono uppercase tracking-[0.18em] text-muted-foreground mb-2">
-                Evidence ({packet.evidence.length})
-              </div>
-              <ul className="space-y-2 font-mono text-[12px]">
-                {packet.evidence.map((ev) => (
-                  <li
-                    key={ev.claim_id}
-                    className="flex items-center justify-between border-b hairline pb-2"
-                  >
-                    <span className="text-signal">{ev.claim_id}</span>
-                    <span className="text-muted-foreground">{ev.source_file}</span>
-                    <span className="tabular-nums text-evidence-good">
-                      {(ev.weight * 100).toFixed(0)}%
-                    </span>
+              <ul className="space-y-3 font-mono text-[12px]">
+                {bundle.memories.map((m) => (
+                  <li key={m.memory_id} className="border-b hairline pb-2">
+                    <div className="flex items-center justify-between">
+                      <span className="text-signal">{m.memory_id}</span>
+                      <span className="flex items-center gap-2">
+                        <StatusDot status={m.status} />
+                        <span className="tabular-nums text-evidence-good">
+                          {(m.confidence * 100).toFixed(0)}%
+                        </span>
+                        <span className="tabular-nums text-muted-foreground">score {m.score.toFixed(2)}</span>
+                      </span>
+                    </div>
+                    <p className="mt-1 text-foreground/90 leading-relaxed">{m.summary}</p>
+                    <p className="mt-1 text-[11px] text-muted-foreground italic">{m.reason_selected}</p>
                   </li>
                 ))}
               </ul>
             </div>
-            <div className="grid grid-cols-1 gap-2 text-[11px] font-mono">
-              <Meta label="input_hash" value={packet.input_hash} mono />
-              <Meta label="output_hash" value={packet.output_hash} mono />
+
+            {bundle.omitted.length > 0 && (
+              <div>
+                <div className="text-[10px] font-mono uppercase tracking-[0.18em] text-muted-foreground mb-2">
+                  Omitted ({bundle.omitted.length})
+                </div>
+                <ul className="space-y-1 font-mono text-[11px] text-muted-foreground">
+                  {bundle.omitted.map((o) => (
+                    <li key={o.memory_id} className="flex gap-2">
+                      <span className="text-evidence-warn">{o.memory_id}</span>
+                      <span>— {o.reason}</span>
+                    </li>
+                  ))}
+                </ul>
+              </div>
+            )}
+
+            <div className="grid grid-cols-2 gap-3 text-[11.5px] font-mono">
+              <Meta label="mode" value={bundle.mode} />
+              <Meta label="candidates" value={String(bundle.retrieval_trace.candidates_considered)} />
+              <Meta label="roots visited" value={String(bundle.retrieval_trace.root_nodes_visited)} />
+              <Meta label="latency" value={`${bundle.latency_ms}ms`} />
             </div>
+            <div className="text-[10px] font-mono text-muted-foreground">
+              policy: {bundle.retrieval_trace.policy_filters_applied.join(' · ')}
+            </div>
+
+            {bundle.packet && (
+              <div>
+                <div className="text-[10px] font-mono uppercase tracking-[0.18em] text-muted-foreground mb-2">
+                  Synthesized packet ({bundle.packet.tokens} tokens · {bundle.packet.model_or_compressor})
+                </div>
+                <pre className="font-mono text-[12px] leading-relaxed whitespace-pre-wrap text-foreground/90">
+{bundle.packet.packet}
+                </pre>
+              </div>
+            )}
           </div>
         )}
       </div>
@@ -221,11 +259,26 @@ export function LiveConsole() {
   );
 }
 
-function Meta({ label, value, mono }: { label: string; value: string; mono?: boolean }) {
+function StatusDot({ status }: { status: string }) {
+  const color =
+    status === 'active'
+      ? 'var(--evidence-good)'
+      : status === 'disputed'
+        ? 'var(--evidence-warn)'
+        : 'var(--evidence-bad)';
+  return (
+    <span className="inline-flex items-center gap-1 text-[11px] text-muted-foreground">
+      <span className="inline-block w-1.5 h-1.5 rounded-full" style={{ background: color }} />
+      {status}
+    </span>
+  );
+}
+
+function Meta({ label, value }: { label: string; value: string }) {
   return (
     <div className="flex flex-col gap-1">
       <span className="text-[10px] uppercase tracking-[0.18em] text-muted-foreground">{label}</span>
-      <span className={mono ? 'truncate text-foreground' : 'text-foreground'}>{value}</span>
+      <span className="text-foreground">{value}</span>
     </div>
   );
 }

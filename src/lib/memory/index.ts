@@ -83,3 +83,24 @@ export function inspect(packet_id: string): MemoryPacket | null {
   // (the packet body itself isn't persisted server-side yet — see Phase 3).
   return null;
 }
+
+// ── Governed memory.retrieve() architecture ────────────────────────────────
+// The packet path above (query/inspect) is the synthesis surface. The governed
+// primitives below are the product's core: scoped, explainable, file-canonical
+// memory retrieval for locally inferred agents.
+export { retrieve } from './retrieve';
+export { write } from './write';
+export { supersede, dispute, forget } from './lifecycle';
+export { loadRegistry, getRecord, DEFAULT_SCOPE } from './registry';
+export { buildIndex, selectBranches, toMemoryMap } from './index-tree';
+export { recordFeedback, findRetrieval } from './telemetry';
+
+import { loadRegistry } from './registry';
+import { buildIndex, toMemoryMap } from './index-tree';
+import type { MemoryMapNode } from '@/types/index-tree';
+
+/** Project memory map (nested MemoryIndex view) for a given project scope. */
+export function memoryMap(project_id: string): MemoryMapNode[] {
+  const records = loadRegistry().filter((r) => r.scope.project_id === project_id);
+  return toMemoryMap(buildIndex(records));
+}

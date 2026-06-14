@@ -5,7 +5,10 @@ out
 .DS_Store
 data/logs/*.jsonl
 data/generated/*.json
+data/governance.json
+data/written-memory.jsonl
 !data/logs/.gitkeep
 !data/generated/.gitkeep
+.tmp-test-data
 next-env.d.ts
 *.tsbuildinfo
