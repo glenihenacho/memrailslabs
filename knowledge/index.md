@@ -21,6 +21,7 @@ surface beneath it (see `architecture.md`).
 - `governed-retrieval.md` — `memory.retrieve()` pipeline, modes, ranking.
 - `billing-model.md` — metered-by-retrieval commercial model.
 - `federation.md` — three planes: SQL government · MemoryIndex protocol · federated NoSQL infrastructure.
+- `stack.md` — canonical rail map (Postgres + MemoryIndex + Redis + R2; global vs per-owner).
 - `data-model.md` — registry / index / telemetry schema (Postgres ↔ MVP).
 - `roadmap.md` — phased build plan.
 - `non-goals.md` — what MemRails is deliberately not.

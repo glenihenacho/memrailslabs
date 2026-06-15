@@ -4,6 +4,7 @@ import { randomUUID } from 'node:crypto';
 import type { ContextBundle } from '@/types/bundle';
 import { logEvent } from '@/lib/ledger/events';
 import { dataPath } from '@/lib/paths';
+import { hotRetrievals } from '@/lib/rails/hot';
 
 /**
  * Retrieval telemetry. Every `memory.retrieve()` writes a full record here so
@@ -34,6 +35,7 @@ function append(path: string, obj: unknown): void {
 }
 
 export function recordRetrieval(bundle: ContextBundle): void {
+  hotRetrievals.set(bundle.retrieval_id, bundle); // Hot Rail: keep recent state warm
   append(retrievalsFile(), bundle);
   logEvent(
     'MEMORY_RETRIEVED',
@@ -58,6 +60,8 @@ export function recordRetrieval(bundle: ContextBundle): void {
 }
 
 export function findRetrieval(retrieval_id: string): ContextBundle | null {
+  const hot = hotRetrievals.get(retrieval_id); // Hot Rail before cold scan
+  if (hot) return hot as ContextBundle;
   const path = retrievalsFile();
   if (!existsSync(path)) return null;
   const lines = readFileSync(path, 'utf8').split('\n');

@@ -33,8 +33,10 @@ one-to-one onto the production tables.
 `source_refs`, `contradictions`, `index_path`, `current_version`,
 `superseded_by`, `created_at`, `updated_at`, `expires_at`.
 
-## Scale rails (add only when they hurt)
+## Rails
 
-pgvector → Qdrant (vector fallback), ClickHouse (telemetry), Neo4j
-(provenance graph), TurboQuant (vector/KV-cache compression). None of these
-define the product; the MemoryIndex tree does.
+See `stack.md` for the canonical rail map. Core = Postgres + MemoryIndex +
+Redis + R2. Authority (Postgres) and analytics (ClickHouse) are global planes;
+the federated NoSQL accounts are per-owner. Specialized rails (pgvector/Qdrant,
+Neo4j, ClickHouse, OpenSearch, Couchbase, ScyllaDB, Firestore) are added only on
+measured pressure. None define the product; the MemoryIndex tree does.

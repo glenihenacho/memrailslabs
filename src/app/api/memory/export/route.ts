@@ -1,5 +1,6 @@
 import { NextResponse } from 'next/server';
 import { loadRegistry } from '@/lib/memory';
+import { artifactRail } from '@/lib/rails/artifact';
 
 export const runtime = 'nodejs';
 export const dynamic = 'force-dynamic';
@@ -32,5 +33,9 @@ export async function GET(req: Request) {
     });
   }
 
-  return NextResponse.json({ count: records.length, records });
+  // Persist a snapshot to the Artifact Rail and hand back its ref (no lock-in:
+  // the export is both returned inline and preserved as a pullable artifact).
+  const owner = project ? records[0]?.scope.owner_id ?? 'user_memrails' : 'user_memrails';
+  const ref = artifactRail.put(owner, `export-${Date.now()}.json`, JSON.stringify({ records }));
+  return NextResponse.json({ count: records.length, artifact_ref: ref, records });
 }

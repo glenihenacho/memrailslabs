@@ -68,6 +68,15 @@ accounts. Billing code: `src/lib/billing/`, `src/lib/accounts/`,
 `/api/{enroll,usage}`. Canonical: `knowledge/billing-model.md`,
 `knowledge/federation.md`.
 
+Canonical rail map (Postgres governs, MemoryIndex retrieves, Redis accelerates,
+R2 preserves, telemetry prices): V1 core = **Postgres + MemoryIndex + Redis +
+R2** + Postgres-first telemetry. Authority (Postgres) and Analytics (ClickHouse)
+are **global** planes; the federated NoSQL accounts (artifact/document) are
+**per-owner**. V2 rails (pgvector/Qdrant, Neo4j, ClickHouse, OpenSearch,
+Couchbase, ScyllaDB, Firestore) are added only on measured pressure. Rails are
+capabilities, not tiers — `src/lib/rails/{registry,hot,artifact}.ts`, inspectable
+at `GET /api/stack`. Canonical: `knowledge/stack.md`.
+
 Canonical knowledge: `knowledge/governed-retrieval.md`, `knowledge/memory-index.md`
 (claim), `knowledge/data-model.md`, `knowledge/roadmap.md`, `knowledge/non-goals.md`.
 
