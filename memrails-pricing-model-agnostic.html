@@ -484,7 +484,7 @@
     </p>
     <div class="mt-9 flex flex-wrap gap-3">
       <span class="inline-flex items-center gap-2 h-9 px-4 rounded-full border hairline bg-graphite/40 font-mono text-[12px] text-muted-foreground"><span class="text-signal font-medium">Any</span> model — BYO or managed</span>
-      <span class="inline-flex items-center gap-2 h-9 px-4 rounded-full border hairline bg-graphite/40 font-mono text-[12px] text-muted-foreground"><span class="text-signal font-medium">$5</span> / 10K packets orchestration</span>
+      <span class="inline-flex items-center gap-2 h-9 px-4 rounded-full border hairline bg-graphite/40 font-mono text-[12px] text-muted-foreground"><span class="text-signal font-medium">$0.62</span> / 1K retrievals — one fee</span>
       <span class="inline-flex items-center gap-2 h-9 px-4 rounded-full border hairline bg-graphite/40 font-mono text-[12px] text-muted-foreground"><span class="text-signal font-medium">$0</span> per seat — always</span>
     </div>
   </div>
@@ -495,12 +495,12 @@
   <div class="mx-auto max-w-7xl px-6 py-20">
     <div class="grid md:grid-cols-2 gap-4">
       <div class="reveal rounded-xl border hairline bg-graphite/40 p-8 md:p-10">
-        <div class="flex items-center gap-2 text-[11px] font-mono uppercase tracking-widest text-signal mb-6"><span class="w-1.5 h-1.5 rounded-full bg-signal"></span>Orchestration</div>
+        <div class="flex items-center gap-2 text-[11px] font-mono uppercase tracking-widest text-signal mb-6"><span class="w-1.5 h-1.5 rounded-full bg-signal"></span>Retrieval — the one fee</div>
         <div class="font-display font-medium tracking-[-0.03em] leading-none">
-          <span class="text-6xl">$5</span><span class="font-mono text-sm text-muted-foreground ml-2 align-middle">/ 10K packets</span>
+          <span class="text-6xl">$0.62</span><span class="font-mono text-sm text-muted-foreground ml-2 align-middle">/ 1K retrievals</span>
         </div>
         <p class="mt-6 text-[15px] leading-relaxed text-muted-foreground max-w-sm">
-          The retrieval, evidence assembly, and contract enforcement that turn your corpus into a packet-ready bundle. Thin, flat, and identical no matter which model you point at it.
+          One non-cache-hit <code class="code-pink">memory.retrieve()</code> = one billable unit ($0.00062), regardless of which layer resolved it. Retrieval, evidence assembly, and contract enforcement that turn your corpus into a governed bundle. Metered per retrieval, separate from inference; cache hits are free.
         </p>
       </div>
       <div class="reveal rounded-xl border border-cyan/40 p-8 md:p-10" style="background: color-mix(in oklab, var(--cyan) 5%, transparent);">
@@ -628,8 +628,8 @@
     <div class="reveal mt-4 grid lg:grid-cols-2 gap-0 rounded-xl border hairline overflow-hidden shadow-card">
       <div class="p-8 bg-graphite border-b lg:border-b-0 lg:border-r hairline">
         <div class="flex justify-between items-baseline mb-3.5 gap-3">
-          <div class="text-[14px] font-medium">Compressed packets
-            <span class="block font-mono text-[11px] text-muted-foreground mt-1 font-normal">L5 packets your agents pull / month</span>
+          <div class="text-[14px] font-medium">Retrievals
+            <span class="block font-mono text-[11px] text-muted-foreground mt-1 font-normal">non-cache-hit retrievals your agents run / month</span>
           </div>
           <div class="font-display text-2xl text-signal tracking-tight whitespace-nowrap" id="p-val">1,000,000</div>
         </div>
@@ -637,7 +637,7 @@
         <div class="flex justify-between mt-2 font-mono text-[10px] text-muted-foreground"><span>0</span><span>20M / mo</span></div>
 
         <div class="mt-7 pt-5 border-t border-dotted hairline font-mono text-[11.5px] text-muted-foreground leading-relaxed">
-          <span class="text-signal font-medium">The MemRails line is flat across models.</span> Orchestration ($5/10K packets) is the same whether you pick the cheapest small model or a frontier one — only the compression line moves. Assumes ~2,500 input + 500 output tokens per packet.
+          <span class="text-signal font-medium">The MemRails line is flat across models.</span> The retrieval fee ($0.62 / 1K) is the same whether you pick the cheapest small model or a frontier one — only the compression line moves. Assumes ~2,500 input + 500 output tokens per synthesized packet.
         </div>
       </div>
 
@@ -652,8 +652,8 @@
 
         <div class="font-mono text-[10px] uppercase tracking-[0.12em] text-signal mt-1 mb-1">To MemRails</div>
         <div class="flex justify-between items-baseline py-2.5 border-t border-dotted hairline">
-          <div class="text-[14px] text-muted-foreground">Orchestration<span class="block font-mono text-[10px] text-muted-foreground mt-0.5" id="h-orch">1M packets × $5 / 10K</span></div>
-          <div class="font-mono text-[14px] font-medium whitespace-nowrap" id="r-orch">$500.00 / mo</div>
+          <div class="text-[14px] text-muted-foreground">Retrieval<span class="block font-mono text-[10px] text-muted-foreground mt-0.5" id="h-orch">1M retrievals × $0.62 / 1K</span></div>
+          <div class="font-mono text-[14px] font-medium whitespace-nowrap" id="r-orch">$620.00 / mo</div>
         </div>
         <div class="flex justify-between items-baseline py-2.5 border-t border-dotted hairline" id="row-mr-comp">
           <div class="text-[14px] text-muted-foreground">Compression<span class="block font-mono text-[10px] text-muted-foreground mt-0.5" id="h-mrcomp">Compress-v1 · managed</span></div>
@@ -668,8 +668,8 @@
 
         <div class="mt-auto pt-5 border-t border-signal/50">
           <div class="font-mono text-[10px] uppercase tracking-[0.12em] text-signal mb-2" id="r-total-label">All-in — monthly</div>
-          <div class="font-display font-medium text-5xl tracking-[-0.03em]" id="r-total-big">$5,500<span class="yr"> / mo</span></div>
-          <div class="font-mono text-[12px] text-muted-foreground mt-2 leading-relaxed" id="r-total-sub"><span class="mrk">MemRails $5,500</span> + <span class="prv">provider $0</span> · $66,000 / yr</div>
+          <div class="font-display font-medium text-5xl tracking-[-0.03em]" id="r-total-big">$5,620<span class="yr"> / mo</span></div>
+          <div class="font-mono text-[12px] text-muted-foreground mt-2 leading-relaxed" id="r-total-sub"><span class="mrk">MemRails $5,620</span> + <span class="prv">provider $0</span> · $67,440 / yr</div>
         </div>
       </div>
     </div>
@@ -687,15 +687,15 @@
     <div class="mt-12 grid md:grid-cols-2 gap-4">
       <div class="reveal rounded-xl border hairline p-7 bg-graphite/40">
         <div class="font-display font-semibold text-lg mb-3">What exactly is a packet?</div>
-        <p class="text-[14px] leading-relaxed text-muted-foreground">The compressed answer an agent consumes at the end of a query. MemRails gathers the candidate evidence across L1–L4, and a model synthesizes it into one structured bundle — typically ~500 output tokens — carrying provenance, surfaced contradictions, and calibrated confidence. It's the billable unit: <span class="text-foreground">one packet is one completed, evidence-graded synthesis</span>, not a raw document dump.</p>
+        <p class="text-[14px] leading-relaxed text-muted-foreground">The compressed answer an agent consumes at the end of a query. MemRails gathers the candidate evidence across L1–L4, and a model synthesizes it into one structured bundle — typically ~500 output tokens — carrying provenance, surfaced contradictions, and calibrated confidence. The billable unit is the <span class="text-foreground">retrieval</span> that produces it — synthesis is part of that one fee, never a separate charge.</p>
       </div>
       <div class="reveal rounded-xl border hairline p-7 bg-graphite/40">
         <div class="font-display font-semibold text-lg mb-3">If we bring our own model, what does MemRails charge?</div>
-        <p class="text-[14px] leading-relaxed text-muted-foreground">One thing: the <span class="text-foreground">$5 / 10K packets</span> orchestration fee. The compression tokens bill to your provider on your own contract — MemRails never touches that inference cost, and there are no seat fees on top.</p>
+        <p class="text-[14px] leading-relaxed text-muted-foreground">One thing: the <span class="text-foreground">$0.62 / 1K retrievals</span> fee ($0.00062 each), regardless of which layer resolved it. The compression tokens bill to your provider on your own contract — MemRails never touches that inference cost, and there are no seat fees on top.</p>
       </div>
       <div class="reveal rounded-xl border hairline p-7 bg-graphite/40">
-        <div class="font-display font-semibold text-lg mb-3">What does the orchestration fee actually cover?</div>
-        <p class="text-[14px] leading-relaxed text-muted-foreground">Everything that turns your corpus into a packet-ready bundle: retrieval across L1–L3, evidence filtering, the structured packet contract, provenance tracking, and network access. It's the work that decides <em>which</em> evidence is worth compressing — which is the part that's genuinely hard to reproduce.</p>
+        <div class="font-display font-semibold text-lg mb-3">What does the retrieval fee actually cover?</div>
+        <p class="text-[14px] leading-relaxed text-muted-foreground">Everything that turns your corpus into a governed context bundle: retrieval across L1–L3, evidence filtering, the structured packet contract, provenance tracking, and network access. It's the work that decides <em>which</em> evidence is worth compressing — which is the part that's genuinely hard to reproduce.</p>
       </div>
       <div class="reveal rounded-xl border hairline p-7 bg-graphite/40">
         <div class="font-display font-semibold text-lg mb-3">Does the model choice change packet quality?</div>
@@ -706,16 +706,16 @@
         <p class="text-[14px] leading-relaxed text-muted-foreground">To skip model ops entirely. Compress-v1 is fine-tuned for the packet contract and served on our GPUs — no key to manage, no infra to run, and predictable token pricing. Start there; move to BYO the day you want to.</p>
       </div>
       <div class="reveal rounded-xl border hairline p-7 bg-graphite/40">
-        <div class="font-display font-semibold text-lg mb-3">Is the orchestration fee really flat across models?</div>
-        <p class="text-[14px] leading-relaxed text-muted-foreground">Yes — it's priced on packets, not tokens, so it doesn't move when you switch models. The calculator makes this visible: change the model and the MemRails line holds while only the compression line shifts.</p>
+        <div class="font-display font-semibold text-lg mb-3">Is the retrieval fee really flat across models?</div>
+        <p class="text-[14px] leading-relaxed text-muted-foreground">Yes — it's priced per retrieval, not per token, so it doesn't move when you switch models. The calculator makes this visible: change the model and the MemRails line holds while only the compression line shifts.</p>
       </div>
       <div class="reveal rounded-xl border hairline p-7 bg-graphite/40">
         <div class="font-display font-semibold text-lg mb-3">Can we commit to volume?</div>
-        <p class="text-[14px] leading-relaxed text-muted-foreground">Yes. Committed-use lowers the per-packet orchestration rate and fixes it for the term. If you run managed Compress-v1, the token rate is committed too. BYO inference stays on your provider's own commitment.</p>
+        <p class="text-[14px] leading-relaxed text-muted-foreground">Yes. Committed-use lowers the per-retrieval rate and fixes it for the term. If you run managed Compress-v1, the token rate is committed too. BYO inference stays on your provider's own commitment.</p>
       </div>
       <div class="reveal rounded-xl border hairline p-7 bg-graphite/40">
         <div class="font-display font-semibold text-lg mb-3">Are there any per-seat or per-user fees?</div>
-        <p class="text-[14px] leading-relaxed text-muted-foreground">None. Pricing is on packets and the tokens they consume — never on headcount. Add a thousand engineers or a thousand agents and the access cost doesn't move; you're billed only for the queries that actually produce packets.</p>
+        <p class="text-[14px] leading-relaxed text-muted-foreground">None. Pricing is on retrievals and any inference tokens they consume — never on headcount. Add a thousand engineers or a thousand agents and the access cost doesn't move; you're billed only for the non-cache-hit retrievals your agents actually run.</p>
       </div>
       <div class="reveal rounded-xl border hairline p-7 bg-graphite/40 md:col-span-2">
         <div class="font-display font-semibold text-lg mb-3">What happens to our data and our model config if we leave?</div>
@@ -736,7 +736,7 @@
       Modeled <span class="text-gradient-signal">before you sign.</span>
     </h2>
     <p class="mt-6 max-w-2xl mx-auto text-muted-foreground">
-      Bring your projected packet volume and model choice. We'll turn the calculator above into a committed-use proposal — fixed rates, audit terms, and an SLA in writing.
+      Bring your projected retrieval volume and model choice. We'll turn the calculator above into a committed-use proposal — fixed rates, audit terms, and an SLA in writing.
     </p>
     <div class="mt-9 flex flex-wrap items-center justify-center gap-3">
       <a href="#" class="inline-flex items-center gap-2 h-11 px-5 rounded-md bg-signal text-signal-foreground font-semibold text-sm shadow-signal hover:opacity-95 transition tracking-tight">Talk to sales →</a>
@@ -822,8 +822,8 @@
   var btnYearly = document.getElementById('btn-yearly');
   var picker = document.getElementById('picker');
 
-  var TOK_IN = 2500, TOK_OUT = 500;     // tokens per packet
-  var ORCH_PER_PACKET = 0.0005;          // $5 / 10K packets
+  var TOK_IN = 2500, TOK_OUT = 500;     // tokens per synthesized packet
+  var RETRIEVAL_FEE = 0.00062;           // $0.62 / 1K retrievals
   var period = 'monthly';
   var model = { name: 'Compress-v1', billed: 'memrails', inRate: 1, outRate: 5 };
 
@@ -835,11 +835,11 @@
   function suffix() { return period === 'yearly' ? ' / yr' : ' / mo'; }
 
   function update() {
-    var packets = parseInt(pRange.value, 10);
+    var retrievals = parseInt(pRange.value, 10);
     var k = mult();
 
-    var mOrch = packets * ORCH_PER_PACKET;
-    var mCompression = (packets * TOK_IN / 1e6 * model.inRate) + (packets * TOK_OUT / 1e6 * model.outRate);
+    var mOrch = retrievals * RETRIEVAL_FEE;
+    var mCompression = (retrievals * TOK_IN / 1e6 * model.inRate) + (retrievals * TOK_OUT / 1e6 * model.outRate);
 
     var managed = model.billed === 'memrails';
     var mMrComp = managed ? mCompression : 0;
@@ -847,9 +847,9 @@
     var mMemRails = mOrch + mMrComp;
     var mAllIn = mMemRails + mProvComp;
 
-    pVal.textContent = nfInt.format(packets);
+    pVal.textContent = nfInt.format(retrievals);
 
-    hOrch.textContent = nfInt.format(packets) + ' packets × $5 / 10K';
+    hOrch.textContent = nfInt.format(retrievals) + ' retrievals × $0.62 / 1K';
     rOrch.textContent = nfMoney2.format(mOrch * k) + suffix();
 
     hMrComp.textContent = managed ? (model.name + ' · managed') : (model.name + ' · billed by provider');
