@@ -23,6 +23,8 @@ function walkMarkdown(dir: string): string[] {
 export type CorpusEntry = {
   claim: EvidenceClaim;
   body: string;
+  /** Raw frontmatter, so the governed registry can read scope/type/summary. */
+  data: Record<string, unknown>;
 };
 
 let cache: CorpusEntry[] | null = null;
@@ -67,7 +69,7 @@ export function loadCorpus(opts: { force?: boolean } = {}): CorpusEntry[] {
           : new Date(0).toISOString().slice(0, 10),
     };
 
-    entries.push({ claim, body: parsed.content });
+    entries.push({ claim, body: parsed.content, data });
   }
 
   cache = entries;

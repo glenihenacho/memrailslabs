@@ -25,6 +25,72 @@ MemRails is **knowledge density infrastructure for agentic software**. Treat mem
 
 ---
 
+## 0.5 Locked Product Definition (v2 — governed retrieval reconcile)
+
+> This section supersedes the framing below where they conflict. The packet
+> contract, retrieval discipline, and design language in §1–§20 still hold; the
+> primitive and the primary output are restated here.
+
+**MemRails is cloud-hosted memory infrastructure for locally inferred agents.**
+The core primitive is:
+
+```ts
+memory.retrieve(task_context) // → ContextBundle
+```
+
+Not `action.retrieve()`, not `provider.execute()`, not `credential.use()`. The
+local agent asks for memory, receives a governed **context bundle**, and infers
+locally — no key handling, no decryption, no local vector DB, no DB management.
+
+How the two framings reconcile:
+
+| v1 framing (§1+) | v2 reconcile (this section) |
+|---|---|
+| `memory.query()` → packet | `memory.retrieve()` → context bundle (packet is optional synthesis inside it) |
+| L1–L5 retrieval stack | the **synthesis surface**; governed retrieval (scope → policy → MemoryIndex tree → ranking) leads |
+| canonical markdown only | curated markdown **plus** governed registry + JSON overlay + JSONL stores (still file-canonical, Git-versioned) |
+| packet provenance | context-bundle `reason_selected` + `omitted` + `retrieval_trace` |
+
+Primary retrieval is a **PageIndex-inspired MemoryIndex** tree (not vector
+top-k). pgvector / Qdrant are optional fallback rails. Authority is PostgreSQL
+in production; the MVP runs file-canonical (`data/governance.json`,
+`data/written-memory.jsonl`, `data/accounts.json`, `data/logs/*.jsonl`).
+
+**Commercial primitive = the metered retrieval.** One successful
+`memory.retrieve()` = one billable retrieval (default `$0.002`). Writes are
+cheap; context tokens are the model provider's charge, not MemRails'. No
+arbitrary user-facing quotas — the free tier is **retrieval credits**.
+Infrastructure is three planes: **SQL = government** (authority/placement),
+**MemoryIndex = protocol** (retrieval), **federated NoSQL accounts =
+infrastructure** (storage). No tiers/pools; the user never brings or sees
+accounts. Billing code: `src/lib/billing/`, `src/lib/accounts/`,
+`src/lib/federation/`, types in `src/types/billing.ts`, API at
+`/api/{enroll,usage}`. Canonical: `knowledge/billing-model.md`,
+`knowledge/federation.md`.
+
+Canonical rail map (Postgres governs, MemoryIndex retrieves, Redis accelerates,
+R2 preserves, telemetry prices): V1 core = **Postgres + MemoryIndex + Redis +
+R2** + Postgres-first telemetry. Authority (Postgres), Telemetry
+(Postgres→ClickHouse), and Analytics (ClickHouse) are **global** planes
+(registry, policy, metering, retrieval logs, billing events — never sharded per
+owner); the federated NoSQL accounts (artifact/document) are **per-owner**. V2 rails (pgvector/Qdrant, Neo4j, ClickHouse, OpenSearch,
+Couchbase, ScyllaDB, Firestore) are added only on measured pressure. Rails are
+capabilities, not tiers — `src/lib/rails/{registry,hot,artifact}.ts`, inspectable
+at `GET /api/stack`. Canonical: `knowledge/stack.md`.
+
+Canonical knowledge: `knowledge/governed-retrieval.md`, `knowledge/memory-index.md`
+(claim), `knowledge/data-model.md`, `knowledge/roadmap.md`, `knowledge/non-goals.md`.
+
+Code map: `src/lib/memory/{registry,scope,ranking,index-tree,retrieve,write,lifecycle,telemetry,synthesize}.ts`,
+types in `src/types/{governed,bundle,index-tree}.ts`, API under
+`src/app/api/memory/*` + `src/app/api/{retrievals,feedback}/*`, SDKs in
+`src/sdk/` and `sdk/python/`, MCP in `src/lib/mcp/tools.ts`.
+
+**Non-goals:** provider actions, credential custody, freemium enrollment,
+generic vector-DB-as-product, and `conversation → chunk → embed → top_k → prompt`.
+
+---
+
 ## 1. Product Truth
 
 ### One-line positioning
