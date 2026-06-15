@@ -3,7 +3,7 @@ import { dirname } from 'node:path';
 import { randomUUID } from 'node:crypto';
 import { dataPath } from '@/lib/paths';
 import { logEvent } from '@/lib/ledger/events';
-import { debit } from '@/lib/accounts/store';
+import { debit, ensureAccount } from '@/lib/accounts/store';
 import { federation } from '@/lib/federation/accounts';
 import {
   PRICE_PER_RETRIEVAL_USD,
@@ -51,14 +51,57 @@ function estimateInternalCost(bundle: ContextBundle): RetrievalCostEvent {
 }
 
 /**
- * Meter one retrieval. 1 successful `memory.retrieve()` = 1 billable retrieval.
+ * Meter one retrieval. There is a single fee: one non-cache-hit
+ * `memory.retrieve()` = 1 billable unit, regardless of which layer resolved it.
+ * Cache hits are free — they are logged for audit but not billed or debited.
  * Writes the public billing event + the internal cost event, debits the
  * account's credits, and returns the minimal usage surfaced on the bundle.
  */
 export function meterRetrieval(bundle: ContextBundle): RetrievalUsage {
+  const cost = estimateInternalCost(bundle);
+
+  // Cache hits are not billed. Log a zero-priced event for the audit trail,
+  // read the balance without debiting, and surface zero billable units.
+  if (bundle.cache_hit) {
+    const account = ensureAccount(bundle.scope.owner_id);
+    const billing: RetrievalBillingEvent = {
+      event_id: `bil_${randomUUID().replace(/-/g, '').slice(0, 16)}`,
+      retrieval_id: bundle.retrieval_id,
+      owner_id: bundle.scope.owner_id,
+      agent_id: bundle.scope.agent_id ?? undefined,
+      project_id: bundle.scope.project_id,
+      retrieval_mode: bundle.mode,
+      billable_units: 0,
+      internal_cost_estimate: cost.estimated_total_cost,
+      price_charged_usd: 0,
+      latency_ms: bundle.latency_ms,
+      memories_considered: bundle.retrieval_trace.candidates_considered,
+      memories_returned: bundle.memories.length,
+      context_tokens_returned: bundle.tokens_returned,
+      created_at: new Date().toISOString(),
+    };
+    append(dataPath('logs', 'billing.jsonl'), billing);
+    append(dataPath('logs', 'costs.jsonl'), cost);
+    logEvent(
+      'RETRIEVAL_BILLED',
+      { billable_units: 0, price_usd: 0, internal_cost: cost.estimated_total_cost, mode: bundle.mode, cache_hit: true },
+      {
+        retrieval_id: bundle.retrieval_id,
+        owner_id: bundle.scope.owner_id,
+        project_id: bundle.scope.project_id,
+        cost_cents: 0,
+      },
+    );
+    return {
+      billable_retrievals: 0,
+      billable_units: 0,
+      credits_remaining: account.credits_remaining,
+      credit_exhausted: account.credits_remaining !== null && account.credits_remaining <= 0,
+    };
+  }
+
   const units = billableUnits(bundle.mode);
   const price = Number((units * PRICE_PER_RETRIEVAL_USD).toFixed(6));
-  const cost = estimateInternalCost(bundle);
 
   const billing: RetrievalBillingEvent = {
     event_id: `bil_${randomUUID().replace(/-/g, '').slice(0, 16)}`,

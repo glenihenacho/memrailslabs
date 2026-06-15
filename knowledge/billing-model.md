@@ -5,17 +5,20 @@ tags: [billing, pricing, retrieval, metering, credits, commercial, pricing]
 aliases: [billing model, pricing model, metered retrieval, retrieval pricing, per retrieval]
 memory_type: decision
 index_path: /project/project_memrails/pricing
-summary: MemRails meters by memory retrieval — one successful memory.retrieve() is one billable unit ($0.002 / $2 per 1,000). Writes are not billed, context tokens are not billed.
+summary: MemRails has one fee — the orchestration/retrieval unit, separate from inference. One non-cache-hit memory.retrieve() is one billable unit ($0.00062 / $0.62 per 1,000), regardless of which layer resolves it. Cache hits, writes, and context tokens are not billed.
 created_at: 2026-06-14
-updated_at: 2026-06-14
-claim: MemRails is priced by memory retrieval. One successful memory.retrieve() equals one billable retrieval, default $0.002 ($2 per 1,000). Writes are not billed because they create future retrieval value. Context tokens are not billed (the model provider already charges those). There are no arbitrary user-facing quotas — usage-based pricing absorbs scale, with hidden infrastructure guardrails only for abuse and stability.
+updated_at: 2026-06-15
+claim: MemRails has a single fee — the orchestration/retrieval unit, charged separately from model inference. One non-cache-hit memory.retrieve() equals one billable unit, default $0.00062 ($0.62 per 1,000), regardless of which retrieval layer resolves it. Cache hits are free. Writes are not billed because they create future retrieval value. Context tokens are not billed (the model provider already charges those). There is no separate packet/synthesis fee. There are no arbitrary user-facing quotas — usage-based pricing absorbs scale, with hidden infrastructure guardrails only for abuse and stability.
 ---
 
-# Billing Model — metered by retrieval
+# Billing Model — one fee, metered by retrieval
 
-**1 successful `memory.retrieve()` = 1 billable retrieval.** Default price
-`$0.002` per retrieval (`$2` / 1,000). The unit is the value: the user pays
-only when memory is actually used during inference.
+There is a **single MemRails fee**: the orchestration/retrieval unit, charged
+**separately from model inference**. **1 non-cache-hit `memory.retrieve()` = 1
+billable unit**, regardless of which layer (L1–L5) resolved it. Default price
+`$0.00062` per unit (`$0.62` / 1,000). **Cache hits are free.** The unit is the
+value: the user pays only when memory is actually used during inference. There
+is no separate packet/synthesis fee — synthesis is part of the same retrieval.
 
 ## Why retrieval, not the alternatives
 

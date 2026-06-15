@@ -33,7 +33,20 @@ describe('retrieval metering', () => {
     const after = getAccount(acct.owner_id);
     expect(after?.retrievals_total).toBe(2);
     expect(after?.credits_remaining).toBe(2498);
-    expect(after?.spend_usd).toBeCloseTo(0.004, 6);
+    expect(after?.spend_usd).toBeCloseTo(0.00124, 6); // 2 × $0.00062
+  });
+
+  it('does not bill or debit a cache hit', () => {
+    const acct = enroll('cache@example.com');
+    const bundle = retrieve({ task_context: 'roadmap', owner_id: acct.owner_id, retrieval_mode: 'hot' });
+
+    expect(bundle.cache_hit).toBe(true);
+    expect(bundle.usage.billable_retrievals).toBe(0);
+    expect(bundle.usage.billable_units).toBe(0);
+
+    const after = getAccount(acct.owner_id);
+    expect(after?.credits_remaining).toBe(2500); // untouched
+    expect(after?.spend_usd).toBeCloseTo(0, 6);
   });
 
   it('rejects a path-traversal owner_id at the federation boundary', () => {
@@ -79,9 +92,9 @@ describe('federated NoSQL accounts — one namespace per owner', () => {
 });
 
 describe('retrieval pricing', () => {
-  it('prices $2 per 1,000 retrievals', () => {
-    expect(calculateRetrievalCost(1000)).toBe(2);
-    expect(calculateRetrievalCost(1)).toBe(0.002);
+  it('prices a single fee of $0.62 per 1,000 retrievals', () => {
+    expect(calculateRetrievalCost(1000)).toBe(0.62);
+    expect(calculateRetrievalCost(1)).toBe(0.00062);
     expect(calculateRetrievalCost(0)).toBe(0);
   });
 });

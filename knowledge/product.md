@@ -33,8 +33,11 @@ packets.
 ## Primitives
 
 - **Memory** — canonical markdown-backed knowledge.
-- **Harness** — in-loop agent runtime binding.
 - **Packet** — billable compressed answer unit.
 - **Console** — observability layer.
 - **MCP** — agent tool surface.
 - **Compress-v1** — L5 synthesis layer.
+
+> Harness is not a current core primitive — dropped from the product-primitive
+> narrative while the exact core product is being dialed in. The in-loop runtime
+> still exists as a delivery surface, not a headline primitive.

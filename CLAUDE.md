@@ -56,10 +56,13 @@ top-k). pgvector / Qdrant are optional fallback rails. Authority is PostgreSQL
 in production; the MVP runs file-canonical (`data/governance.json`,
 `data/written-memory.jsonl`, `data/accounts.json`, `data/logs/*.jsonl`).
 
-**Commercial primitive = the metered retrieval.** One successful
-`memory.retrieve()` = one billable retrieval (default `$0.002`). Writes are
-cheap; context tokens are the model provider's charge, not MemRails'. No
-arbitrary user-facing quotas — the free tier is **retrieval credits**.
+**Commercial primitive = the metered retrieval, billed as a single fee.** One
+non-cache-hit `memory.retrieve()` = one billable unit (default `$0.00062`),
+regardless of which layer resolved it. This is the orchestration/retrieval fee,
+charged **separately from model inference**; cache hits are free and there is no
+separate packet/synthesis fee. Writes are free; context tokens are the model
+provider's charge, not MemRails'. No arbitrary user-facing quotas — the free
+tier is **retrieval credits**.
 Infrastructure is three planes: **SQL = government** (authority/placement),
 **MemoryIndex = protocol** (retrieval), **federated NoSQL accounts =
 infrastructure** (storage). No tiers/pools; the user never brings or sees
@@ -116,7 +119,6 @@ The product value is not “we store memories.” The product value is:
 | Primitive | Meaning | Implementation implication |
 |---|---|---|
 | Memory | Canonical markdown-backed knowledge | Store human-readable source files and extracted claims |
-| Harness | In-loop agent runtime binding | Agents call memory before model calls |
 | Packet | Billable compressed answer unit | Standardize output schema |
 | Console | Observability layer | Log every query, packet, confidence, provenance, hash |
 | MCP | Agent tool surface | Expose `memory.query`, `memory.write`, `memory.inspect` |
@@ -761,47 +763,51 @@ Integrations to represent:
 
 ## 11. Pricing & Billing Fulfillment
 
-Pricing logic must be packet-based, not seat-based.
+Pricing is a **single fee**, metered by retrieval, not seat-based. See
+`knowledge/billing-model.md` (canonical).
 
 ### Billing unit
 
-One packet = one completed evidence-graded synthesis.
+One non-cache-hit `memory.retrieve()` = one billable unit, regardless of which
+layer (L1–L5) resolved it.
 
 Default assumption:
 
-- One packet is typically around 500 output tokens.
-- Orchestration fee is separate from model inference.
+- This single fee is the **orchestration/retrieval** unit, separate from model
+  inference.
+- Cache hits are free; there is no separate packet/synthesis fee.
 - BYO model means user pays provider directly.
 - Managed Compress-v1 means MemRails handles compression model serving.
 
-### Orchestration
+### The fee
 
 Baseline:
 
 ```txt
-$5 / 10K packets
+$0.00062 / billable retrieval ($0.62 / 1,000)
 ```
 
-Implementation:
+Implementation (`src/lib/pricing/calculator.ts`):
 
 ```ts
-export function calculateOrchestrationCost(packetCount: number) {
-  return (packetCount / 10_000) * 5;
+export function calculateRetrievalCost(retrievalCount: number) {
+  return Number((retrievalCount * PRICE_PER_RETRIEVAL_USD).toFixed(6));
 }
 ```
 
-Do not charge seat fees by default.
+Do not charge seat fees by default. Do not reintroduce a separate packet
+orchestration fee — synthesis is part of the same metered retrieval.
 
 ### Pricing UI requirements
 
 Must support:
 
-- packet volume slider,
+- retrieval volume slider,
 - BYO model mode,
 - managed Compress-v1 mode,
 - monthly/yearly cost,
-- MemRails line item,
-- provider line item,
+- MemRails line item (the single retrieval fee),
+- provider line item (inference, separate),
 - annualized estimate.
 
 ---

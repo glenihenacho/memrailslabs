@@ -165,6 +165,7 @@ export function retrieve(input: RetrieveInput): ContextBundle {
       candidates_considered: candidates.length,
       scoring: mode === 'debug' ? scoring : undefined,
     },
+    cache_hit: mode === 'hot',
     usage: { billable_retrievals: 0, billable_units: 0, credits_remaining: 0, credit_exhausted: false },
     latency_ms: Date.now() - start,
     created_at: new Date().toISOString(),

@@ -3,7 +3,7 @@
 import { useCallback, useEffect, useState } from 'react';
 import type { ContextBundle, RetrievalMode } from '@/types/bundle';
 import type { LedgerEvent } from '@/types/ledger';
-import { calculateOrchestrationCost, formatUsd } from '@/lib/pricing/calculator';
+import { calculateRetrievalCost, formatUsd } from '@/lib/pricing/calculator';
 
 type LedgerResponse = { events: LedgerEvent[] };
 
@@ -122,8 +122,8 @@ export function LiveConsole() {
 
         <div className="border-t hairline px-5 py-4">
           <div className="text-[10px] font-mono uppercase tracking-[0.18em] text-muted-foreground mb-3">
-            Retrieval stream &middot; {retrievalEvents.length} retrievals &middot; orchestration{' '}
-            {formatUsd(calculateOrchestrationCost(retrievalEvents.length))}
+            Retrieval stream &middot; {retrievalEvents.length} retrievals &middot; fee{' '}
+            {formatUsd(calculateRetrievalCost(retrievalEvents.length))}
           </div>
           <div className="overflow-x-auto">
             <table className="w-full text-left text-[12px] font-mono">

@@ -80,7 +80,9 @@ export type ContextBundle = {
   retrieval_trace: RetrievalTrace;
   /** Present only when synthesis was requested (`include_packet: true`). */
   packet?: MemoryPacket;
-  /** Metered usage — 1 successful retrieve = 1 billable retrieval. */
+  /** True when served from hot cache — cache hits are not billed. */
+  cache_hit: boolean;
+  /** Metered usage — 1 non-cache-hit retrieve = 1 billable unit. */
   usage: RetrievalUsage;
   latency_ms: number;
   created_at: string;

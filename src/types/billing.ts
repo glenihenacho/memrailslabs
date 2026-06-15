@@ -1,10 +1,12 @@
 /**
- * Billing model — metered by memory retrieval.
+ * Billing model — one fee, metered by memory retrieval.
  *
- * The commercial primitive is one successful `memory.retrieve()` = one billable
- * retrieval. Writes are cheap/free (they create future retrieval value); context
- * tokens are NOT billed here (the model provider already charges those). See
- * `knowledge/billing-model.md`.
+ * There is a single MemRails fee: the orchestration/retrieval unit, charged
+ * separately from model inference. One successful `memory.retrieve()` that is
+ * NOT a cache hit = one billable unit, regardless of which retrieval layer
+ * resolved it. Cache hits are free. Writes are free (they create future
+ * retrieval value); context tokens are NOT billed here (the model provider
+ * already charges those). See `knowledge/billing-model.md`.
  */
 
 export type BillingMode = 'standard' | 'deep' | 'bulk' | 'debug';
@@ -22,8 +24,13 @@ export const RETRIEVAL_MULTIPLIERS: Record<BillingMode, number> = {
 
 export const SIMPLE_V1 = true;
 
-/** Per-retrieval price. $0.002 / retrieval = $2 per 1,000. */
-export const PRICE_PER_RETRIEVAL_USD = 0.002;
+/**
+ * The single MemRails fee — the orchestration/retrieval unit, separate from
+ * model inference. $0.00062 per billable retrieval ($0.62 per 1,000). Charged
+ * on a non-cache-hit retrieval regardless of which layer resolved it; cache
+ * hits are free.
+ */
+export const PRICE_PER_RETRIEVAL_USD = 0.00062;
 
 /** Free accounts start with retrieval credits, not memory/agent caps. */
 export const STARTER_RETRIEVAL_CREDITS = 2500;
