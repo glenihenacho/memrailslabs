@@ -36,6 +36,10 @@ describe('retrieval metering', () => {
     expect(after?.spend_usd).toBeCloseTo(0.004, 6);
   });
 
+  it('rejects a path-traversal owner_id at the federation boundary', () => {
+    expect(() => retrieve({ task_context: 'x', owner_id: '../../etc' })).toThrow();
+  });
+
   it('enrollment is idempotent per email', () => {
     const a = enroll('dev@example.com');
     const b = enroll('dev@example.com');

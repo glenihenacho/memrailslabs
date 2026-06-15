@@ -16,6 +16,8 @@ export const DEFAULT_SCOPE: Required<MemoryScope> = {
   agent_id: 'agent_local_001',
 };
 
+const VALID_SENSITIVITY: SensitivityLevel[] = ['normal', 'sensitive', 'restricted'];
+
 const VALID_TYPES: MemoryType[] = [
   'decision',
   'preference',
@@ -63,8 +65,10 @@ function corpusToRecord(entry: CorpusEntry): MemoryRecord {
   const typeRaw = str(entry.data, 'memory_type') as MemoryType | undefined;
   const memory_type: MemoryType = typeRaw && VALID_TYPES.includes(typeRaw) ? typeRaw : 'claim';
 
-  const sensitivityRaw = str(entry.data, 'sensitivity') as SensitivityLevel | undefined;
-  const sensitivity: SensitivityLevel = sensitivityRaw ?? 'normal';
+  const sensitivityRaw = str(entry.data, 'sensitivity');
+  const sensitivity: SensitivityLevel = VALID_SENSITIVITY.includes(sensitivityRaw as SensitivityLevel)
+    ? (sensitivityRaw as SensitivityLevel)
+    : 'normal';
 
   return {
     memory_id: entry.claim.id,

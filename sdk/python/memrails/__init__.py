@@ -81,6 +81,8 @@ class MemRails:
         api_key: Optional[str] = None,
         base_url: str = "http://localhost:3000",
     ) -> None:
+        if not base_url.startswith(("http://", "https://")):
+            raise ValueError("base_url must use http:// or https://")
         self.api_key = api_key or os.environ.get("MEMRAILS_API_KEY")
         self.base_url = base_url.rstrip("/")
         self.memory = MemoryClient(self)

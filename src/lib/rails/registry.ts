@@ -46,7 +46,7 @@ export type Rail = {
   add_when?: string;
 };
 
-export const RAILS: Rail[] = [
+export const RAILS: readonly Rail[] = [
   {
     id: 'authority',
     name: 'Authority Rail',

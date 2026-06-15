@@ -5,6 +5,7 @@ import type { ContextBundle } from '@/types/bundle';
 import { logEvent } from '@/lib/ledger/events';
 import { dataPath } from '@/lib/paths';
 import { hotRetrievals } from '@/lib/rails/hot';
+import { shortHash } from '@/lib/observability/hash';
 
 /**
  * Retrieval telemetry. Every `memory.retrieve()` writes a full record here so
@@ -40,7 +41,7 @@ export function recordRetrieval(bundle: ContextBundle): void {
   logEvent(
     'MEMORY_RETRIEVED',
     {
-      task_context_hash: bundle.context_bundle_id,
+      task_context_hash: shortHash(bundle.query),
       mode: bundle.mode,
       latency_ms: bundle.latency_ms,
       memories_considered: bundle.retrieval_trace.candidates_considered,

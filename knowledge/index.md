@@ -4,7 +4,7 @@ confidence: 1.0
 tags: [index, overview]
 aliases: [knowledge index, repo memory]
 created_at: 2026-05-25
-updated_at: 2026-05-25
+updated_at: 2026-06-15
 ---
 
 # Knowledge Index

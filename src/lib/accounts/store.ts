@@ -1,4 +1,4 @@
-import { existsSync, mkdirSync, readFileSync, writeFileSync } from 'node:fs';
+import { existsSync, mkdirSync, readFileSync, renameSync, writeFileSync } from 'node:fs';
 import { dirname } from 'node:path';
 import { randomUUID, createHash } from 'node:crypto';
 import { dataPath } from '@/lib/paths';
@@ -21,7 +21,7 @@ export type Account = {
   email: string;
   plan: Plan;
   api_key_hash: string;
-  credits_remaining: number;
+  credits_remaining: number | null; // null = unlimited (paid plans)
   retrievals_total: number;
   spend_usd: number;
   created_at: string;
@@ -44,8 +44,9 @@ function load(force = false): AccountStore {
   }
   try {
     cache = JSON.parse(readFileSync(path, 'utf8')) as AccountStore;
-  } catch {
-    cache = {};
+  } catch (error) {
+    // Fail loud rather than wiping accounts/credits on the next save.
+    throw new Error(`failed_to_parse_accounts:${path}`, { cause: error });
   }
   return cache;
 }
@@ -53,7 +54,9 @@ function load(force = false): AccountStore {
 function save(store: AccountStore): void {
   const path = accountsFile();
   if (!existsSync(dirname(path))) mkdirSync(dirname(path), { recursive: true });
-  writeFileSync(path, `${JSON.stringify(store, null, 2)}\n`, 'utf8');
+  const tmp = `${path}.tmp`;
+  writeFileSync(tmp, `${JSON.stringify(store, null, 2)}\n`, 'utf8');
+  renameSync(tmp, path); // atomic: crash mid-write keeps accounts intact
   cache = store;
 }
 
@@ -63,7 +66,7 @@ export function ownerIdForEmail(email: string): string {
   return `user_${slug}`;
 }
 
-export type EnrollResult = { owner_id: string; email: string; plan: Plan; api_key: string; credits_remaining: number };
+export type EnrollResult = { owner_id: string; email: string; plan: Plan; api_key: string; credits_remaining: number | null };
 
 /** Provision (or return) an isolated tenant for an email. */
 export function enroll(email: string, plan: Plan = 'free'): EnrollResult {
@@ -85,7 +88,7 @@ export function enroll(email: string, plan: Plan = 'free'): EnrollResult {
     email: email.trim().toLowerCase(),
     plan,
     api_key_hash: createHash('sha256').update(api_key).digest('hex'),
-    credits_remaining: plan === 'free' ? STARTER_RETRIEVAL_CREDITS : Number.POSITIVE_INFINITY,
+    credits_remaining: plan === 'free' ? STARTER_RETRIEVAL_CREDITS : null,
     retrievals_total: 0,
     spend_usd: 0,
     created_at: new Date().toISOString(),
@@ -125,18 +128,19 @@ export function getAccount(owner_id: string): Account | null {
  * accounts — gating is a deploy policy (guardrail), not a hard cap baked into
  * the meter. Returns the post-debit balance and whether credits were exhausted.
  */
-export function debit(owner_id: string, units: number, priceUsd: number): { credits_remaining: number; exhausted: boolean } {
+export function debit(owner_id: string, units: number, priceUsd: number): { credits_remaining: number | null; exhausted: boolean } {
   const store = load(true);
   const account = store[owner_id] ?? ensureAccount(owner_id);
   const before = account.credits_remaining;
-  if (Number.isFinite(before)) account.credits_remaining = before - units;
+  // null = unlimited (paid plans); only finite balances are decremented.
+  if (before !== null) account.credits_remaining = before - units;
   account.retrievals_total += 1;
   account.spend_usd = Number((account.spend_usd + priceUsd).toFixed(6));
   store[owner_id] = account;
   save(store);
   return {
     credits_remaining: account.credits_remaining,
-    exhausted: Number.isFinite(account.credits_remaining) && account.credits_remaining <= 0,
+    exhausted: account.credits_remaining !== null && account.credits_remaining <= 0,
   };
 }
 

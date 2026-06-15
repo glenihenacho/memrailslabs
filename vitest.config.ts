@@ -10,6 +10,9 @@ export default defineConfig({
     env: {
       MEMRAILS_DATA_DIR: resolve(__dirname, '.tmp-test-data'),
     },
+    // Test files share one on-disk data dir and reset it between cases, so they
+    // must not run in parallel or one file's reset races another's writes.
+    fileParallelism: false,
   },
   resolve: {
     alias: {

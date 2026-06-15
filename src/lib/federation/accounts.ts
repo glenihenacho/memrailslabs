@@ -36,8 +36,21 @@ function accountId(owner_id: string): string {
   return `acct_${owner_id}`;
 }
 
+/**
+ * Guard against path traversal: owner_id reaches the filesystem via
+ * namespaceDir, so reject anything outside a safe identifier charset
+ * (blocks `..`, `/`, `\`, absolute paths). Enrolled ids are `user_<hex>`;
+ * the default tenant is `user_memrails` — both pass.
+ */
+export function assertSafeOwnerId(owner_id: string): string {
+  if (!/^[A-Za-z0-9_-]+$/.test(owner_id)) {
+    throw new Error(`invalid_owner_id:${owner_id}`);
+  }
+  return owner_id;
+}
+
 export function namespaceDir(owner_id: string): string {
-  return dataPath('federation', owner_id);
+  return dataPath('federation', assertSafeOwnerId(owner_id));
 }
 
 export class Federation {
@@ -54,6 +67,7 @@ export class Federation {
 
   /** Provision the owner's namespace (idempotent). Called at enrollment. */
   provision(owner_id: string): FederatedAccount {
+    assertSafeOwnerId(owner_id);
     const dir = namespaceDir(owner_id);
     if (!existsSync(dir)) mkdirSync(dir, { recursive: true });
     return this.accountFor(owner_id);

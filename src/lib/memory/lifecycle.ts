@@ -44,6 +44,12 @@ export function supersede(
     }).memory_id;
   }
 
+  // A memory can never supersede itself — that would tombstone a live record
+  // while pointing it back at itself.
+  if (replacement === memory_id) {
+    throw new Error('cannot_supersede_with_self');
+  }
+
   const changed_by = opts.changed_by ?? 'system';
   const v = version(memory_id, 'SUPERSEDE', opts.reason ?? 'superseded by newer memory', changed_by);
 

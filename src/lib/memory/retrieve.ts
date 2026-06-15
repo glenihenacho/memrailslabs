@@ -140,7 +140,9 @@ export function retrieve(input: RetrieveInput): ContextBundle {
       tokens: memTokens,
       source_file: record.source_file,
       index_path: record.index_path,
-      evidence_refs: input.include_evidence ? record.source_refs.map((s) => s.ref ?? s.id ?? '') : undefined,
+      evidence_refs: input.include_evidence
+        ? record.source_refs.flatMap((s) => (s.ref ?? s.id ? [s.ref ?? s.id!] : []))
+        : undefined,
     });
   }
 

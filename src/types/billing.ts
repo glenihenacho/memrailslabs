@@ -64,6 +64,6 @@ export type RetrievalCostEvent = {
 export type RetrievalUsage = {
   billable_retrievals: number;
   billable_units: number;
-  credits_remaining: number;
+  credits_remaining: number | null; // null = unlimited (paid plans)
   credit_exhausted: boolean;
 };

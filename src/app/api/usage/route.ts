@@ -9,6 +9,11 @@ export const dynamic = 'force-dynamic';
 export async function GET(req: Request) {
   const url = new URL(req.url);
   const owner = url.searchParams.get('owner_id') ?? 'user_memrails';
+  // TODO(auth): derive owner from authenticated context instead of the query
+  // param once an API-key auth layer exists. Until then, validate the charset.
+  if (!/^[A-Za-z0-9_-]+$/.test(owner)) {
+    return NextResponse.json({ error: 'invalid_owner_id' }, { status: 400 });
+  }
   const account = getAccount(owner);
   if (!account) return NextResponse.json({ error: 'not_found' }, { status: 404 });
 

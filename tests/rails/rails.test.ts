@@ -58,4 +58,9 @@ describe('Artifact Rail', () => {
     expect(artifactRail.get(ref)).toBe('{"ok":true}');
     expect(artifactRail.get('artifact://user_demo/missing.json')).toBeNull();
   });
+
+  it('rejects path-traversal in artifact refs', () => {
+    expect(() => artifactRail.put('../../etc', 'passwd', 'x')).toThrow();
+    expect(() => artifactRail.get('artifact://../../etc/passwd')).toThrow();
+  });
 });

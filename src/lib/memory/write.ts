@@ -32,6 +32,12 @@ export type WriteResult = {
   contradicts: string[];
 };
 
+/** Clamp a caller-supplied confidence into the valid [0, 1] range. */
+function clamp01(n: number): number {
+  if (Number.isNaN(n)) return 0;
+  return Math.min(1, Math.max(0, n));
+}
+
 function similarity(a: string, b: string): number {
   const ta = new Set(tokenize(a));
   const tb = new Set(tokenize(b));
@@ -103,7 +109,7 @@ export function write(input: WriteInput): WriteResult {
     scope,
     memory_type,
     status: 'active',
-    confidence: input.confidence ?? 0.8,
+    confidence: clamp01(input.confidence ?? 0.8),
     sensitivity: input.sensitivity ?? 'normal',
     content,
     summary: input.summary ?? content.split(/(?<=[.!?])\s/)[0].slice(0, 220),

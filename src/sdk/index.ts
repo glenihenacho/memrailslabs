@@ -103,7 +103,8 @@ export class MemRails {
       }),
 
     get: async (memoryId: string): Promise<MemoryRecord> => {
-      const res = await this.fetchImpl(`${this.baseUrl}/api/memory/${memoryId}`, {
+      const id = encodeURIComponent(memoryId);
+      const res = await this.fetchImpl(`${this.baseUrl}/api/memory/${id}`, {
         headers: this.headers(),
       });
       if (!res.ok) throw new Error(`MemRails get failed: ${res.status}`);
@@ -111,10 +112,10 @@ export class MemRails {
     },
 
     supersede: (memoryId: string, body: { reason?: string; new_memory?: WriteArgs }) =>
-      this.post(`/api/memory/${memoryId}/supersede`, body),
+      this.post(`/api/memory/${encodeURIComponent(memoryId)}/supersede`, body),
 
     dispute: (memoryId: string, reason: string) =>
-      this.post(`/api/memory/${memoryId}/dispute`, { reason }),
+      this.post(`/api/memory/${encodeURIComponent(memoryId)}/dispute`, { reason }),
   };
 }
 

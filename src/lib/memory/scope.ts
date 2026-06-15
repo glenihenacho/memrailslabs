@@ -43,8 +43,12 @@ export function evaluatePolicy(record: MemoryRecord, req: ScopeRequest): PolicyD
   if (record.sensitivity === 'restricted') {
     return { allowed: false, reason: 'restricted_sensitivity' };
   }
-  if (record.expires_at && Date.parse(record.expires_at) < Date.now()) {
-    return { allowed: false, reason: 'expired' };
+  if (record.expires_at) {
+    const expiresAtMs = Date.parse(record.expires_at);
+    // An unparseable expiry is treated as expired rather than silently allowed.
+    if (Number.isNaN(expiresAtMs) || expiresAtMs < Date.now()) {
+      return { allowed: false, reason: 'expired' };
+    }
   }
   return { allowed: true, reason: 'in_scope' };
 }

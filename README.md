@@ -24,7 +24,7 @@ optional synthesis surface beneath it (`include_packet`).
 
 ```bash
 npm install
-npm test                 # 21 tests across packet + governed paths
+npm test                 # full suite across packet + governed paths
 npm run typecheck
 
 # In-process governed memory (no server needed):

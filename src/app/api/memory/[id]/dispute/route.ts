@@ -22,6 +22,8 @@ export async function POST(req: Request, { params }: { params: { id: string } })
     const result = dispute(params.id, { ...parsed.data, changed_by: 'api' });
     return NextResponse.json(result);
   } catch (err) {
-    return NextResponse.json({ error: (err as Error).message }, { status: 404 });
+    const message = (err as Error).message;
+    const status = message === 'memory_not_found' ? 404 : 500;
+    return NextResponse.json({ error: message }, { status });
   }
 }

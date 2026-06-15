@@ -1,4 +1,4 @@
-import { existsSync, mkdirSync, readFileSync, writeFileSync } from 'node:fs';
+import { existsSync, mkdirSync, readFileSync, renameSync, writeFileSync } from 'node:fs';
 import { dirname } from 'node:path';
 import type { GovernanceOverlay, GovernanceOverlayEntry } from '@/types/governed';
 import { dataPath } from '@/lib/paths';
@@ -27,8 +27,10 @@ export function loadOverlay(opts: { force?: boolean } = {}): GovernanceOverlay {
   }
   try {
     cache = JSON.parse(readFileSync(path, 'utf8')) as GovernanceOverlay;
-  } catch {
-    cache = {};
+  } catch (error) {
+    // Fail loud: silently resetting to {} would let the next save overwrite the
+    // canonical overlay and lose governance/version history irreversibly.
+    throw new Error(`failed_to_parse_governance_overlay:${path}`, { cause: error });
   }
   return cache;
 }
@@ -38,7 +40,10 @@ export function saveOverlay(overlay: GovernanceOverlay): void {
   if (!existsSync(dirname(path))) {
     mkdirSync(dirname(path), { recursive: true });
   }
-  writeFileSync(path, `${JSON.stringify(overlay, null, 2)}\n`, 'utf8');
+  // Atomic write: a crash mid-write leaves the original overlay intact.
+  const tmp = `${path}.tmp`;
+  writeFileSync(tmp, `${JSON.stringify(overlay, null, 2)}\n`, 'utf8');
+  renameSync(tmp, path);
   cache = overlay;
 }
 
