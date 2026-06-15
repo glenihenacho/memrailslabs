@@ -16,8 +16,9 @@ describe('canonical rail registry', () => {
     expect(core).toEqual(['artifact', 'authority', 'hot', 'retrieval', 'telemetry']);
   });
 
-  it('keeps authority and analytics on the global plane', () => {
+  it('keeps authority, telemetry, and analytics on the global plane', () => {
     expect(getRail('authority')?.scope).toBe('global');
+    expect(getRail('telemetry')?.scope).toBe('global');
     expect(getRail('analytics')?.scope).toBe('global');
   });
 

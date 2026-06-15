@@ -8,7 +8,7 @@ index_path: /project/project_memrails/stack_decisions
 summary: Core stack is Postgres + MemoryIndex + Redis + R2. Authority (Postgres) and analytics (ClickHouse) are global planes; federated NoSQL accounts are per-owner. Specialized rails added only on measured pressure.
 created_at: 2026-06-15
 updated_at: 2026-06-15
-claim: The canonical MemRails core stack is PostgreSQL (authority) + MemoryIndex (retrieval) + Redis (hot) + S3/R2 (artifacts), with telemetry on Postgres first. Authority (Postgres) and analytics (ClickHouse) are global planes spanning all tenants; the federated NoSQL accounts (artifact/document) are per-owner. Specialized rails — pgvector/Qdrant, Neo4j, ClickHouse, OpenSearch, Couchbase, ScyllaDB, Firestore — are added only after a measurable bottleneck. Postgres governs, MemoryIndex retrieves, Redis accelerates, R2 preserves, and retrieval telemetry prices the system.
+claim: The canonical MemRails core stack is PostgreSQL (authority) + MemoryIndex (retrieval) + Redis (hot) + S3/R2 (artifacts), with telemetry on Postgres first. Authority (Postgres), telemetry, and analytics (ClickHouse) are global planes spanning all tenants; the federated NoSQL accounts (artifact/document) are per-owner. Specialized rails — pgvector/Qdrant, Neo4j, ClickHouse, OpenSearch, Couchbase, ScyllaDB, Firestore — are added only after a measurable bottleneck. Postgres governs, MemoryIndex retrieves, Redis accelerates, R2 preserves, and retrieval telemetry prices the system.
 ---
 
 # Canonical Stack
@@ -32,8 +32,10 @@ optional later).
 
 ## Global vs per-owner
 
-- **Global plane** (spans all tenants): Authority (Postgres) and Analytics
-  (ClickHouse). Registry, policy, metering, and telemetry/evals are global.
+- **Global plane** (spans all tenants): Authority (Postgres), Telemetry
+  (Postgres → ClickHouse), and Analytics (ClickHouse). Registry, policy,
+  metering, retrieval logs, quality scores, billing events, and evals are all
+  global — telemetry is never sharded per owner.
 - **Per-owner plane** (federation): each owner/email is one NoSQL account
   namespace holding that tenant's memory bodies and artifacts.
 
