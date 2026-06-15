@@ -33,3 +33,9 @@ User
 The index compiler creates, merges, splits, and re-homes nodes, summarizes
 branches, and flags stale ones. Tree reasoning replaces
 `conversation → chunk → embed → top_k`, which is undifferentiated.
+
+Branch selection scores each branch's title, summary, and path against the task
+with the same model-free lexical core as record ranking — **stemmed** tokens
+(so `pricing` matches `priced`) weighted by **IDF** over the branches, so a
+distinctive branch term outweighs a common one. See
+`knowledge/governed-retrieval.md` for the blended L1–L3 relevance.

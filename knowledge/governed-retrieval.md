@@ -22,7 +22,7 @@ updated_at: 2026-06-14
 3. Policy → filter accessible memory (reason on every rejection)
 4. MemoryIndex → select relevant branches by tree reasoning
 5. Candidate gather from selected nodes (mode-dependent)
-6. Rank → freshness / confidence / contradiction / token cost
+6. Rank → blended L1–L3 relevance (stemmed, IDF-weighted) + freshness / confidence / contradiction / token cost, then L4 relevance floor
 7. Assemble context bundle within token budget
 8. Log retrieval telemetry
 9. Return bundle to the local agent
@@ -52,3 +52,35 @@ final_score =
 
 In `debug` mode every term is returned per candidate in
 `retrieval_trace.scoring`.
+
+### Relevance is a blend of the evolved L1–L3 layer signals
+
+`relevance` is not a flat token count. It combines the three retrieval layers,
+each computed on a shared, model-free **lexical core** (`src/lib/memory/lexical.ts`):
+
+```txt
+relevance = 0.5·semantic(L3) + 0.3·lexical(L1) + 0.2·structural(L2)
+```
+
+| Signal | Layer | What it measures |
+|---|---|---|
+| `lexical` | L1 | literal phrase / raw token coverage |
+| `structural` | L2 | query names the record's id, alias, or tag |
+| `semantic` | L3 | IDF-weighted, **stemmed** token overlap |
+
+Two upgrades drive recall and precision without a model:
+
+- **Stemming** — `retrieve / retrieval / retrieves / retrieving / retrieved`
+  collapse to one stem, so morphological variants match.
+- **IDF weighting** — rare query terms outweigh filler (BM25-lite), computed
+  once over in-scope memory. Branch selection uses the same weighted overlap.
+
+The per-layer signals are returned in `retrieval_trace.scoring[].relevance_signals`.
+
+### L4 evidence floor
+
+After ranking, a candidate that shares **no** lexical, structural, or semantic
+signal with the query is branch noise and is dropped — surfaced in `omitted`
+with reason `no L1–L3 relevance signal (below floor)`. The top-ranked memory
+always passes, so the floor never empties a bundle. High confidence does not
+rescue an irrelevant memory.

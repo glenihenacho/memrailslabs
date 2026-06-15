@@ -39,10 +39,22 @@ export type OmittedMemory = {
   reason: string;
 };
 
+/** The evolved L1–L3 layer signals that combine into the governed relevance. */
+export type RelevanceSignals = {
+  /** L1 — literal phrase / raw token coverage. */
+  lexical: number;
+  /** L2 — query names this record's id, alias, or tag. */
+  structural: number;
+  /** L3 — IDF-weighted, stemmed token overlap. */
+  semantic: number;
+};
+
 /** Transparent breakdown of the ranking formula for a single candidate. */
 export type ScoreBreakdown = {
   memory_id: string;
   relevance: number;
+  /** Per-layer signal contributions behind `relevance` (L1–L3). */
+  relevance_signals?: RelevanceSignals;
   scope_match: number;
   recency: number;
   confidence: number;

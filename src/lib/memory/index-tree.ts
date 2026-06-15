@@ -6,7 +6,7 @@ import type {
   MemoryMapNode,
   NodeMembership,
 } from '@/types/index-tree';
-import { tokenize } from './ranking';
+import { stemSet, weightedOverlap, computeIdf } from './lexical';
 
 function nid(path: string): string {
   return `node_${path.replace(/[^a-z0-9]+/gi, '_').toLowerCase()}`.replace(/_+/g, '_');
@@ -102,6 +102,10 @@ export function buildIndex(records: MemoryRecord[]): MemoryIndex {
  * Tree reasoning: score each branch node against the task context and return
  * the relevant branches, most relevant first. This is the PageIndex-style
  * tree-walk that replaces flat vector top-k.
+ *
+ * Branch relevance uses the same evolved lexical core as record ranking —
+ * stemmed tokens (so `pricing` matches `priced`) weighted by IDF over the
+ * branches (so a distinctive branch term outweighs a common one).
  */
 export function selectBranches(
   index: MemoryIndex,
@@ -110,16 +114,15 @@ export function selectBranches(
 ): { selected: MemoryIndexNode[]; rootsVisited: number } {
   const limit = opts.limit ?? 4;
   const threshold = opts.threshold ?? 0.0001;
-  const taskTokens = new Set(tokenize(taskContext));
+  const taskStems = stemSet(taskContext);
 
   const branchNodes = index.nodes.filter((n) => n.member_ids.length > 0);
-  const scored = branchNodes.map((node) => {
-    const haystack = new Set(tokenize(`${node.title} ${node.summary} ${node.path}`));
-    let overlap = 0;
-    for (const t of taskTokens) if (haystack.has(t)) overlap += 1;
-    const score = taskTokens.size === 0 ? 0 : overlap / taskTokens.size;
-    return { node, score };
-  });
+  const branchStems = branchNodes.map((n) => stemSet(`${n.title} ${n.summary} ${n.path}`));
+  const idf = computeIdf(branchStems);
+  const scored = branchNodes.map((node, i) => ({
+    node,
+    score: weightedOverlap(taskStems, branchStems[i], idf),
+  }));
 
   scored.sort((a, b) => b.score - a.score);
   const selected = scored.filter((s) => s.score > threshold).slice(0, limit).map((s) => s.node);

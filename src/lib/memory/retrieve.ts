@@ -11,7 +11,8 @@ import type {
 import { loadRegistry } from './registry';
 import { buildIndex, selectBranches } from './index-tree';
 import { evaluatePolicy, defaultScope, POLICY_FILTERS, type ScopeRequest } from './scope';
-import { scoreRecord, tokenize } from './ranking';
+import { scoreRecord, tokenize, type QueryContext } from './ranking';
+import { stemSet, computeIdf } from './lexical';
 import { estimateTokens } from './compress';
 import { recordRetrieval } from './telemetry';
 import { buildPacketFromBundle } from './synthesize';
@@ -106,8 +107,14 @@ export function retrieve(input: RetrieveInput): ContextBundle {
 
   const candidates = inScope.filter((r) => candidateIds.has(r.memory_id));
 
-  // 3. Rank with the transparent formula.
-  const scoring: ScoreBreakdown[] = candidates.map((r) => scoreRecord(r, taskTokens));
+  // 3. Rank with the transparent formula. Relevance blends the evolved L1–L3
+  // layer signals; IDF is computed once over in-scope memory so rare query
+  // terms drive the match.
+  const idf = computeIdf(
+    inScope.map((r) => stemSet(`${r.summary} ${r.content} ${r.tags.join(' ')} ${r.index_path}`)),
+  );
+  const queryCtx: QueryContext = { raw: input.task_context, stems: stemSet(input.task_context), idf };
+  const scoring: ScoreBreakdown[] = candidates.map((r) => scoreRecord(r, queryCtx));
   const scoreById = new Map(scoring.map((s) => [s.memory_id, s]));
   const ranked = [...candidates].sort(
     (a, b) => (scoreById.get(b.memory_id)?.final_score ?? 0) - (scoreById.get(a.memory_id)?.final_score ?? 0),
@@ -123,6 +130,14 @@ export function retrieve(input: RetrieveInput): ContextBundle {
     const piece = includeContent ? `${record.summary}\n${record.content}` : record.summary;
     const memTokens = estimateTokens(piece);
     const score = scoreById.get(record.memory_id);
+
+    // L4 evidence/quality gate: a candidate that shares no lexical, structural,
+    // or semantic signal with the query is branch noise — drop it (but never
+    // empty the bundle; the top-ranked memory always passes).
+    if ((score?.relevance ?? 0) <= 0 && memories.length > 0) {
+      omitted.push({ memory_id: record.memory_id, reason: 'Dropped: no L1–L3 relevance signal (below floor).' });
+      continue;
+    }
 
     if (tokens + memTokens > budget && memories.length > 0) {
       omitted.push({ memory_id: record.memory_id, reason: 'Dropped: token budget exhausted.' });
