@@ -119,3 +119,22 @@ export function weightedOverlap(
   }
   return denom === 0 ? 0 : Number((num / denom).toFixed(4));
 }
+
+/**
+ * Rigorous literal coverage — the L1 grep signal. Deliberately *unstemmed* and
+ * whole-word: a literal phrase match scores 1; otherwise it is the fraction of
+ * the query's distinct words present verbatim in the text. No morphology, no
+ * embeddings — this is the cheap evidence that, when strong, lets retrieval
+ * skip the semantic blend entirely.
+ */
+export function literalCoverage(queryRaw: string, text: string): number {
+  const qWords = new Set(tokenize(queryRaw));
+  if (qWords.size === 0) return 0;
+  const haystack = text.toLowerCase();
+  const phrase = queryRaw.trim().toLowerCase();
+  if (phrase.length > 2 && haystack.includes(phrase)) return 1;
+  const hWords = new Set(tokenize(text));
+  let matched = 0;
+  for (const w of qWords) if (hWords.has(w)) matched += 1;
+  return Number((matched / qWords.size).toFixed(4));
+}

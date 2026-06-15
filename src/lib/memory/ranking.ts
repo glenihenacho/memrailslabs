@@ -40,7 +40,11 @@ function round(n: number): number {
  *   L2 structural — query mentions the record's id, alias, or tag.
  *   L3 semantic   — IDF-weighted, stemmed token overlap.
  */
-export function relevanceSignals(record: MemoryRecord, q: QueryContext): RelevanceSignals {
+export function relevanceSignals(
+  record: MemoryRecord,
+  q: QueryContext,
+  opts: { skipSemantic?: boolean } = {},
+): RelevanceSignals {
   // L1 — literal. Exact phrase presence is the strongest cheap signal; failing
   // that, fall back to raw (unstemmed) token coverage.
   const hay = `${record.summary} ${record.content}`.toLowerCase();
@@ -73,11 +77,15 @@ export function relevanceSignals(record: MemoryRecord, q: QueryContext): Relevan
     }
   }
 
-  // L3 — semantic. IDF-weighted stemmed overlap is the recall backbone.
-  const docStems = stemSet(
-    `${record.summary} ${record.content} ${record.tags.join(' ')} ${record.index_path}`,
-  );
-  const semantic = weightedOverlap(q.stems, docStems, q.idf);
+  // L3 — semantic. IDF-weighted stemmed overlap is the recall backbone, but it
+  // is the expensive signal; skip it when rigorous grep already resolved.
+  const semantic = opts.skipSemantic
+    ? 0
+    : weightedOverlap(
+        q.stems,
+        stemSet(`${record.summary} ${record.content} ${record.tags.join(' ')} ${record.index_path}`),
+        q.idf,
+      );
 
   return { lexical: round(lexical), structural: round(structural), semantic };
 }
@@ -106,13 +114,15 @@ function stalenessPenalty(record: MemoryRecord, now: number): number {
 export function scoreRecord(
   record: MemoryRecord,
   q: QueryContext,
-  opts: { now?: number; usageSuccess?: number } = {},
+  opts: { now?: number; usageSuccess?: number; skipSemantic?: boolean } = {},
 ): ScoreBreakdown {
   const now = opts.now ?? Date.now();
-  const signals = relevanceSignals(record, q);
-  const relevance = round(
-    BLEND.semantic * signals.semantic + BLEND.lexical * signals.lexical + BLEND.structural * signals.structural,
-  );
+  const signals = relevanceSignals(record, q, { skipSemantic: opts.skipSemantic });
+  // When grep already resolved, the semantic term is skipped; the two cheap
+  // signals are renormalized to keep relevance on the same [0, 1] scale.
+  const relevance = opts.skipSemantic
+    ? round((0.6 * signals.lexical + 0.4 * signals.structural))
+    : round(BLEND.semantic * signals.semantic + BLEND.lexical * signals.lexical + BLEND.structural * signals.structural);
   const scope_match = record.scope.agent_id ? 0.1 : 0.05; // agent-specific is a tighter fit
   const recency = recencyScore(record, now);
   const confidence = Number((record.confidence * 0.3).toFixed(4));

@@ -4,10 +4,12 @@ import { beforeEach, describe, it, expect } from 'vitest';
 import { retrieve } from '@/lib/memory/retrieve';
 import { write } from '@/lib/memory/write';
 import { invalidateRegistry } from '@/lib/memory/registry';
+import { resetRetrievalCache } from '@/lib/memory/cache';
 
 function resetData() {
   rmSync(resolve(__dirname, '../../.tmp-test-data'), { recursive: true, force: true });
   invalidateRegistry();
+  resetRetrievalCache();
 }
 
 describe('governed relevance — evolved L1–L3 blend', () => {
@@ -52,7 +54,10 @@ describe('governed relevance — evolved L1–L3 blend', () => {
       confidence: 0.99, // high confidence must not rescue an irrelevant memory
     });
 
-    const bundle = retrieve({ task_context: 'blue green deployment rollout' });
+    // A morphological-variant query (deploying ~ deployment, rollouts ~ rollout)
+    // doesn't clear the literal grep bar, so the tree path runs and the L4 floor
+    // applies to the branch members.
+    const bundle = retrieve({ task_context: 'deploying the blue green rollouts' });
     const summaries = bundle.memories.map((m) => m.summary).join(' ');
     expect(summaries).toContain('canary');
     expect(summaries).not.toContain('otters');

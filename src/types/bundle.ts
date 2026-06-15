@@ -73,6 +73,14 @@ export type RetrievalTrace = {
   policy_filters_applied: string[];
   candidates_considered: number;
   scoring?: ScoreBreakdown[];
+  /** Layer that resolved the query: `L1_GREP` short-circuits the semantic blend. */
+  resolved_layer?: 'L1_GREP' | 'L2_KEY' | 'L3_SEMANTIC';
+  /** True when rigorous grep found enough evidence to skip the L3 semantic blend. */
+  semantic_skipped?: boolean;
+  /** Recent cache-hit rate that tuned the grep threshold this run. */
+  cache_hit_rate?: number;
+  /** Adaptive grep coverage threshold applied this run. */
+  grep_threshold?: number;
 };
 
 export type ContextBundle = {

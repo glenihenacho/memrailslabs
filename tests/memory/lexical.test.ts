@@ -1,5 +1,5 @@
 import { describe, it, expect } from 'vitest';
-import { stem, stemSet, computeIdf, weightedOverlap } from '@/lib/memory/lexical';
+import { stem, stemSet, computeIdf, weightedOverlap, literalCoverage } from '@/lib/memory/lexical';
 
 describe('stemming — morphological variants collapse', () => {
   const families: Record<string, string[]> = {
@@ -47,5 +47,25 @@ describe('weighted overlap — normalized to [0, 1]', () => {
 
   it('matches morphological variants (retrieving ~ retrieval)', () => {
     expect(weightedOverlap(stemSet('retrieving'), docs[0], idf)).toBeGreaterThan(0);
+  });
+});
+
+describe('literal coverage — the rigorous grep signal', () => {
+  it('scores a literal phrase match as 1', () => {
+    expect(literalCoverage('packet contract', 'the packet contract is stable')).toBe(1);
+  });
+
+  it('is the fraction of distinct query words present verbatim', () => {
+    // 3 of 4 query words appear; "delta" does not.
+    expect(literalCoverage('alpha bravo charlie delta', 'alpha bravo charlie')).toBe(0.75);
+  });
+
+  it('is unstemmed — morphological variants do NOT count', () => {
+    // "retrieval" is present but the query word "retrieving" is not verbatim.
+    expect(literalCoverage('retrieving', 'governed retrieval pipeline')).toBe(0);
+  });
+
+  it('is 0 with no overlap', () => {
+    expect(literalCoverage('quokka kebab', 'pricing and retrieval')).toBe(0);
   });
 });

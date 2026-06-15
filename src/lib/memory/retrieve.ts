@@ -12,13 +12,22 @@ import { loadRegistry } from './registry';
 import { buildIndex, selectBranches } from './index-tree';
 import { evaluatePolicy, defaultScope, POLICY_FILTERS, type ScopeRequest } from './scope';
 import { scoreRecord, tokenize, type QueryContext } from './ranking';
-import { stemSet, computeIdf } from './lexical';
+import { stemSet, computeIdf, literalCoverage } from './lexical';
+import {
+  retrievalSignature,
+  observeRetrieval,
+  recentCacheHitRate,
+  adaptiveGrepThreshold,
+} from './cache';
 import { estimateTokens } from './compress';
 import { recordRetrieval } from './telemetry';
 import { buildPacketFromBundle } from './synthesize';
 import { meterRetrieval } from '@/lib/billing/meter';
 
 const DEFAULT_BUDGET = 1800;
+
+/** A grep hit must also clear this confidence bar to count as resolving evidence. */
+const EVIDENCE_FLOOR = 0.75;
 
 function bundleId(prefix: string): string {
   return `${prefix}_${randomUUID().replace(/-/g, '').slice(0, 16)}`;
@@ -82,39 +91,77 @@ export function retrieve(input: RetrieveInput): ContextBundle {
     }
   }
 
-  // 2. Candidate gather by mode.
-  const index = buildIndex(inScope);
-  const { selected, rootsVisited } = selectBranches(index, input.task_context);
-  const branchPaths = selected.map((n) => n.path);
-  const branchMemberIds = new Set(selected.flatMap((n) => n.member_ids));
+  // Adaptive control: the recent cache-hit rate tunes how aggressively rigorous
+  // grep is allowed to resolve and skip the semantic blend. Stable/repeated
+  // traffic (high hit rate) lowers the bar; novel traffic keeps it strict.
+  const signature = retrievalSignature({
+    owner_id: scope.owner_id,
+    project_id: scope.project_id,
+    agent_id: scope.agent_id,
+    task_context: input.task_context,
+  });
+  observeRetrieval(signature);
+  const cacheHitRate = recentCacheHitRate();
+  const grepThreshold = adaptiveGrepThreshold(cacheHitRate);
 
-  let candidateIds: Set<string>;
-  if (mode === 'exact') {
-    candidateIds = exactMatches(inScope, taskTokens);
-  } else if (mode === 'hot') {
-    candidateIds = new Set(
-      [...inScope]
-        .sort((a, b) => Date.parse(b.updated_at) - Date.parse(a.updated_at))
-        .slice(0, 8)
-        .map((r) => r.memory_id),
-    );
-  } else if (mode === 'hybrid') {
-    candidateIds = new Set([...branchMemberIds, ...exactMatches(inScope, taskTokens)]);
+  // 2. L1 rigorous grep. Literal, whole-word evidence. If a record clears the
+  // adaptive coverage bar AND the evidence floor, the query is resolved here and
+  // the L3 semantic blend is skipped entirely (CLAUDE.md Rule 2).
+  const grepHits: MemoryRecord[] = [];
+  for (const r of inScope) {
+    if (literalCoverage(input.task_context, `${r.summary}\n${r.content}`) >= grepThreshold) {
+      grepHits.push(r);
+    }
+  }
+  const grepResolved =
+    mode !== 'hot' && grepHits.some((r) => r.confidence >= EVIDENCE_FLOOR);
+
+  let candidates: MemoryRecord[];
+  let branchPaths: string[];
+  let rootsVisited: number;
+  let scoring: ScoreBreakdown[];
+
+  if (grepResolved) {
+    // Resolved by literal evidence — rank the hits on the cheap signals only.
+    candidates = grepHits;
+    branchPaths = [];
+    rootsVisited = 0;
+    const cheapCtx: QueryContext = { raw: input.task_context, stems: new Set(), idf: new Map() };
+    scoring = candidates.map((r) => scoreRecord(r, cheapCtx, { skipSemantic: true }));
   } else {
-    // tree (and debug)
-    candidateIds = branchMemberIds;
+    // 3. Tree path — branch selection then the full blended L1–L3 ranking.
+    const index = buildIndex(inScope);
+    const selectedResult = selectBranches(index, input.task_context);
+    rootsVisited = selectedResult.rootsVisited;
+    branchPaths = selectedResult.selected.map((n) => n.path);
+    const branchMemberIds = new Set(selectedResult.selected.flatMap((n) => n.member_ids));
+
+    let candidateIds: Set<string>;
+    if (mode === 'exact') {
+      candidateIds = exactMatches(inScope, taskTokens);
+    } else if (mode === 'hot') {
+      candidateIds = new Set(
+        [...inScope]
+          .sort((a, b) => Date.parse(b.updated_at) - Date.parse(a.updated_at))
+          .slice(0, 8)
+          .map((r) => r.memory_id),
+      );
+    } else if (mode === 'hybrid') {
+      candidateIds = new Set([...branchMemberIds, ...exactMatches(inScope, taskTokens)]);
+    } else {
+      // tree (and debug)
+      candidateIds = branchMemberIds;
+    }
+
+    candidates = inScope.filter((r) => candidateIds.has(r.memory_id));
+    // IDF is computed once over in-scope memory so rare query terms drive the match.
+    const idf = computeIdf(
+      inScope.map((r) => stemSet(`${r.summary} ${r.content} ${r.tags.join(' ')} ${r.index_path}`)),
+    );
+    const queryCtx: QueryContext = { raw: input.task_context, stems: stemSet(input.task_context), idf };
+    scoring = candidates.map((r) => scoreRecord(r, queryCtx));
   }
 
-  const candidates = inScope.filter((r) => candidateIds.has(r.memory_id));
-
-  // 3. Rank with the transparent formula. Relevance blends the evolved L1–L3
-  // layer signals; IDF is computed once over in-scope memory so rare query
-  // terms drive the match.
-  const idf = computeIdf(
-    inScope.map((r) => stemSet(`${r.summary} ${r.content} ${r.tags.join(' ')} ${r.index_path}`)),
-  );
-  const queryCtx: QueryContext = { raw: input.task_context, stems: stemSet(input.task_context), idf };
-  const scoring: ScoreBreakdown[] = candidates.map((r) => scoreRecord(r, queryCtx));
   const scoreById = new Map(scoring.map((s) => [s.memory_id, s]));
   const ranked = [...candidates].sort(
     (a, b) => (scoreById.get(b.memory_id)?.final_score ?? 0) - (scoreById.get(a.memory_id)?.final_score ?? 0),
@@ -150,7 +197,7 @@ export function retrieve(input: RetrieveInput): ContextBundle {
       content: includeContent ? record.content : undefined,
       confidence: record.confidence,
       status: record.status,
-      reason_selected: reasonSelected(record, score, branchPaths),
+      reason_selected: reasonSelected(record, score, branchPaths, grepResolved),
       score: score?.final_score ?? 0,
       tokens: memTokens,
       source_file: record.source_file,
@@ -179,6 +226,10 @@ export function retrieve(input: RetrieveInput): ContextBundle {
       policy_filters_applied: [...POLICY_FILTERS],
       candidates_considered: candidates.length,
       scoring: mode === 'debug' ? scoring : undefined,
+      resolved_layer: grepResolved ? 'L1_GREP' : 'L3_SEMANTIC',
+      semantic_skipped: grepResolved,
+      cache_hit_rate: cacheHitRate,
+      grep_threshold: grepThreshold,
     },
     cache_hit: mode === 'hot',
     usage: { billable_retrievals: 0, billable_units: 0, credits_remaining: 0, credit_exhausted: false },
@@ -202,11 +253,15 @@ function reasonSelected(
   record: MemoryRecord,
   score: ScoreBreakdown | undefined,
   branchPaths: string[],
+  grepResolved: boolean,
 ): string {
+  const rel = score ? score.relevance.toFixed(2) : '0';
+  if (grepResolved) {
+    return `Literal evidence — resolved at L1 grep, semantic skipped (confidence ${record.confidence}).`;
+  }
   const branch = branchPaths.includes(record.index_path)
     ? record.index_path.split('/').filter(Boolean).pop()
     : null;
-  const rel = score ? score.relevance.toFixed(2) : '0';
   if (branch) {
     return `Selected from branch ${branch} (relevance ${rel}, confidence ${record.confidence}).`;
   }

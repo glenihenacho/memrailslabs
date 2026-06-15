@@ -20,12 +20,13 @@ updated_at: 2026-06-14
 1. memory.retrieve(task_context)
 2. Auth → resolve owner / project / agent scope
 3. Policy → filter accessible memory (reason on every rejection)
-4. MemoryIndex → select relevant branches by tree reasoning
-5. Candidate gather from selected nodes (mode-dependent)
-6. Rank → blended L1–L3 relevance (stemmed, IDF-weighted) + freshness / confidence / contradiction / token cost, then L4 relevance floor
-7. Assemble context bundle within token budget
-8. Log retrieval telemetry
-9. Return bundle to the local agent
+4. L1 rigorous grep → if literal evidence clears the adaptive bar, resolve here and skip semantic
+5. MemoryIndex → otherwise select relevant branches by tree reasoning
+6. Candidate gather from selected nodes (mode-dependent)
+7. Rank → blended L1–L3 relevance (stemmed, IDF-weighted) + freshness / confidence / contradiction / token cost, then L4 relevance floor
+8. Assemble context bundle within token budget
+9. Log retrieval telemetry
+10. Return bundle to the local agent
 ```
 
 ## Retrieval modes
@@ -37,6 +38,30 @@ updated_at: 2026-06-14
 | `hybrid` | tree + exact + optional vector fallback |
 | `hot` | most recently updated memory in scope |
 | `debug` | tree + full scoring breakdown in the trace |
+
+## Rigorous grep short-circuit (adaptive)
+
+Cheap filters before expensive synthesis (Rule 2). Before the tree path runs, a
+**rigorous L1 grep** scores every in-scope memory by *literal, whole-word*
+coverage (`literalCoverage` — an exact phrase scores 1; otherwise the fraction
+of distinct query words present verbatim). If a memory clears the coverage bar
+**and** the evidence floor (confidence ≥ 0.75), the query is resolved at L1 and
+the L3 semantic blend is **skipped entirely** — ranking uses the cheap
+lexical/structural signals only.
+
+The coverage bar is **adaptive**, tuned by the recent cache-hit rate:
+
+```txt
+grep_threshold = COLD − (COLD − HOT) · cache_hit_rate     (COLD 0.9, HOT 0.6)
+```
+
+Each retrieval has a signature (scope + normalized task context). A signature
+seen again inside the warm window is a cache hit; a rolling window of recent
+hits gives `cache_hit_rate`. When hits are frequent (stable / repeated traffic),
+the bar drops and grep is trusted to resolve more aggressively; when novel
+queries dominate, the bar stays strict and retrieval falls through to the
+semantic tree-walk. The trace reports `resolved_layer`, `semantic_skipped`,
+`cache_hit_rate`, and `grep_threshold` (`src/lib/memory/cache.ts`).
 
 ## Transparent ranking
 
