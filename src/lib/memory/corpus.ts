@@ -59,14 +59,8 @@ export function loadCorpus(opts: { force?: boolean } = {}): CorpusEntry[] {
       evidence_urls: Array.isArray(data.evidence_urls)
         ? (data.evidence_urls as string[])
         : undefined,
-      created_at:
-        typeof data.created_at === 'string'
-          ? data.created_at
-          : new Date(0).toISOString().slice(0, 10),
-      updated_at:
-        typeof data.updated_at === 'string'
-          ? data.updated_at
-          : new Date(0).toISOString().slice(0, 10),
+      created_at: coerceDate(data.created_at),
+      updated_at: coerceDate(data.updated_at),
     };
 
     entries.push({ claim, body: parsed.content, data });
@@ -74,6 +68,17 @@ export function loadCorpus(opts: { force?: boolean } = {}): CorpusEntry[] {
 
   cache = entries;
   return cache;
+}
+
+/**
+ * Coerce a frontmatter date into an ISO string. YAML parses `2026-05-25` as a
+ * Date object, not a string — without this, every dated record silently fell
+ * back to the epoch, breaking recency ranking and temporal retrieval.
+ */
+function coerceDate(value: unknown): string {
+  if (value instanceof Date && !Number.isNaN(value.getTime())) return value.toISOString();
+  if (typeof value === 'string' && !Number.isNaN(Date.parse(value))) return value;
+  return new Date(0).toISOString();
 }
 
 function extractFirstParagraph(content: string): string {

@@ -94,6 +94,7 @@ export { supersede, dispute, forget } from './lifecycle';
 export { loadRegistry, getRecord, DEFAULT_SCOPE } from './registry';
 export { buildIndex, selectBranches, toMemoryMap } from './index-tree';
 export { recordFeedback, findRetrieval } from './telemetry';
+export { compileTimeline, statusAsOf } from './temporal';
 
 import { loadRegistry } from './registry';
 import { buildIndex, toMemoryMap } from './index-tree';
