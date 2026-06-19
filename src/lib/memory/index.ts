@@ -95,6 +95,7 @@ export { loadRegistry, getRecord, DEFAULT_SCOPE } from './registry';
 export { buildIndex, selectBranches, toMemoryMap } from './index-tree';
 export { recordFeedback, findRetrieval } from './telemetry';
 export { compileTimeline, statusAsOf } from './temporal';
+export { compileView } from './compile';
 
 import { loadRegistry } from './registry';
 import { buildIndex, toMemoryMap } from './index-tree';

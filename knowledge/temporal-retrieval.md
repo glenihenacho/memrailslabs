@@ -38,12 +38,29 @@ So temporal retrieval is its own path: `POST /api/memory/timeline`
 - **Forget is audit-safe.** Tombstoned records stay in the timeline with a
   `[forgotten]` body so the audit trail survives without exposing the content.
 
+## Made-to-order index (prompt + time)
+
+The layer on top of completeness: `compileView` (`POST /api/memory/compile`)
+takes the completeness slice and builds a **fresh index over only that
+window**, organized around a prompt. Sections are ordered by relevance to the
+question and entries within them likewise — but **nothing is dropped**:
+relevance orders, it does not filter (`total` = every in-window record;
+`total_relevant` is how many matched). Relevance is a deterministic lexical
+projection over canonical records — select & organize, never generation.
+
+So: `prompt + time → a made-to-order index over the complete time slice`. This
+reconciles the relevance/completeness tension — you get the question's framing
+*and* the full segment.
+
 ## Honest limits
 
 - Window is keyed on `created_at` (system time). Full **bitemporal** valid-time
   (when a fact was *true* vs. when it was *recorded*) is a further extension.
-- A prompt-compiled, made-to-order index (organize the window around a question)
-  is the natural next step on top of this completeness base.
+- Relevance is lexical (token overlap). A semantic/embedding pass or an
+  LLM-structured ToC would sharpen organization — but only over labeled
+  evidence, never inventing content.
 
-Code: `src/lib/memory/temporal.ts`, `src/app/api/memory/timeline/route.ts`.
-Tests: `tests/memory/timeline.test.ts`.
+Code: `src/lib/memory/temporal.ts` (completeness + `selectScoped` + `statusAsOf`),
+`src/lib/memory/compile.ts` (prompt-compiled view),
+`src/app/api/memory/{timeline,compile}/route.ts`.
+Tests: `tests/memory/{timeline,compile}.test.ts`.
