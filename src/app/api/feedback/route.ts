@@ -1,6 +1,7 @@
 import { NextResponse } from 'next/server';
 import { z } from 'zod';
 import { recordFeedback } from '@/lib/memory';
+import { authenticate, authErrorResponse } from '@/lib/auth/authenticate';
 
 export const runtime = 'nodejs';
 export const dynamic = 'force-dynamic';
@@ -23,6 +24,11 @@ export async function POST(req: Request) {
   const parsed = Body.safeParse(json);
   if (!parsed.success) {
     return NextResponse.json({ error: 'invalid_input', issues: parsed.error.issues }, { status: 400 });
+  }
+  try {
+    authenticate(req); // reject invalid keys; demo tenant may submit feedback
+  } catch (err) {
+    return authErrorResponse(err);
   }
   const result = recordFeedback(parsed.data);
   return NextResponse.json(result, { status: 201 });

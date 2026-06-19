@@ -16,6 +16,14 @@ const Body = z.object({
  * router — the user only ever sees this account + an API key.
  */
 export async function POST(req: Request) {
+  // Optional enrollment gate: when MEMRAILS_ENROLL_TOKEN is set, callers must
+  // present it (x-enroll-token), preventing open credential issuance in prod.
+  // Unset (dev/demo) leaves enrollment open.
+  const enrollToken = process.env.MEMRAILS_ENROLL_TOKEN;
+  if (enrollToken && req.headers.get('x-enroll-token') !== enrollToken) {
+    return NextResponse.json({ error: 'enrollment_forbidden' }, { status: 403 });
+  }
+
   let json: unknown;
   try {
     json = await req.json();

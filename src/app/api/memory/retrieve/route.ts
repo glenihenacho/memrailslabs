@@ -1,6 +1,7 @@
 import { NextResponse } from 'next/server';
 import { z } from 'zod';
 import { retrieve } from '@/lib/memory';
+import { authenticate, authErrorResponse } from '@/lib/auth/authenticate';
 
 export const runtime = 'nodejs';
 export const dynamic = 'force-dynamic';
@@ -30,6 +31,14 @@ export async function POST(req: Request) {
   if (!parsed.success) {
     return NextResponse.json({ error: 'invalid_input', issues: parsed.error.issues }, { status: 400 });
   }
-  const bundle = retrieve(parsed.data);
+  // Owner is derived from the API key (or the demo tenant), never trusted from
+  // the body — a caller can only read memory in their own namespace.
+  let owner_id: string;
+  try {
+    owner_id = authenticate(req).owner_id;
+  } catch (err) {
+    return authErrorResponse(err);
+  }
+  const bundle = retrieve({ ...parsed.data, owner_id });
   return NextResponse.json(bundle);
 }

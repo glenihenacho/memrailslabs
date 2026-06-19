@@ -1,6 +1,7 @@
 import { NextResponse } from 'next/server';
 import { z } from 'zod';
 import { write } from '@/lib/memory';
+import { requireOwner, authErrorResponse } from '@/lib/auth/authenticate';
 
 export const runtime = 'nodejs';
 export const dynamic = 'force-dynamic';
@@ -45,6 +46,12 @@ export async function POST(req: Request) {
   if (!parsed.success) {
     return NextResponse.json({ error: 'invalid_input', issues: parsed.error.issues }, { status: 400 });
   }
-  const result = write(parsed.data);
+  let owner_id: string;
+  try {
+    owner_id = requireOwner(req); // writes require a real key, not the demo tenant
+  } catch (err) {
+    return authErrorResponse(err);
+  }
+  const result = write({ ...parsed.data, owner_id });
   return NextResponse.json(result, { status: 201 });
 }

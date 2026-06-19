@@ -1,12 +1,22 @@
 import { NextResponse } from 'next/server';
 import { findRetrieval } from '@/lib/memory';
+import { authenticate, authErrorResponse } from '@/lib/auth/authenticate';
 
 export const runtime = 'nodejs';
 export const dynamic = 'force-dynamic';
 
-export async function GET(_req: Request, { params }: { params: { id: string } }) {
+export async function GET(req: Request, { params }: { params: { id: string } }) {
+  let owner_id: string;
+  try {
+    owner_id = authenticate(req).owner_id;
+  } catch (err) {
+    return authErrorResponse(err);
+  }
   const bundle = findRetrieval(params.id);
-  if (!bundle) return NextResponse.json({ error: 'not_found' }, { status: 404 });
+  // Not-found and not-owned both 404 so retrieval ids don't leak across tenants.
+  if (!bundle || bundle.scope.owner_id !== owner_id) {
+    return NextResponse.json({ error: 'not_found' }, { status: 404 });
+  }
   return NextResponse.json({
     retrieval_id: bundle.retrieval_id,
     query: bundle.query,

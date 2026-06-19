@@ -99,8 +99,13 @@ import { loadRegistry } from './registry';
 import { buildIndex, toMemoryMap } from './index-tree';
 import type { MemoryMapNode } from '@/types/index-tree';
 
-/** Project memory map (nested MemoryIndex view) for a given project scope. */
-export function memoryMap(project_id: string): MemoryMapNode[] {
-  const records = loadRegistry().filter((r) => r.scope.project_id === project_id);
+/**
+ * Project memory map (nested MemoryIndex view), scoped to an owner so project-id
+ * collisions across tenants never mix records.
+ */
+export function memoryMap(project_id: string, owner_id?: string): MemoryMapNode[] {
+  const records = loadRegistry().filter(
+    (r) => r.scope.project_id === project_id && (owner_id === undefined || r.scope.owner_id === owner_id),
+  );
   return toMemoryMap(buildIndex(records));
 }

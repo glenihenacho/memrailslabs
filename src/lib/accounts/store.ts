@@ -123,6 +123,24 @@ export function getAccount(owner_id: string): Account | null {
   return load()[owner_id] ?? null;
 }
 
+/** sha256 of a plaintext API key, as stored in `api_key_hash`. */
+export function hashApiKey(key: string): string {
+  return createHash('sha256').update(key).digest('hex');
+}
+
+/** Reverse-lookup an account by presented API key (constant set, small N). */
+export function findByApiKey(key: string): Account | null {
+  if (!key) return null;
+  const hash = hashApiKey(key);
+  const store = load();
+  for (const owner_id of Object.keys(store)) {
+    if (store[owner_id].api_key_hash && store[owner_id].api_key_hash === hash) {
+      return store[owner_id];
+    }
+  }
+  return null;
+}
+
 /**
  * Debit billable units and record spend. Credits can go negative for free
  * accounts — gating is a deploy policy (guardrail), not a hard cap baked into
