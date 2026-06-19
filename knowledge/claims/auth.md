@@ -19,8 +19,9 @@ claim: The memory API authenticates with API keys. The owner is derived from the
   without credentials. Mutations require a real key (401 otherwise).
 - **Ownership** — `[id]`, `supersede`, `dispute`, and retrieval traces verify
   the target belongs to the caller; not-found and not-owned both return 404.
-- **Reads are scoped** — retrieve, export, map, usage, and the ledger are
-  filtered to the caller's tenant; `/api/stack` is public.
+- **Reads are scoped** — retrieve, export, map, and usage are filtered to the
+  caller's tenant; the ledger returns the caller's events plus ownerless system
+  events. `/api/stack` is public.
 - **Enrollment gate** — `MEMRAILS_ENROLL_TOKEN` (`x-enroll-token`) blocks open
   credential issuance in production.
 
