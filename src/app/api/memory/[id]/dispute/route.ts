@@ -1,6 +1,7 @@
 import { NextResponse } from 'next/server';
 import { z } from 'zod';
-import { dispute } from '@/lib/memory';
+import { dispute, getRecord } from '@/lib/memory';
+import { requireOwner, authErrorResponse } from '@/lib/auth/authenticate';
 
 export const runtime = 'nodejs';
 export const dynamic = 'force-dynamic';
@@ -17,6 +18,16 @@ export async function POST(req: Request, { params }: { params: { id: string } })
   const parsed = Body.safeParse(json);
   if (!parsed.success) {
     return NextResponse.json({ error: 'invalid_input', issues: parsed.error.issues }, { status: 400 });
+  }
+  let owner_id: string;
+  try {
+    owner_id = requireOwner(req);
+  } catch (err) {
+    return authErrorResponse(err);
+  }
+  const target = getRecord(params.id, { force: true });
+  if (!target || target.scope.owner_id !== owner_id) {
+    return NextResponse.json({ error: 'memory_not_found' }, { status: 404 });
   }
   try {
     const result = dispute(params.id, { ...parsed.data, changed_by: 'api' });

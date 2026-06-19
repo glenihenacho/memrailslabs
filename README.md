@@ -52,6 +52,20 @@ npm run dev   # → http://localhost:3000/console-live
 | POST | `/api/enroll` | Provision an isolated tenant (one email → one account + credits) |
 | GET | `/api/usage` | Metered usage summary for an owner |
 
+## Authentication
+
+API-key auth, keyed to the per-owner federation:
+
+- **Enroll** → `POST /api/enroll` returns an `api_key` (shown once). Set
+  `MEMRAILS_ENROLL_TOKEN` to gate enrollment in production (`x-enroll-token`).
+- **Use** → send `Authorization: Bearer <api_key>`. The owner is derived from
+  the key, never from the request body/query — a tenant can only reach its own
+  namespace.
+- **Demo** → with no key, requests resolve to a read-only demo tenant
+  (`user_memrails`, the curated corpus) so the live console works out of the box.
+  Writes and lifecycle (`write`/`supersede`/`dispute`/`forget`) require a real
+  key; reads are scoped to the caller; `/api/stack` is public.
+
 ## Pricing — metered by retrieval
 
 The commercial primitive is the metered retrieval: **one successful
