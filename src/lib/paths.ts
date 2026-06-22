@@ -17,6 +17,7 @@ export function dataDir(): string {
   return resolve(process.cwd(), 'data');
 }
 
+/** Resolve a path inside the writable data directory (see {@link dataDir}). */
 export function dataPath(...segments: string[]): string {
   return resolve(dataDir(), ...segments);
 }
