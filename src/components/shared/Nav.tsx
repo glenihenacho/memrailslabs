@@ -39,7 +39,7 @@ export function Nav() {
                 <Link href="/console" role="menuitem">Console</Link>
                 <Link href="/streaming" role="menuitem">Streaming</Link>
                 <Link href="/mcp" role="menuitem">MCP</Link>
-                <Link href="/console-live" role="menuitem">Console (live)</Link>
+                <Link href="/inference" role="menuitem">Inference</Link>
               </div>
             </div>
             <Link href="/pricing" className="nav-link" style={{ color: 'inherit' }}>
@@ -134,7 +134,7 @@ export function Nav() {
             <Link href="/console">Console</Link>
             <Link href="/streaming">Streaming</Link>
             <Link href="/mcp">MCP</Link>
-            <Link href="/console-live">Console (live)</Link>
+            <Link href="/inference">Inference</Link>
           </div>
           <div className="nav-drawer-group">
             <Link href="/pricing">Pricing</Link>

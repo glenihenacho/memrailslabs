@@ -33,7 +33,7 @@ export function Footer() {
             <Link href="/streaming" className="hover:text-foreground transition">Streaming</Link>
             <Link href="/mcp" className="hover:text-foreground transition">MCP</Link>
             <Link href="/pricing" className="hover:text-foreground transition">Pricing</Link>
-            <Link href="/console-live" className="hover:text-foreground transition">Console (live)</Link>
+            <Link href="/inference" className="hover:text-foreground transition">Inference</Link>
           </div>
         </div>
         <div className="md:col-span-2">
