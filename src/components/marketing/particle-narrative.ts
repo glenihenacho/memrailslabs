@@ -587,10 +587,23 @@ export function initParticleNarrative(): () => void {
     if (item.kind === 'text' && item.targets && item.targets.length) {
       const t = item.targets[i % item.targets.length];
       // Hero text targets are viewport coords captured at scrollY≈0, but the
-      // HTML hero scrolls away with the page. Subtract the live scrollY so the
-      // particle "remember." stays glued to the real text during the handoff
-      // instead of popping back to its boot position (the hero "skip").
-      return { x: t[0] + P[i].jx * 1.5, y: t[1] - window.scrollY + P[i].jy * 1.5 };
+      // HTML hero scrolls away with the page. Subtract scrollY so the particle
+      // "remember." stays glued to the real text through the handoff — but CAP
+      // the offset to the handoff zone. Without the cap, scrolling back up
+      // while scrollY is still large (and the text weight is growing again)
+      // aims the particles far above the viewport and they go missing.
+      const sy = window.scrollY;
+      const reg = Math.min(sy, H * 0.18);
+      // Ease the cluster toward viewport center as you scroll into the morph,
+      // so the off-center headline becomes a centered "remember." → chaos
+      // transition. 0 at the very top keeps the handoff seamless.
+      const prog = Math.min(1, sy / (H * 0.6));
+      const bx = t[0] + P[i].jx * 1.5;
+      const by = t[1] - reg + P[i].jy * 1.5;
+      return {
+        x: bx + (W * 0.5 - bx) * 0.5 * prog,
+        y: by + (H * 0.5 - by) * 0.5 * prog,
+      };
     }
     if (item.kind === 'shape' && item.targets && item.targets.length) {
       const target = item.targets[i % item.targets.length];
