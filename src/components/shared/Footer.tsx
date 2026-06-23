@@ -46,7 +46,7 @@ export function Footer() {
           <div className="flex flex-col gap-2.5">
             <Link href="/#research" className="hover:text-foreground transition">Research</Link>
             <Link href="/#blog" className="hover:text-foreground transition">Blog</Link>
-            <Link href="/#docs" className="hover:text-foreground transition">Docs</Link>
+            <Link href="/docs" className="hover:text-foreground transition">Docs</Link>
             <Link href="/#community" className="hover:text-foreground transition">Community</Link>
           </div>
         </div>

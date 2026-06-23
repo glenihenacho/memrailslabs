@@ -536,3 +536,111 @@ body::before {
   font-size: 12px;
   color: var(--muted-foreground);
 }
+
+/* ── Pricing calculator: compression-model picker + estimate slider ──────────
+   These live in the /pricing marketing partial, which is injected as a body
+   fragment with no <style> of its own. Without these the model buttons and the
+   range slider fall back to unstyled browser defaults — off-brand. Ported from
+   the source design. */
+
+/* Signal-themed range slider (the volume estimate control). Scoped to the
+   pricing slider's id so it never restyles other range inputs app-wide. */
+#p-range {
+  -webkit-appearance: none;
+  appearance: none;
+  width: 100%;
+  height: 3px;
+  background: var(--border);
+  border-radius: 999px;
+  outline: none;
+  cursor: pointer;
+}
+#p-range::-webkit-slider-thumb {
+  -webkit-appearance: none;
+  appearance: none;
+  width: 18px;
+  height: 18px;
+  background: var(--signal);
+  border-radius: 50%;
+  cursor: pointer;
+  box-shadow: 0 0 0 4px color-mix(in oklab, var(--signal) 18%, transparent),
+    0 0 24px -4px var(--signal);
+  transition: transform 0.12s;
+}
+#p-range::-webkit-slider-thumb:hover { transform: scale(1.12); }
+#p-range::-moz-range-thumb {
+  width: 18px;
+  height: 18px;
+  background: var(--signal);
+  border: none;
+  border-radius: 50%;
+  cursor: pointer;
+  box-shadow: 0 0 0 4px color-mix(in oklab, var(--signal) 18%, transparent);
+}
+
+/* Inline code chips used in the pricing copy. */
+.code-pink {
+  color: var(--signal);
+  background: color-mix(in oklab, var(--signal) 8%, transparent);
+  padding: 1px 6px;
+  border-radius: 4px;
+  font-family: 'JetBrains Mono', ui-monospace, monospace;
+  font-size: 0.85em;
+}
+.code-cyan {
+  color: var(--cyan);
+  background: color-mix(in oklab, var(--cyan) 8%, transparent);
+  padding: 1px 6px;
+  border-radius: 4px;
+  font-family: 'JetBrains Mono', ui-monospace, monospace;
+  font-size: 0.85em;
+}
+
+/* Compression-model picker buttons. */
+.model-btn {
+  text-align: left;
+  padding: 16px;
+  border: 1px solid var(--border);
+  border-radius: 0.5rem;
+  background: var(--graphite);
+  cursor: pointer;
+  transition: all 0.18s;
+  font-family: 'Inter', sans-serif;
+  color: var(--muted-foreground);
+}
+.model-btn:hover { border-color: color-mix(in oklab, var(--signal) 50%, transparent); }
+.model-btn .mb-name { font-size: 14px; font-weight: 600; color: var(--foreground); margin-bottom: 6px; }
+.model-btn .mb-tag {
+  font-family: 'JetBrains Mono', ui-monospace, monospace;
+  font-size: 10px;
+  letter-spacing: 0.08em;
+  text-transform: uppercase;
+}
+.model-btn .mb-rate {
+  font-family: 'JetBrains Mono', ui-monospace, monospace;
+  font-size: 11px;
+  color: var(--muted-foreground);
+  margin-top: 8px;
+}
+.model-btn.active { border-color: var(--signal); background: color-mix(in oklab, var(--signal) 6%, transparent); }
+.model-btn.active .mb-name { color: var(--signal); }
+.model-btn[data-billed='memrails'] .mb-tag { color: var(--signal); }
+.model-btn[data-billed='provider'] .mb-tag { color: var(--cyan); }
+
+/* Estimate readout accents. */
+.yr {
+  font-size: 0.3em;
+  color: var(--muted-foreground);
+  font-family: 'JetBrains Mono', ui-monospace, monospace;
+  letter-spacing: 0.04em;
+}
+.mrk { color: var(--signal); }
+.prv { color: var(--cyan); }
+.text-cyan-italic {
+  font-family: 'Newsreader', Georgia, serif;
+  font-style: italic;
+  font-weight: 500;
+  font-variation-settings: 'opsz' 72;
+  color: var(--cyan);
+  letter-spacing: -0.015em;
+}

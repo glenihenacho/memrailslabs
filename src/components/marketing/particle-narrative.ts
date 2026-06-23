@@ -541,6 +541,11 @@ export function initParticleNarrative(): () => void {
         } else {
           t = (t - leavePlateau) / (1 - leavePlateau - arrivePlateau);
         }
+        // Ease in/out (smoothstep) so the morph starts and stops with zero
+        // velocity at the held endpoints. The linear remap stepped the velocity
+        // right as the cluster settled onto / lifted off a shape, which read as
+        // a snap; smoothstep removes that.
+        t = t * t * (3 - 2 * t);
         return { a, b, t };
       }
     }
@@ -656,7 +661,13 @@ export function initParticleNarrative(): () => void {
   }
 
   // ── tick ────────────────────────────────────────────────────────────────
-  const APPROACH = 0.65;
+  // Per-frame catch-up toward the scroll-driven target. This was 0.65 — fast
+  // enough that particles reached the target in ~3 frames, so any step in the
+  // target (segment hand-offs, the shape re-centering as a cluster locks) read
+  // as an abrupt jump. A gentler factor eases into every target, turning those
+  // steps into smooth glides. dt-compensated below so this stays consistent
+  // across frame rates. Tunable: lower = smoother/laggier, higher = snappier.
+  const APPROACH = 0.18;
   let lastFrameT = performance.now();
   let lastDt = 1 / 60; // most recent clamped frame delta, shared with updateGlow
 
@@ -860,8 +871,16 @@ export function initParticleNarrative(): () => void {
     }
   }
 
+  let resizeW = window.innerWidth;
   function onResize() {
-    resize();
+    resize(); // always keep the canvas covering the viewport
+    // Mobile browsers fire resize when the URL bar shows/hides — a height-only
+    // change. Recomputing + snap() on those events instantly re-centers every
+    // particle's Y mid-scroll (the snap the cluster shows as the glow
+    // settles/unsettles). Only re-snap on a real width change; height-only
+    // changes are absorbed smoothly by the eased tick toward the live H/2.
+    if (window.innerWidth === resizeW) return;
+    resizeW = window.innerWidth;
     resolveAnchors();
     precomputeTargets();
     snap();
