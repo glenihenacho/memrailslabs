@@ -541,6 +541,11 @@ export function initParticleNarrative(): () => void {
         } else {
           t = (t - leavePlateau) / (1 - leavePlateau - arrivePlateau);
         }
+        // Ease in/out (smoothstep) so the morph starts and stops with zero
+        // velocity at the held endpoints. The linear remap stepped the velocity
+        // right as the cluster settled onto / lifted off a shape, which read as
+        // a snap; smoothstep removes that.
+        t = t * t * (3 - 2 * t);
         return { a, b, t };
       }
     }
@@ -866,8 +871,16 @@ export function initParticleNarrative(): () => void {
     }
   }
 
+  let resizeW = window.innerWidth;
   function onResize() {
-    resize();
+    resize(); // always keep the canvas covering the viewport
+    // Mobile browsers fire resize when the URL bar shows/hides — a height-only
+    // change. Recomputing + snap() on those events instantly re-centers every
+    // particle's Y mid-scroll (the snap the cluster shows as the glow
+    // settles/unsettles). Only re-snap on a real width change; height-only
+    // changes are absorbed smoothly by the eased tick toward the live H/2.
+    if (window.innerWidth === resizeW) return;
+    resizeW = window.innerWidth;
     resolveAnchors();
     precomputeTargets();
     snap();
