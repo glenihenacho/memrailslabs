@@ -69,7 +69,7 @@ export function Nav() {
               <div className="nav-dropdown-panel" role="menu">
                 <Link href="/#research" role="menuitem">Research</Link>
                 <Link href="/#blog" role="menuitem">Blog</Link>
-                <Link href="/#docs" role="menuitem">Docs</Link>
+                <Link href="/docs" role="menuitem">Docs</Link>
                 <Link href="/#community" role="menuitem">Community</Link>
               </div>
             </div>
@@ -143,7 +143,7 @@ export function Nav() {
             <div className="nav-drawer-group-title">Resources</div>
             <Link href="/#research">Research</Link>
             <Link href="/#blog">Blog</Link>
-            <Link href="/#docs">Docs</Link>
+            <Link href="/docs">Docs</Link>
             <Link href="/#community">Community</Link>
           </div>
           <div className="nav-drawer-cta">
