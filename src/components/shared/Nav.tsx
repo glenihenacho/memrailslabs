@@ -38,7 +38,6 @@ export function Nav() {
                 <Link href="/harness" role="menuitem">Harness</Link>
                 <Link href="/console" role="menuitem">Console</Link>
                 <Link href="/streaming" role="menuitem">Streaming</Link>
-                <Link href="/mcp" role="menuitem">MCP</Link>
                 <Link href="/inference" role="menuitem">Inference</Link>
               </div>
             </div>
@@ -133,7 +132,6 @@ export function Nav() {
             <Link href="/harness">Harness</Link>
             <Link href="/console">Console</Link>
             <Link href="/streaming">Streaming</Link>
-            <Link href="/mcp">MCP</Link>
             <Link href="/inference">Inference</Link>
           </div>
           <div className="nav-drawer-group">
