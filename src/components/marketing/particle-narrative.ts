@@ -656,7 +656,13 @@ export function initParticleNarrative(): () => void {
   }
 
   // ── tick ────────────────────────────────────────────────────────────────
-  const APPROACH = 0.65;
+  // Per-frame catch-up toward the scroll-driven target. This was 0.65 — fast
+  // enough that particles reached the target in ~3 frames, so any step in the
+  // target (segment hand-offs, the shape re-centering as a cluster locks) read
+  // as an abrupt jump. A gentler factor eases into every target, turning those
+  // steps into smooth glides. dt-compensated below so this stays consistent
+  // across frame rates. Tunable: lower = smoother/laggier, higher = snappier.
+  const APPROACH = 0.18;
   let lastFrameT = performance.now();
   let lastDt = 1 / 60; // most recent clamped frame delta, shared with updateGlow
 
