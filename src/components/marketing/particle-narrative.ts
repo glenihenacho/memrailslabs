@@ -636,6 +636,7 @@ export function initParticleNarrative(): () => void {
   // ── tick ────────────────────────────────────────────────────────────────
   const APPROACH = 0.65;
   let lastFrameT = performance.now();
+  let lastDt = 1 / 60; // most recent clamped frame delta, shared with updateGlow
 
   // ── Reserve (v20): static, no JS ────────────────────────────────────────
   // --particle-reserve is set entirely from CSS (40vw on md+, 0 below).
@@ -675,6 +676,11 @@ export function initParticleNarrative(): () => void {
   let glowSX = GLOW_INIT_SX;
   let glowSY = GLOW_INIT_SY;
   let glowOpacity = 0;
+  // Low-passed cluster half-extents. The raw bbox snaps hard at settle/unsettle
+  // (chaos ↔ shape), which made the glow's scale — and thus its screen-blended
+  // repaint — lurch right there. Smoothing the *input* keeps the scale steady.
+  let glowHalfW = 0;
+  let glowHalfH = 0;
   function updateGlow(scrollY, centroidX, centroidY, halfW, halfH) {
     if (!glowEl) return;
     const seg = getSegment(scrollY);
@@ -694,8 +700,13 @@ export function initParticleNarrative(): () => void {
     } else if (centroidX != null && Number.isFinite(centroidX)) {
       targetX = centroidX;
       targetY = centroidY;
-      targetSX = Math.max(0.4, (halfW + GLOW_PADDING) / GLOW_BRIGHT_R);
-      targetSY = Math.max(0.4, (halfH + GLOW_PADDING) / GLOW_BRIGHT_R);
+      // Smooth the bbox before deriving scale so the chaos↔shape snap doesn't
+      // pulse the glow (frame-rate-independent, ~0.08/frame at 60fps).
+      const gExtent = 1 - Math.pow(1 - 0.08, lastDt * 60);
+      glowHalfW += (halfW - glowHalfW) * gExtent;
+      glowHalfH += (halfH - glowHalfH) * gExtent;
+      targetSX = Math.max(0.4, (glowHalfW + GLOW_PADDING) / GLOW_BRIGHT_R);
+      targetSY = Math.max(0.4, (glowHalfH + GLOW_PADDING) / GLOW_BRIGHT_R);
     } else {
       const posA = getShapePos(a);
       const posB = getShapePos(b);
@@ -704,10 +715,15 @@ export function initParticleNarrative(): () => void {
       targetSX = GLOW_INIT_SX;
       targetSY = GLOW_INIT_SY;
     }
-    glowX  += (targetX  - glowX ) * 0.06;
-    glowY  += (targetY  - glowY ) * 0.06;
-    glowSX += (targetSX - glowSX) * 0.10;
-    glowSY += (targetSY - glowSY) * 0.10;
+    // Frame-rate-independent glow easing (was fixed 0.06/0.10 per frame, which
+    // stuttered under variable frame timing — exactly when the glow settled
+    // onto / broke off a shape).
+    const gMove = 1 - Math.pow(1 - 0.06, lastDt * 60);
+    const gScale = 1 - Math.pow(1 - 0.10, lastDt * 60);
+    glowX  += (targetX  - glowX ) * gMove;
+    glowY  += (targetY  - glowY ) * gMove;
+    glowSX += (targetSX - glowSX) * gScale;
+    glowSY += (targetSY - glowSY) * gScale;
     // Opacity policy. Visible from page load through to absorb completion;
     // pre-scroll uses the low ambient intensity (matching the original
     // body-bg), then ramps to full as soon as scroll starts. During absorb
@@ -721,9 +737,9 @@ export function initParticleNarrative(): () => void {
       const k = Math.min(1, Math.max(0, t));
       targetOpacity = Math.max(0, 1 - k * k);
     }
-    glowOpacity += (targetOpacity - glowOpacity) * 0.10;
+    glowOpacity += (targetOpacity - glowOpacity) * gScale;
     glowEl.style.transform =
-      `translate3d(${glowX}px, ${glowY}px, 0) scale(${glowSX.toFixed(3)}, ${glowSY.toFixed(3)})`;
+      `translate3d(${glowX.toFixed(1)}px, ${glowY.toFixed(1)}px, 0) scale(${glowSX.toFixed(2)}, ${glowSY.toFixed(2)})`;
     glowEl.style.opacity = glowOpacity.toFixed(3);
   }
 
@@ -734,6 +750,7 @@ export function initParticleNarrative(): () => void {
     lastFrameT = nowT;
     if (!(dt > 0)) dt = 1 / 60;
     if (dt > 0.1) dt = 0.1; // clamp big gaps (tab-away) so motion never lurches
+    lastDt = dt; // share with updateGlow so its easing is frame-rate-independent too
     // Frame-rate-independent easing: equals APPROACH at 60fps, but stays
     // proportional when frame intervals spike (e.g. the contended first
     // transition right after load) so motion reads smooth, not choppy.
