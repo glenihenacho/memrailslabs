@@ -372,7 +372,7 @@ export function initParticleNarrative(): () => void {
   // ── hero span (HTML) + fixed viewport position for hero particles ───────
   const heroSpan = document.querySelector('h1 .text-gradient-signal');
   let heroFixedPos = { x: 0, y: 0 };
-  if (heroSpan) heroSpan.style.transition = 'none';   // ensure hard switch
+  if (heroSpan) heroSpan.style.transition = 'none';   // opacity is driven per-frame (crossfade)
 
   // ── init ────────────────────────────────────────────────────────────────
   function resolveAnchors() {
@@ -586,7 +586,11 @@ export function initParticleNarrative(): () => void {
     }
     if (item.kind === 'text' && item.targets && item.targets.length) {
       const t = item.targets[i % item.targets.length];
-      return { x: t[0] + P[i].jx * 1.5, y: t[1] + P[i].jy * 1.5 };
+      // Hero text targets are viewport coords captured at scrollY≈0, but the
+      // HTML hero scrolls away with the page. Subtract the live scrollY so the
+      // particle "remember." stays glued to the real text during the handoff
+      // instead of popping back to its boot position (the hero "skip").
+      return { x: t[0] + P[i].jx * 1.5, y: t[1] - window.scrollY + P[i].jy * 1.5 };
     }
     if (item.kind === 'shape' && item.targets && item.targets.length) {
       const target = item.targets[i % item.targets.length];
@@ -614,7 +618,7 @@ export function initParticleNarrative(): () => void {
   // ── hard visibility switch (no fade) ────────────────────────────────────
   // scrollY <= 0  →  HTML visible, canvas invisible
   // scrollY  > 0  →  HTML invisible, canvas visible
-  let lastVisible = -1;  // tracks last applied state so we don't spam style writes
+  let lastVisible = -1;  // binary on/off, drives the dormant-frame gate in tick()
   function updateVisibility(scrollY) {
     // Active window: above hero (scrollY > 0) AND up to and including the
     // absorb peak. Below 0 → hero HTML, above absorbPeak → dormant.
@@ -622,14 +626,19 @@ export function initParticleNarrative(): () => void {
     const absorbPeak = absorbItem.peakY;
     const pastFinal = (absorbPeak != null && scrollY > absorbPeak);
     const visible = (scrollY > 0 && !pastFinal) ? 1 : 0;
-    if (visible === lastVisible) return;
     lastVisible = visible;
     if (visible) {
-      canvas.style.opacity = '1';
-      if (heroSpan) heroSpan.style.opacity = '0';
+      // Crossfade the HTML hero ↔ particle canvas across the first slice of
+      // scroll instead of a hard cut. Combined with the scroll-registered
+      // hero particles above, the two "remember." renders sit on top of each
+      // other and dissolve into one another — no skip.
+      const band = Math.max(48, H * 0.1);
+      const f = Math.min(1, scrollY / band);
+      canvas.style.opacity = f.toFixed(3);
+      if (heroSpan) heroSpan.style.opacity = (1 - f).toFixed(3);
     } else {
       canvas.style.opacity = '0';
-      if (heroSpan) heroSpan.style.opacity = '';
+      if (heroSpan) heroSpan.style.opacity = pastFinal ? '0' : '';
     }
   }
 
