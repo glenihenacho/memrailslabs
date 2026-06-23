@@ -205,7 +205,7 @@ const API_GROUPS: Group[] = [
         method: 'GET',
         path: '/api/memory/export',
         auth: 'demo',
-        purpose: 'Export the caller’s registry. No lock-in — read it all out any time.',
+        purpose: 'Export the caller’s registry — memory is file-canonical and Git-versioned. No lock-in; read it all out any time.',
         request: [
           { name: 'format', type: "'json' | 'jsonl' | 'markdown'", note: 'Query param. Default json.' },
           { name: 'project_id', type: 'string', note: 'Query param. Filter to one project.' },
@@ -225,7 +225,7 @@ const API_GROUPS: Group[] = [
         method: 'POST',
         path: '/api/memory/query',
         auth: 'none',
-        purpose: 'Synthesize a compressed packet over the curated corpus via the L1–L5 stack (public).',
+        purpose: 'Synthesize a compressed packet over the curated corpus via the L1–L5 retrieval stack — cheap filters first, compression as last resort (public).',
         request: [
           { name: 'query', type: 'string (1–2000)', required: true, note: 'The question.' },
           { name: 'intent', type: "'answer'|'summarize'|'compare'|'extract'|'refactor'|'route'", note: 'Synthesis intent.' },
@@ -368,7 +368,7 @@ const TOC = [
   ...MCP_TOOLS.map((t) => ({ href: `#${t.id}`, label: t.name.replace('memrails.memory.', 'memory.'), sub: true })),
   { href: '#api', label: 'API suite' },
   { href: '#api-overview', label: 'Auth & billing', sub: true },
-  ...API_GROUPS.map((g) => ({ href: `#${g.endpoints[0].id}`, label: g.title, sub: true })),
+  ...API_GROUPS.filter((g) => g.endpoints.length > 0).map((g) => ({ href: `#${g.endpoints[0].id}`, label: g.title, sub: true })),
 ];
 
 export default function DocsPage() {
@@ -389,7 +389,8 @@ export default function DocsPage() {
             MemRails exposes the same governed memory two ways — pick whichever fits your stack. The{' '}
             <span className="text-foreground">MCP suite</span> is agent-native: tools your model calls in-loop. The{' '}
             <span className="text-foreground">HTTP API suite</span> is everything else: a plain REST surface for any
-            language or runtime. The two are documented independently below; you never need both.
+            language or runtime. Either way the memory is evidence-graded, inspectable, Git-versioned, and
+            model-agnostic. The two are documented independently below; you never need both.
           </p>
         </div>
       </section>
@@ -425,7 +426,8 @@ export default function DocsPage() {
             <p className="mt-4 max-w-2xl text-[15px] leading-relaxed text-muted-foreground">
               Four tools that expose governed memory directly to an agent loop. The dispatcher runs in-process against
               the file-canonical library; a stdio JSON-RPC transport wraps it so MCP clients (Claude Code, and others)
-              can call the tools natively. Read-only by default — writes are governed proposals.
+              can call the tools natively. The contract is model-agnostic and every retrieval is inspectable;
+              read-only by default — writes are governed proposals.
             </p>
 
             <div id="mcp-overview" className="scroll-mt-24 mt-8 rounded-xl border hairline bg-graphite/40 p-6">
@@ -470,7 +472,7 @@ npm run mcp:server`}</CodeBlock>
             </div>
             <p className="mt-4 max-w-2xl text-[15px] leading-relaxed text-muted-foreground">
               A plain JSON-over-HTTP surface for everything that isn’t an MCP client. Same governed memory, same scope
-              rules, same metering — callable from any language.
+              rules, same metering — callable from any language. Model-agnostic, and every retrieval stays inspectable.
             </p>
 
             <div id="api-overview" className="scroll-mt-24 mt-8 rounded-xl border hairline bg-graphite/40 p-6 space-y-5">

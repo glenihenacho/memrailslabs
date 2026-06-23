@@ -543,8 +543,9 @@ body::before {
    range slider fall back to unstyled browser defaults — off-brand. Ported from
    the source design. */
 
-/* Signal-themed range slider (the volume estimate control). */
-input[type='range'] {
+/* Signal-themed range slider (the volume estimate control). Scoped to the
+   pricing slider's id so it never restyles other range inputs app-wide. */
+#p-range {
   -webkit-appearance: none;
   appearance: none;
   width: 100%;
@@ -554,7 +555,7 @@ input[type='range'] {
   outline: none;
   cursor: pointer;
 }
-input[type='range']::-webkit-slider-thumb {
+#p-range::-webkit-slider-thumb {
   -webkit-appearance: none;
   appearance: none;
   width: 18px;
@@ -566,8 +567,8 @@ input[type='range']::-webkit-slider-thumb {
     0 0 24px -4px var(--signal);
   transition: transform 0.12s;
 }
-input[type='range']::-webkit-slider-thumb:hover { transform: scale(1.12); }
-input[type='range']::-moz-range-thumb {
+#p-range::-webkit-slider-thumb:hover { transform: scale(1.12); }
+#p-range::-moz-range-thumb {
   width: 18px;
   height: 18px;
   background: var(--signal);
