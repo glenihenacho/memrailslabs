@@ -190,16 +190,31 @@ const answer = await model.run({ context: bundle, task });
             Simple API
           </div>
           <h2 className="mt-5 font-display font-medium text-3xl md:text-5xl tracking-tight max-w-3xl leading-[1.05]">
-            One endpoint. <span className="text-gradient-signal">One call to governed memory.</span>
+            One API. <span className="text-gradient-signal">The retrieval stack, orchestrated for you.</span>
           </h2>
+
+          {/* behind the one call: the pipeline MemRails runs for you */}
+          <div className="mt-7 flex flex-wrap items-center gap-2 font-mono text-[11px]">
+            <span className="rounded border border-signal/40 bg-signal/5 px-2.5 py-1 text-signal">task_context</span>
+            {['scope', 'policy', 'MemoryIndex tree', 'ranking'].map((s) => (
+              <span key={s} className="flex items-center gap-2">
+                <span className="text-signal">→</span>
+                <span className="rounded border hairline bg-graphite/40 px-2.5 py-1 text-muted-foreground">{s}</span>
+              </span>
+            ))}
+            <span className="text-signal">→</span>
+            <span className="rounded border border-signal/40 bg-signal/5 px-2.5 py-1 text-signal">ContextBundle</span>
+          </div>
 
           <div className="mt-10 grid gap-8 lg:grid-cols-[0.85fr_1.15fr] lg:items-start">
             {/* offer copy + pricing + CTA */}
             <div>
               <p className="text-[15px] leading-relaxed text-muted-foreground">
-                No SDK, no infra, no vector DB to stand up. POST your task context to a single
-                endpoint and get back a governed, evidence-graded context bundle — ready for your
-                local model to infer against. Model-agnostic, inspectable, ~50&nbsp;ms.
+                Integrate one endpoint and drop it into your existing agent loop — no SDK migration,
+                no infra, no vector DB to stand up. Behind the single call, MemRails runs the whole
+                retrieval stack for you — scope, policy, the MemoryIndex tree, and ranking — and
+                returns a governed, evidence-graded context bundle for your local model. You
+                orchestrate nothing; it stays model-agnostic, inspectable, ~50&nbsp;ms.
               </p>
 
               <ul className="mt-7 space-y-3 text-[14px]">
