@@ -37,6 +37,7 @@ const PRINCIPLES = [
   ['File-canonical & exportable', 'Memory stays Git-versioned and exportable. Read it, self-host it, or eject — no lock-in.'],
 ];
 
+/** Inference marketing page — the locally-inferred-agent story plus the simple-API offer. */
 export default function InferencePage() {
   return (
     <>
@@ -213,8 +214,10 @@ const answer = await model.run({ context: bundle, task });
                 Integrate one endpoint and drop it into your existing agent loop — no SDK migration,
                 no infra, no vector DB to stand up. Behind the single call, MemRails runs the whole
                 retrieval stack for you — scope, policy, the MemoryIndex tree, and ranking — and
-                returns a governed, evidence-graded context bundle for your local model. You
-                orchestrate nothing; it stays model-agnostic, inspectable, ~50&nbsp;ms.
+                returns a governed, evidence-graded context bundle with provenance (and optional
+                packets) for your local model. It is read-only by default, cheap filters first and
+                compression as last resort. You orchestrate nothing; it stays model-agnostic,
+                inspectable, ~50&nbsp;ms.
               </p>
 
               <ul className="mt-7 space-y-3 text-[14px]">
@@ -266,7 +269,7 @@ const answer = await model.run({ context: bundle, task });
               <div className="overflow-hidden rounded-xl border hairline bg-graphite shadow-card">
                 <div className="flex items-center gap-2 border-b hairline px-4 py-2 font-mono text-[10px] uppercase tracking-[0.14em] text-muted-foreground">
                   <span className="h-1.5 w-1.5 rounded-full bg-evidence-good" />
-                  200 · ContextBundle
+                  200 · ContextBundle excerpt
                 </div>
                 <pre className="overflow-x-auto p-4 font-mono text-[12.5px] leading-relaxed">
                   <code>{`{
