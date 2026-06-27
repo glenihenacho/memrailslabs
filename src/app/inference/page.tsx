@@ -37,6 +37,7 @@ const PRINCIPLES = [
   ['File-canonical & exportable', 'Memory stays Git-versioned and exportable. Read it, self-host it, or eject — no lock-in.'],
 ];
 
+/** Inference marketing page — the locally-inferred-agent story plus the simple-API offer. */
 export default function InferencePage() {
   return (
     <>
@@ -175,6 +176,117 @@ const bundle = await memory.retrieve(taskContext);
 const answer = await model.run({ context: bundle, task });
 // MemRails never sees \`answer\`, never holds your key.`}</code>
             </pre>
+          </div>
+        </div>
+      </section>
+
+      {/* SIMPLE API */}
+      <section className="border-b hairline">
+        <div className="mx-auto max-w-7xl px-6 py-20">
+          <div
+            className="ref-eyebrow text-[11px] font-mono uppercase tracking-[0.18em] text-muted-foreground"
+            data-ref="04"
+          >
+            <span className="ref-rule" />
+            Simple API
+          </div>
+          <h2 className="mt-5 font-display font-medium text-3xl md:text-5xl tracking-tight max-w-3xl leading-[1.05]">
+            One API. <span className="text-gradient-signal">The retrieval stack, orchestrated for you.</span>
+          </h2>
+
+          {/* behind the one call: the pipeline MemRails runs for you */}
+          <div className="mt-7 flex flex-wrap items-center gap-2 font-mono text-[11px]">
+            <span className="rounded border border-signal/40 bg-signal/5 px-2.5 py-1 text-signal">task_context</span>
+            {['scope', 'policy', 'MemoryIndex tree', 'ranking'].map((s) => (
+              <span key={s} className="flex items-center gap-2">
+                <span className="text-signal">→</span>
+                <span className="rounded border hairline bg-graphite/40 px-2.5 py-1 text-muted-foreground">{s}</span>
+              </span>
+            ))}
+            <span className="text-signal">→</span>
+            <span className="rounded border border-signal/40 bg-signal/5 px-2.5 py-1 text-signal">ContextBundle</span>
+          </div>
+
+          <div className="mt-10 grid gap-8 lg:grid-cols-[0.85fr_1.15fr] lg:items-start">
+            {/* offer copy + pricing + CTA */}
+            <div>
+              <p className="text-[15px] leading-relaxed text-muted-foreground">
+                Integrate one endpoint and drop it into your existing agent loop — no SDK migration,
+                no infra, no vector DB to stand up. Behind the single call, MemRails runs the whole
+                retrieval stack for you — scope, policy, the MemoryIndex tree, and ranking — and
+                returns a governed, evidence-graded context bundle with provenance (and optional
+                packets) for your local model. It is read-only by default, cheap filters first and
+                compression as last resort. You orchestrate nothing; it stays model-agnostic,
+                inspectable, ~50&nbsp;ms.
+              </p>
+
+              <ul className="mt-7 space-y-3 text-[14px]">
+                {[
+                  ['$0.002', 'per retrieval ($2 / 1,000) — the one metered call'],
+                  ['Free', 'retrieval credits to start — no card, no quota'],
+                  ['$0', 'for writes — you pay for retrieval, nothing else'],
+                  ['No', 'seats, no infra, no keys to hand over'],
+                ].map(([k, v]) => (
+                  <li key={v} className="flex items-baseline gap-3">
+                    <span className="font-mono text-signal font-semibold whitespace-nowrap min-w-[3.5rem]">{k}</span>
+                    <span className="text-muted-foreground">{v}</span>
+                  </li>
+                ))}
+              </ul>
+
+              <div className="mt-8 flex flex-wrap items-center gap-3">
+                <Link
+                  href="/pricing"
+                  className="inline-flex items-center gap-2 h-11 px-5 rounded-md bg-signal text-signal-foreground font-semibold text-sm shadow-signal hover:opacity-95 transition tracking-tight"
+                >
+                  Get an API key →
+                </Link>
+                <Link
+                  href="/docs"
+                  className="inline-flex items-center gap-2 h-11 px-5 rounded-md border hairline text-sm font-medium hover:border-signal/60 hover:text-signal transition"
+                >
+                  API reference →
+                </Link>
+              </div>
+            </div>
+
+            {/* request + response */}
+            <div className="space-y-4">
+              <div className="overflow-hidden rounded-xl border hairline bg-graphite shadow-card">
+                <div className="flex items-center gap-2 border-b hairline px-4 py-2 font-mono text-[10px] uppercase tracking-[0.14em] text-muted-foreground">
+                  <span className="h-1.5 w-1.5 rounded-full bg-signal" />
+                  Request
+                </div>
+                <pre className="overflow-x-auto p-4 font-mono text-[12.5px] leading-relaxed">
+                  <code>{`curl -s https://memrails.dev/api/memory/retrieve \\
+  -H "Authorization: Bearer $MEMRAILS_KEY" \\
+  -H "Content-Type: application/json" \\
+  -d '{ "task_context": "deploying the billing worker",
+        "max_tokens": 1200 }'`}</code>
+                </pre>
+              </div>
+
+              <div className="overflow-hidden rounded-xl border hairline bg-graphite shadow-card">
+                <div className="flex items-center gap-2 border-b hairline px-4 py-2 font-mono text-[10px] uppercase tracking-[0.14em] text-muted-foreground">
+                  <span className="h-1.5 w-1.5 rounded-full bg-evidence-good" />
+                  200 · ContextBundle excerpt
+                </div>
+                <pre className="overflow-x-auto p-4 font-mono text-[12.5px] leading-relaxed">
+                  <code>{`{
+  "retrieval_id": "ret_9f2a…",
+  "memories": [
+    { "memory_id": "mem_4c1…",
+      "summary": "Billing worker runs on cron, not the request path",
+      "reason_selected": "names the billing worker + deploy",
+      "score": 8.4 }
+  ],
+  "omitted": [{ "memory_id": "mem_77b…", "reason": "below confidence floor" }],
+  "tokens_returned": 240,
+  "usage": { "billable_retrievals": 1, "credits_remaining": 2499 }
+}`}</code>
+                </pre>
+              </div>
+            </div>
           </div>
         </div>
       </section>
