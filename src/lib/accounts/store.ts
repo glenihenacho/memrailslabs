@@ -24,6 +24,8 @@ export type Account = {
   credits_remaining: number | null; // null = unlimited (paid plans)
   retrievals_total: number;
   spend_usd: number;
+  /** Opt-in to the cross-tenant collective (default off). Server-authoritative. */
+  collective_opt_in?: boolean;
   created_at: string;
 };
 
@@ -160,6 +162,26 @@ export function debit(owner_id: string, units: number, priceUsd: number): { cred
     credits_remaining: account.credits_remaining,
     exhausted: account.credits_remaining !== null && account.credits_remaining <= 0,
   };
+}
+
+/** Set a tenant's consent to participate in the cross-tenant collective. */
+export function setCollectiveOptIn(owner_id: string, value: boolean): Account {
+  const store = load(true);
+  const account = store[owner_id] ?? ensureAccount(owner_id);
+  account.collective_opt_in = value;
+  store[owner_id] = account;
+  save(store);
+  return account;
+}
+
+export function isOptedIn(owner_id: string): boolean {
+  return load()[owner_id]?.collective_opt_in === true;
+}
+
+/** Owners who have explicitly consented to the collective. */
+export function optedInOwners(): string[] {
+  const store = load();
+  return Object.keys(store).filter((id) => store[id].collective_opt_in === true);
 }
 
 export function invalidateAccounts(): void {
