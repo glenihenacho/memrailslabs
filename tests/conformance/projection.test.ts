@@ -3,20 +3,13 @@
  * Interface-level: seed through memory.write / lifecycle, project, assert on
  * the markdown and stats only.
  */
-import { rmSync } from 'node:fs';
-import { resolve } from 'node:path';
 import { beforeEach, describe, it, expect } from 'vitest';
+import { resetData } from './helpers';
 import { write } from '@/lib/memory/write';
 import { supersede, forget } from '@/lib/memory/lifecycle';
-import { invalidateRegistry } from '@/lib/memory/registry';
 import { projectMarkdown } from '@/lib/memory/project-md';
 
 const PROJECT = 'project_projection_conf';
-
-function resetData() {
-  rmSync(resolve(__dirname, '../../.tmp-test-data'), { recursive: true, force: true });
-  invalidateRegistry();
-}
 
 describe('contract §7 — memrails.md projection', () => {
   beforeEach(resetData);

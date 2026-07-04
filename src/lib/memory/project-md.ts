@@ -2,6 +2,7 @@ import type { MemoryRecord, MemoryType } from '@/types/governed';
 import { loadRegistry } from './registry';
 import { evaluatePolicy, defaultScope, POLICY_FILTERS, type ScopeRequest } from './scope';
 import { buildIndex } from './index-tree';
+import { DEFAULT_FLOOR } from './evidence';
 
 /**
  * `memrails.md` projection — contract v0.1 §7.
@@ -51,8 +52,6 @@ const SECTION_ORDER: Array<{ type: MemoryType; title: string }> = [
   { type: 'summary', title: 'Summaries' },
   { type: 'extraction', title: 'Extractions' },
 ];
-
-const DEFAULT_FLOOR = 0.75;
 
 function renderRecord(record: MemoryRecord): string {
   const conf = record.confidence.toFixed(2);

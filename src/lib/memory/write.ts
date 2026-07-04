@@ -7,7 +7,7 @@ import type {
 } from '@/types/governed';
 import { sha256 } from '@/lib/observability/hash';
 import { logEvent } from '@/lib/ledger/events';
-import { loadRegistry, invalidateRegistry, DEFAULT_SCOPE } from './registry';
+import { loadRegistry, invalidateRegistry, DEFAULT_SCOPE, capSummary } from './registry';
 import { appendWritten } from './store';
 import { tokenize } from './ranking';
 
@@ -112,7 +112,7 @@ export function write(input: WriteInput): WriteResult {
     confidence: clamp01(input.confidence ?? 0.8),
     sensitivity: input.sensitivity ?? 'normal',
     content,
-    summary: input.summary ?? content.split(/(?<=[.!?])\s/)[0].slice(0, 220),
+    summary: input.summary ?? capSummary(content.split(/(?<=[.!?])\s/)[0]),
     tags,
     aliases: [],
     source_file: `data/federation/${scope.owner_id}/written.jsonl`,

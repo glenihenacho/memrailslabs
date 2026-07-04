@@ -3,6 +3,7 @@ import { loadRegistry, invalidateRegistry } from './registry';
 import { loadOverlay, upsertEntry } from './governance';
 import { appendWritten } from './store';
 import { logEvent } from '@/lib/ledger/events';
+import { DEFAULT_FLOOR } from './evidence';
 
 /**
  * Record export / import — contract v0.1 §6 (portability).
@@ -24,8 +25,6 @@ import { logEvent } from '@/lib/ledger/events';
 
 export const RECORD_MARKER = 'memrails.record.v0_1';
 export const TOMBSTONE_MARKER = 'memrails.tombstone.v0_1';
-
-const EVIDENCE_FLOOR = 0.75;
 
 export type ExportedRecordLine = MemoryRecord & {
   export: typeof RECORD_MARKER;
@@ -131,11 +130,12 @@ export function importRecords(jsonl: string): ImportReport {
     if (line.export === TOMBSTONE_MARKER) {
       // Honor the tombstone regardless of whether the record exists here yet:
       // the overlay entry is keyed by memory_id and wins if content ever lands.
+      const tombstoneVersions = line.versions ?? [];
       upsertEntry(line.memory_id, (cur) => ({
         ...cur,
         status: 'tombstoned',
         tombstoned_at: line.tombstoned_at ?? cur.tombstoned_at ?? new Date().toISOString(),
-        versions: line.versions.length > 0 ? line.versions : cur.versions,
+        versions: tombstoneVersions.length > 0 ? tombstoneVersions : cur.versions,
       }));
       report.tombstones_applied += 1;
       continue;
@@ -146,12 +146,13 @@ export function importRecords(jsonl: string): ImportReport {
       continue;
     }
 
-    const { export: _marker, versions, ...record } = line;
+    // Hand-authored or older lines may omit versions — default, don't crash.
+    const { export: _marker, versions = [], ...record } = line;
     if (seenInImport.has(record.memory_id)) continue;
     seenInImport.add(record.memory_id);
 
     // Re-run the local evidence floor (§6): report, never silently drop.
-    if (record.confidence < EVIDENCE_FLOOR) {
+    if (record.confidence < DEFAULT_FLOOR) {
       report.below_floor.push(record.memory_id);
     }
 

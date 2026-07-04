@@ -19,7 +19,7 @@ export type RetrievalMeter = (bundle: ContextBundle) => RetrievalUsage;
 const UNMETERED: RetrievalUsage = {
   billable_retrievals: 0,
   billable_units: 0,
-  credits_remaining: 0,
+  credits_remaining: null, // null = unlimited — unmetered, not exhausted
   credit_exhausted: false,
 };
 

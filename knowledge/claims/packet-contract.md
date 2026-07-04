@@ -5,6 +5,7 @@ tags: [packet, contract, protocol]
 aliases: [packet contract, memorypacket, packet schema]
 index_path: /project/project_memrails/packet_contract
 memory_type: claim
+summary: A packet is a billable answer unit carrying answer text, confidence, tokens, provenance, evidence IDs, contradictions, hashes, and the compressor version — never anonymous prose.
 created_at: 2026-05-25
 updated_at: 2026-05-25
 claim: A MemRails packet is a billable answer unit that must include answer text, confidence, token count, provenance references, evidence IDs, contradictions surfaced, input hash, output hash, and the model or compressor version. No packet ships as anonymous prose.

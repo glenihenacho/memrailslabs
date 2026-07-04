@@ -5,23 +5,17 @@
  * This test becomes the Portable conformance test once a second runtime
  * exists (conversion phase C7); today it proves the law on one runtime.
  */
-import { rmSync } from 'node:fs';
-import { resolve } from 'node:path';
 import { beforeEach, describe, it, expect } from 'vitest';
+import { resetData } from './helpers';
 import { retrieve } from '@/lib/memory/retrieve';
 import { write } from '@/lib/memory/write';
 import { supersede, forget } from '@/lib/memory/lifecycle';
-import { invalidateRegistry, getRecord } from '@/lib/memory/registry';
+import { getRecord } from '@/lib/memory/registry';
 import { getEntry } from '@/lib/memory/governance';
 import { exportRecords, importRecords, TOMBSTONE_MARKER } from '@/lib/memory/records';
 import type { ContextBundle } from '@/types/bundle';
 
 const PROJECT = 'project_portability_conf';
-
-function resetData() {
-  rmSync(resolve(__dirname, '../../.tmp-test-data'), { recursive: true, force: true });
-  invalidateRegistry();
-}
 
 /** The retrieval-relevant fingerprint of a bundle: what came back and why. */
 function fingerprint(bundle: ContextBundle) {

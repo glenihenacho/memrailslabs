@@ -4,7 +4,7 @@
 
 # memrails.md — project_memrails
 
-> Governed projection of 24 active memories (floor 0.75, restricted excluded). Generated 2026-07-04T22:52:57.359Z.
+> Governed projection of 24 active memories (floor 0.75, restricted excluded). Generated 2026-07-04T23:59:03.850Z.
 
 ## Decisions
 
@@ -40,11 +40,11 @@
 
 - This directory is the canonical, Git-versioned memory for MemRails. (confidence 1.00 · `clm_index` · knowledge/index.md)
   > This directory is the canonical, Git-versioned memory for MemRails. Every claim lives in `knowledge/claims/*.md` with frontmatter that the governed registry, MemoryIndex tree, and evidence filtering read directly. MemRails is **cloud-hosted memory infrastructure for locally inferred agents**. The core primitive is `memory.retrieve()`, which returns a governed, scoped, explainable **context bundle*
-- A MemRails packet is a billable answer unit that must include answer text, confidence, token count, provenance references, evidence IDs, contradictions surfaced, input hash, output hash, and the model or compressor versi (confidence 0.97 · `clm_packet_contract` · knowledge/claims/packet-contract.md)
+- A packet is a billable answer unit carrying answer text, confidence, tokens, provenance, evidence IDs, contradictions, hashes, and the compressor version — never anonymous prose. (confidence 0.97 · `clm_packet_contract` · knowledge/claims/packet-contract.md)
   > A MemRails packet is a billable answer unit that must include answer text, confidence, token count, provenance references, evidence IDs, contradictions surfaced, input hash, output hash, and the model or compressor version. No packet ships as anonymous prose.
 - A context bundle is the governed output of memory.retrieve — scored memories, omissions with reasons, and a retrieval trace. (confidence 0.96 · `clm_context_bundle` · knowledge/claims/context-bundle.md)
   > memory.retrieve() returns a context bundle, the governed evolution of the packet. It carries context_bundle_id, scored memories (each with summary, confidence, status, reason_selected), an omitted list with reasons, token accounting, and a retrieval_trace listing branches selected and policy filters applied. A synthesized packet is attached only when the caller asks for it.
-- The MemRails v0.1 contract (knowledge/memrails-contract-v0.1.md) is the normative spec — record model, governance invariants, retrieval guarantees, export/import portability, the memrails.md projection — and a runtime cl (confidence 0.95 · `clm_contract_v0_1_pointer` · knowledge/claims/contract-v0.1.md)
+- The v0.1 contract in knowledge/memrails-contract-v0.1.md is the normative spec; conformance levels (Baseline/Governed/Portable) are claimed only with a passing suite in tests/conformance/. (confidence 0.95 · `clm_contract_v0_1_pointer` · knowledge/claims/contract-v0.1.md)
   > The MemRails v0.1 contract (knowledge/memrails-contract-v0.1.md) is the normative spec — record model, governance invariants, retrieval guarantees, export/import portability, the memrails.md projection — and a runtime claims Baseline, Governed, or Portable conformance only with a passing suite in tests/conformance/.
 - Retrieval order is grep → key → semantic → evidence → compress. (confidence 0.95 · `clm_retrieval_order` · knowledge/claims/retrieval-order.md)
   > Retrieval order is grep → key → semantic → evidence → compress. The orchestrator runs cheap filters first and only falls through to L5 compression when lower tiers fail to resolve or when the intent requires synthesis.
@@ -85,5 +85,5 @@ evidence_floor: 0.75
 branches: 11
 memories_included: 24
 memories_omitted: {}
-generated_at: 2026-07-04T22:52:57.359Z
+generated_at: 2026-07-04T23:59:03.850Z
 ```

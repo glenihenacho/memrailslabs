@@ -5,6 +5,7 @@ tags: [contract, spec, conformance, standard]
 aliases: [contract v0.1, normative spec, conformance levels, portable conformance]
 index_path: /project/project_memrails/contract
 memory_type: claim
+summary: The v0.1 contract in knowledge/memrails-contract-v0.1.md is the normative spec; conformance levels (Baseline/Governed/Portable) are claimed only with a passing suite in tests/conformance/.
 created_at: 2026-07-04
 updated_at: 2026-07-04
 claim: The MemRails v0.1 contract (knowledge/memrails-contract-v0.1.md) is the normative spec — record model, governance invariants, retrieval guarantees, export/import portability, the memrails.md projection — and a runtime claims Baseline, Governed, or Portable conformance only with a passing suite in tests/conformance/.

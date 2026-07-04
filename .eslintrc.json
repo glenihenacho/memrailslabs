@@ -23,14 +23,19 @@
             "patterns": [
               {
                 "group": [
-                  "@/lib/billing*",
-                  "@/lib/accounts*",
-                  "@/lib/auth*",
-                  "@/lib/pricing*",
-                  "@/lib/mcp*",
-                  "@/app/*",
-                  "@/components/*",
-                  "@/sdk/*"
+                  "@/lib/billing",
+                  "@/lib/billing/**",
+                  "@/lib/accounts",
+                  "@/lib/accounts/**",
+                  "@/lib/auth",
+                  "@/lib/auth/**",
+                  "@/lib/pricing",
+                  "@/lib/pricing/**",
+                  "@/lib/mcp",
+                  "@/lib/mcp/**",
+                  "@/app/**",
+                  "@/components/**",
+                  "@/sdk/**"
                 ],
                 "message": "Kernel files (types/memory/ledger/rails) must not import the product shell — see conversion phase C0 and npm run core:check."
               }

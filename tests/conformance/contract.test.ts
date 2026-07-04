@@ -7,19 +7,12 @@
  * C0 → C7). If a change cannot keep this suite green, it is a contract change
  * and goes through a spec revision.
  */
-import { rmSync } from 'node:fs';
-import { resolve } from 'node:path';
 import { beforeEach, describe, it, expect } from 'vitest';
+import { resetData } from './helpers';
 import { retrieve } from '@/lib/memory/retrieve';
 import { write } from '@/lib/memory/write';
 import { supersede, dispute, forget } from '@/lib/memory/lifecycle';
-import { invalidateRegistry } from '@/lib/memory/registry';
 import type { RetrievalMode } from '@/types/bundle';
-
-function resetData() {
-  rmSync(resolve(__dirname, '../../.tmp-test-data'), { recursive: true, force: true });
-  invalidateRegistry();
-}
 
 describe('contract §4 — governance invariants', () => {
   beforeEach(resetData);
