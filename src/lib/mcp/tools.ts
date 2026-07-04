@@ -10,6 +10,9 @@ import { retrieve } from '@/lib/memory/retrieve';
 import { write } from '@/lib/memory/write';
 import { findRetrieval } from '@/lib/memory/telemetry';
 import { memoryMap } from '@/lib/memory';
+import { projectMarkdown } from '@/lib/memory/project-md';
+// Side-effect import: installs the billing meter so MCP retrievals stay billed.
+import '@/lib/billing/meter';
 
 export type McpTool = {
   name: string;
@@ -65,6 +68,19 @@ export const MCP_TOOLS: McpTool[] = [
       properties: { project_id: { type: 'string' } },
     },
   },
+  {
+    name: 'memrails.memory.project',
+    description:
+      'Project the governed store into a derived memrails.md (contract §7): sections by memory type, floor-filtered, restricted excluded, trace footer.',
+    input_schema: {
+      type: 'object',
+      properties: {
+        project_id: { type: 'string' },
+        agent_id: { type: 'string' },
+        include_sensitive: { type: 'boolean' },
+      },
+    },
+  },
 ];
 
 /** Dispatch an MCP tool call to the governed lib. Read-only by default. */
@@ -94,6 +110,12 @@ export async function dispatchTool(name: string, args: Record<string, unknown>):
     }
     case 'memrails.memory.map':
       return memoryMap((args.project_id as string) ?? 'project_memrails');
+    case 'memrails.memory.project':
+      return projectMarkdown({
+        project_id: args.project_id as string | undefined,
+        agent_id: (args.agent_id as string | undefined) ?? null,
+        include_sensitive: args.include_sensitive as boolean | undefined,
+      });
     default:
       throw new Error(`unknown_tool:${name}`);
   }

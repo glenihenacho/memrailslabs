@@ -6,12 +6,20 @@
  *   npm run memrails -- write --content "..." --type decision --confidence 0.95
  *   npm run memrails -- map --project project_memrails
  *   npm run memrails -- inspect --retrieval ret_xxx
+ *   npm run memrails -- project-md --out memrails.md
+ *   npm run memrails -- export --out records.jsonl [--include-sensitive]
+ *   npm run memrails -- import --in records.jsonl
  */
+import { writeFileSync, readFileSync } from 'node:fs';
 import { retrieve } from '@/lib/memory/retrieve';
 import { write } from '@/lib/memory/write';
 import { findRetrieval } from '@/lib/memory/telemetry';
 import { memoryMap } from '@/lib/memory';
+import { projectMarkdown } from '@/lib/memory/project-md';
+import { exportRecords, importRecords } from '@/lib/memory/records';
 import type { RetrievalMode } from '@/types/bundle';
+// Side-effect import: installs the billing meter so CLI retrievals stay billed.
+import '@/lib/billing/meter';
 
 function flag(name: string, fallback?: string): string | undefined {
   const i = process.argv.indexOf(`--${name}`);
@@ -53,8 +61,45 @@ function main() {
       console.log(bundle ? JSON.stringify(bundle.retrieval_trace, null, 2) : 'not found');
       break;
     }
+    case 'project-md': {
+      const { markdown, stats } = projectMarkdown({
+        owner_id: flag('owner'),
+        project_id: flag('project'),
+        agent_id: flag('agent') ?? null,
+        include_sensitive: process.argv.includes('--include-sensitive'),
+      });
+      const out = flag('out') ?? 'memrails.md';
+      writeFileSync(out, `${markdown.trimEnd()}\n`, 'utf8');
+      console.log(JSON.stringify({ out, ...stats }, null, 2));
+      break;
+    }
+    case 'export': {
+      const { jsonl, stats } = exportRecords({
+        owner_id: flag('owner'),
+        project_id: flag('project'),
+        include_sensitive: process.argv.includes('--include-sensitive'),
+      });
+      const out = flag('out');
+      if (out) {
+        writeFileSync(out, jsonl, 'utf8');
+        console.log(JSON.stringify({ out, ...stats }, null, 2));
+      } else {
+        process.stdout.write(jsonl);
+      }
+      break;
+    }
+    case 'import': {
+      const src = flag('in');
+      if (!src) {
+        console.error('usage: memrails import --in <records.jsonl>');
+        process.exit(1);
+      }
+      const report = importRecords(readFileSync(src, 'utf8'));
+      console.log(JSON.stringify(report, null, 2));
+      break;
+    }
     default:
-      console.error('usage: memrails <retrieve|write|map|inspect> [flags]');
+      console.error('usage: memrails <retrieve|write|map|inspect|project-md|export|import> [flags]');
       process.exit(1);
   }
 }

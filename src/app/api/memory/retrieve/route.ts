@@ -2,6 +2,9 @@ import { NextResponse } from 'next/server';
 import { z } from 'zod';
 import { retrieve } from '@/lib/memory';
 import { authenticate, authErrorResponse } from '@/lib/auth/authenticate';
+// Side-effect import: installs the billing meter into the kernel's metering
+// seam so API retrievals stay billed (1 retrieve = 1 billable retrieval).
+import '@/lib/billing/meter';
 
 export const runtime = 'nodejs';
 export const dynamic = 'force-dynamic';

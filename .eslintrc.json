@@ -5,5 +5,40 @@
     "@next/next/no-page-custom-font": "off",
     "react/no-unescaped-entities": "off"
   },
+  "overrides": [
+    {
+      "files": [
+        "src/types/**/*.ts",
+        "src/lib/memory/**/*.ts",
+        "src/lib/ledger/**/*.ts",
+        "src/lib/rails/**/*.ts",
+        "src/lib/federation/**/*.ts",
+        "src/lib/observability/**/*.ts",
+        "src/lib/paths.ts"
+      ],
+      "rules": {
+        "no-restricted-imports": [
+          "error",
+          {
+            "patterns": [
+              {
+                "group": [
+                  "@/lib/billing*",
+                  "@/lib/accounts*",
+                  "@/lib/auth*",
+                  "@/lib/pricing*",
+                  "@/lib/mcp*",
+                  "@/app/*",
+                  "@/components/*",
+                  "@/sdk/*"
+                ],
+                "message": "Kernel files (types/memory/ledger/rails) must not import the product shell — see conversion phase C0 and npm run core:check."
+              }
+            ]
+          }
+        ]
+      }
+    }
+  ],
   "ignorePatterns": ["data/**/*", "*.html", "src/marketing/**/*.html"]
 }
