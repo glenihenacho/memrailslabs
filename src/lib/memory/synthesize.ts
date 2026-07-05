@@ -3,6 +3,7 @@ import type { MemoryRecord } from '@/types/governed';
 import type { BundleMemory } from '@/types/bundle';
 import type { MemoryPacket } from '@/types/packet';
 import { compressLayer } from './compress';
+import { evidenceLayer } from './evidence';
 import { buildPacket } from './packet';
 
 /**
@@ -38,12 +39,17 @@ export function buildPacketFromBundle(
     .filter((r): r is MemoryRecord => Boolean(r))
     .map(recordToClaim);
 
-  const { packet: body, compressor } = compressLayer(taskContext, claims, 600);
+  // Contract §5.5: synthesis only ever sees evidence above the floor. The
+  // bundle itself may carry below-floor memories (the caller sees confidence
+  // per memory); a synthesized packet must not silently blend them.
+  const gated = evidenceLayer(taskContext, claims).candidates;
+
+  const { packet: body, compressor } = compressLayer(taskContext, gated, 600);
   return buildPacket({
     query: taskContext,
     intent: 'summarize',
     body,
-    candidates: claims,
+    candidates: gated,
     resolved_layer: 'L5_COMPRESS',
     model_or_compressor: compressor,
   });

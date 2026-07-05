@@ -1,7 +1,8 @@
 import type { EvidenceClaim } from '@/types/evidence';
 import type { RetrievalResult } from '@/types/packet';
 
-const DEFAULT_FLOOR = 0.75;
+/** Contract §5.5 evidence floor — shared by retrieval, projection, and import. */
+export const DEFAULT_FLOOR = 0.75;
 
 /**
  * L4 — Quality gate. Filters candidates by confidence, surfaces

@@ -15,7 +15,7 @@ import { scoreRecord, tokenize } from './ranking';
 import { estimateTokens } from './compress';
 import { recordRetrieval } from './telemetry';
 import { buildPacketFromBundle } from './synthesize';
-import { meterRetrieval } from '@/lib/billing/meter';
+import { meterBundle } from './meter';
 
 const DEFAULT_BUDGET = 1800;
 
@@ -165,7 +165,7 @@ export function retrieve(input: RetrieveInput): ContextBundle {
       candidates_considered: candidates.length,
       scoring: mode === 'debug' ? scoring : undefined,
     },
-    usage: { billable_retrievals: 0, billable_units: 0, credits_remaining: 0, credit_exhausted: false },
+    usage: { billable_retrievals: 0, billable_units: 0, credits_remaining: null, credit_exhausted: false },
     latency_ms: Date.now() - start,
     created_at: new Date().toISOString(),
   };
@@ -175,8 +175,9 @@ export function retrieve(input: RetrieveInput): ContextBundle {
   }
 
   // Meter the retrieval (1 successful retrieve = 1 billable unit) before
-  // persisting, so the stored bundle carries its usage.
-  bundle.usage = meterRetrieval(bundle);
+  // persisting, so the stored bundle carries its usage. The meter itself lives
+  // in the billing shell and reaches the kernel through the seam in meter.ts.
+  bundle.usage = meterBundle(bundle);
 
   recordRetrieval(bundle);
   return bundle;

@@ -13,7 +13,10 @@ export type LedgerEventType =
   | 'MEMORY_DISPUTED'
   | 'MEMORY_DELETED'
   | 'FEEDBACK_RECORDED'
-  | 'RETRIEVAL_BILLED';
+  | 'RETRIEVAL_BILLED'
+  // Portability (contract v0.1 §6)
+  | 'MEMORY_EXPORTED'
+  | 'MEMORY_IMPORTED';
 
 export type LedgerEvent = {
   event_id: string;

@@ -5,6 +5,7 @@ export default defineConfig({
   test: {
     environment: 'node',
     include: ['tests/**/*.test.ts'],
+    setupFiles: ['tests/setup.ts'],
     // Isolated, disposable data dir so tests never pollute the committed
     // `data/` ledger, governance overlay, or written-memory store.
     env: {

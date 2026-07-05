@@ -1,0 +1,17 @@
+{
+  "extends": "./tsconfig.json",
+  "compilerOptions": {
+    "noEmit": true,
+    "incremental": false
+  },
+  "include": [
+    "src/types/**/*.ts",
+    "src/lib/memory/**/*.ts",
+    "src/lib/ledger/**/*.ts",
+    "src/lib/rails/**/*.ts",
+    "src/lib/federation/**/*.ts",
+    "src/lib/observability/**/*.ts",
+    "src/lib/paths.ts"
+  ],
+  "exclude": ["node_modules"]
+}

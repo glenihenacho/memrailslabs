@@ -8,6 +8,7 @@
     "start": "next start",
     "lint": "next lint",
     "typecheck": "tsc --noEmit",
+    "core:check": "tsx scripts/check-core-boundary.ts && tsc --noEmit -p tsconfig.core.json",
     "test": "vitest run",
     "test:watch": "vitest",
     "memory:extract": "tsx scripts/extract-marketing.ts",
@@ -17,6 +18,9 @@
     "memory:retrieve": "tsx scripts/memrails.ts retrieve",
     "memory:write": "tsx scripts/memrails.ts write",
     "memory:map": "tsx scripts/memrails.ts map",
+    "memory:project": "tsx scripts/memrails.ts project-md",
+    "memory:export": "tsx scripts/memrails.ts export",
+    "memory:import": "tsx scripts/memrails.ts import",
     "memrails": "tsx scripts/memrails.ts",
     "mcp:server": "tsx scripts/mcp-server.ts",
     "ledger:export": "tsx scripts/export-ledger.ts"

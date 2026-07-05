@@ -15,6 +15,7 @@ import {
   type RetrievalUsage,
 } from '@/types/billing';
 import type { ContextBundle } from '@/types/bundle';
+import { setRetrievalMeter } from '@/lib/memory/meter';
 
 function append(path: string, obj: unknown): void {
   if (!existsSync(dirname(path))) mkdirSync(dirname(path), { recursive: true });
@@ -100,3 +101,7 @@ export function meterRetrieval(bundle: ContextBundle): RetrievalUsage {
     credit_exhausted: exhausted,
   };
 }
+
+// Self-install into the kernel's metering seam: any entrypoint that imports the
+// billing shell gets metered `memory.retrieve()` calls with no further wiring.
+setRetrievalMeter(meterRetrieval);

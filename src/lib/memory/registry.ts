@@ -46,13 +46,21 @@ function deriveIndexPath(entry: CorpusEntry, project: string): string {
   return `/project/${project}/${base}`;
 }
 
+/** Cap at a word boundary with an ellipsis — never a mid-word chop. */
+export function capSummary(text: string, max = 220): string {
+  if (text.length <= max) return text;
+  const cut = text.slice(0, max);
+  const atBoundary = cut.slice(0, cut.lastIndexOf(' '));
+  return `${(atBoundary || cut).replace(/[,;:.\s]+$/, '')}…`;
+}
+
 function deriveSummary(entry: CorpusEntry): string {
   const explicit = str(entry.data, 'summary');
   if (explicit) return explicit;
   const claim = entry.claim.claim;
   // First sentence, capped.
   const firstSentence = claim.split(/(?<=[.!?])\s/)[0] ?? claim;
-  return firstSentence.slice(0, 220);
+  return capSummary(firstSentence);
 }
 
 /** Map a canonical corpus entry → governed registry record. */
