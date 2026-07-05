@@ -1,6 +1,6 @@
 import type { MemoryRecord, MemoryVersion } from '@/types/governed';
 import { loadRegistry, invalidateRegistry } from './registry';
-import { loadOverlay, upsertEntry } from './governance';
+import { loadOverlay, upsertEntryWithEvent } from './governance';
 import { appendWritten } from './store';
 import { logEvent } from '@/lib/ledger/events';
 import { DEFAULT_FLOOR } from './evidence';
@@ -131,12 +131,20 @@ export function importRecords(jsonl: string): ImportReport {
       // Honor the tombstone regardless of whether the record exists here yet:
       // the overlay entry is keyed by memory_id and wins if content ever lands.
       const tombstoneVersions = line.versions ?? [];
-      upsertEntry(line.memory_id, (cur) => ({
-        ...cur,
-        status: 'tombstoned',
-        tombstoned_at: line.tombstoned_at ?? cur.tombstoned_at ?? new Date().toISOString(),
-        versions: tombstoneVersions.length > 0 ? tombstoneVersions : cur.versions,
-      }));
+      upsertEntryWithEvent(
+        line.memory_id,
+        (cur) => ({
+          ...cur,
+          status: 'tombstoned',
+          tombstoned_at: line.tombstoned_at ?? cur.tombstoned_at ?? new Date().toISOString(),
+          versions: tombstoneVersions.length > 0 ? tombstoneVersions : cur.versions,
+        }),
+        (entry) => ({
+          type: 'MEMORY_GOVERNANCE_IMPORTED',
+          metadata: { via: 'tombstone_import', overlay_entry: entry },
+          extra: { memory_id: line.memory_id },
+        }),
+      );
       report.tombstones_applied += 1;
       continue;
     }
@@ -167,17 +175,26 @@ export function importRecords(jsonl: string): ImportReport {
 
     // Governance state (status transitions, confidence overrides, supersession
     // pointers, version history) lands in the authority overlay either way —
-    // that is what makes re-import reconcile instead of drift.
+    // that is what makes re-import reconcile instead of drift. Each applied
+    // entry is evented (C3) so imported governance is replayable like native.
     const carriesGovernance =
       versions.length > 0 || record.status !== 'active' || record.superseded_by != null;
     if (carriesGovernance) {
-      upsertEntry(record.memory_id, (cur) => ({
-        ...cur,
-        status: record.status,
-        confidence: record.confidence,
-        superseded_by: record.superseded_by ?? cur.superseded_by ?? null,
-        versions: versions.length > 0 ? versions : cur.versions,
-      }));
+      upsertEntryWithEvent(
+        record.memory_id,
+        (cur) => ({
+          ...cur,
+          status: record.status,
+          confidence: record.confidence,
+          superseded_by: record.superseded_by ?? cur.superseded_by ?? null,
+          versions: versions.length > 0 ? versions : cur.versions,
+        }),
+        (entry) => ({
+          type: 'MEMORY_GOVERNANCE_IMPORTED',
+          metadata: { via: 'record_import', overlay_entry: entry },
+          extra: { memory_id: record.memory_id },
+        }),
+      );
     }
   }
 

@@ -1,15 +1,29 @@
 import { randomUUID } from 'node:crypto';
-import type { MemoryVersion } from '@/types/governed';
-import { logEvent } from '@/lib/ledger/events';
+import type { GovernanceOverlayEntry, MemoryVersion } from '@/types/governed';
+import { newEventId } from '@/lib/ledger/events';
 import { getRecord, invalidateRegistry } from './registry';
-import { upsertEntry } from './governance';
+import { upsertEntryWithEvent } from './governance';
 import { write, type WriteInput } from './write';
+
+/**
+ * Governed lifecycle transitions — supersede / dispute / restore /
+ * re-score / forget.
+ *
+ * Every transition commits through `upsertEntryWithEvent` (C3): the overlay
+ * change and its ledger event land as one unit, the version row links back
+ * to the event via `source_event_id`, and the event carries the full
+ * resulting `overlay_entry` so governance state is exactly rebuildable from
+ * the stream (`src/lib/ledger/replay.ts`). One timestamp per transition —
+ * version, overlay, and event agree to the millisecond.
+ */
 
 function version(
   memory_id: string,
   change_type: MemoryVersion['change_type'],
   diff_summary: string,
   changed_by: string,
+  created_at: string,
+  source_event_id: string,
 ): MemoryVersion {
   return {
     version_id: `ver_${randomUUID().replace(/-/g, '').slice(0, 12)}`,
@@ -18,8 +32,15 @@ function version(
     change_type,
     changed_by,
     diff_summary,
-    created_at: new Date().toISOString(),
+    source_event_id,
+    created_at,
   };
+}
+
+function appendVersion(cur: GovernanceOverlayEntry, v: MemoryVersion): MemoryVersion[] {
+  const versions = [...(cur.versions ?? [])];
+  v.version_number = versions.length + 1;
+  return [...versions, v];
 }
 
 /**
@@ -51,20 +72,26 @@ export function supersede(
   }
 
   const changed_by = opts.changed_by ?? 'system';
-  const v = version(memory_id, 'SUPERSEDE', opts.reason ?? 'superseded by newer memory', changed_by);
+  const now = new Date().toISOString();
+  const event_id = newEventId();
+  const v = version(memory_id, 'SUPERSEDE', opts.reason ?? 'superseded by newer memory', changed_by, now, event_id);
 
-  upsertEntry(memory_id, (cur) => {
-    const versions = [...(cur.versions ?? [])];
-    v.version_number = versions.length + 1;
-    return { ...cur, status: 'superseded', superseded_by: replacement, versions: [...versions, v] };
-  });
-  invalidateRegistry();
-
-  logEvent(
-    'MEMORY_SUPERSEDED',
-    { reason: opts.reason ?? null, replacement },
-    { memory_id, owner_id: existing.scope.owner_id, project_id: existing.scope.project_id },
+  upsertEntryWithEvent(
+    memory_id,
+    (cur) => ({ ...cur, status: 'superseded', superseded_by: replacement, versions: appendVersion(cur, v) }),
+    (entry) => ({
+      type: 'MEMORY_SUPERSEDED',
+      metadata: { reason: opts.reason ?? null, replacement, overlay_entry: entry },
+      extra: {
+        event_id,
+        created_at: now,
+        memory_id,
+        owner_id: existing.scope.owner_id,
+        project_id: existing.scope.project_id,
+      },
+    }),
   );
+  invalidateRegistry();
 
   return { superseded: memory_id, replacement };
 }
@@ -82,28 +109,127 @@ export function dispute(
 
   const reducedConfidence = Number((existing.confidence * 0.5).toFixed(3));
   const changed_by = opts.changed_by ?? 'system';
-  const v = version(memory_id, 'DISPUTE', opts.reason, changed_by);
+  const now = new Date().toISOString();
+  const event_id = newEventId();
+  const v = version(memory_id, 'DISPUTE', opts.reason, changed_by, now, event_id);
 
-  upsertEntry(memory_id, (cur) => {
-    const versions = [...(cur.versions ?? [])];
-    v.version_number = versions.length + 1;
-    return {
+  upsertEntryWithEvent(
+    memory_id,
+    (cur) => ({
       ...cur,
       status: 'disputed',
       confidence: reducedConfidence,
       disputed_reason: opts.reason,
-      versions: [...versions, v],
-    };
-  });
+      versions: appendVersion(cur, v),
+    }),
+    (entry) => ({
+      type: 'MEMORY_DISPUTED',
+      metadata: { reason: opts.reason, confidence: reducedConfidence, overlay_entry: entry },
+      extra: {
+        event_id,
+        created_at: now,
+        memory_id,
+        owner_id: existing.scope.owner_id,
+        project_id: existing.scope.project_id,
+      },
+    }),
+  );
   invalidateRegistry();
 
-  logEvent(
-    'MEMORY_DISPUTED',
-    { reason: opts.reason, confidence: reducedConfidence },
-    { memory_id, owner_id: existing.scope.owner_id, project_id: existing.scope.project_id },
+  return { memory_id, status: 'disputed', confidence: reducedConfidence };
+}
+
+/**
+ * Restore: bring a disputed memory back to active retrieval at a stated
+ * confidence (defaults to its current one). Completes the dispute cycle —
+ * doubt is reversible (contract §4.4), and the reversal is a first-class,
+ * versioned, evented transition like every other.
+ */
+export function restore(
+  memory_id: string,
+  opts: { confidence?: number; reason?: string; changed_by?: string } = {},
+): { memory_id: string; status: 'active'; confidence: number } {
+  const existing = getRecord(memory_id);
+  if (!existing) throw new Error('memory_not_found');
+  if (existing.status !== 'disputed') throw new Error('only_disputed_memory_can_be_restored');
+
+  const confidence = clamp01(opts.confidence ?? existing.confidence);
+  const changed_by = opts.changed_by ?? 'system';
+  const now = new Date().toISOString();
+  const event_id = newEventId();
+  const v = version(memory_id, 'RESTORE', opts.reason ?? 'dispute resolved', changed_by, now, event_id);
+
+  upsertEntryWithEvent(
+    memory_id,
+    (cur) => {
+      const { disputed_reason: _cleared, ...rest } = cur;
+      return { ...rest, status: 'active', confidence, versions: appendVersion(cur, v) };
+    },
+    (entry) => ({
+      type: 'MEMORY_RESTORED',
+      metadata: { reason: opts.reason ?? null, confidence, overlay_entry: entry },
+      extra: {
+        event_id,
+        created_at: now,
+        memory_id,
+        owner_id: existing.scope.owner_id,
+        project_id: existing.scope.project_id,
+      },
+    }),
+  );
+  invalidateRegistry();
+
+  return { memory_id, status: 'active', confidence };
+}
+
+/**
+ * Re-score: update a memory's confidence without a status change (staleness
+ * re-verification, telemetry-weighted scoring — the C5 loop writes through
+ * here so every re-score is versioned and evented).
+ */
+export function updateConfidence(
+  memory_id: string,
+  opts: { confidence: number; reason?: string; changed_by?: string },
+): { memory_id: string; confidence: number } {
+  const existing = getRecord(memory_id);
+  if (!existing) throw new Error('memory_not_found');
+
+  const confidence = clamp01(opts.confidence);
+  const changed_by = opts.changed_by ?? 'system';
+  const now = new Date().toISOString();
+  const event_id = newEventId();
+  const v = version(
+    memory_id,
+    'UPDATE_CONFIDENCE',
+    opts.reason ?? `confidence ${existing.confidence} → ${confidence}`,
+    changed_by,
+    now,
+    event_id,
   );
 
-  return { memory_id, status: 'disputed', confidence: reducedConfidence };
+  upsertEntryWithEvent(
+    memory_id,
+    (cur) => ({ ...cur, confidence, versions: appendVersion(cur, v) }),
+    (entry) => ({
+      type: 'MEMORY_CONFIDENCE_UPDATED',
+      metadata: {
+        reason: opts.reason ?? null,
+        confidence,
+        previous_confidence: existing.confidence,
+        overlay_entry: entry,
+      },
+      extra: {
+        event_id,
+        created_at: now,
+        memory_id,
+        owner_id: existing.scope.owner_id,
+        project_id: existing.scope.project_id,
+      },
+    }),
+  );
+  invalidateRegistry();
+
+  return { memory_id, confidence };
 }
 
 /**
@@ -118,25 +244,31 @@ export function forget(
   if (!existing) throw new Error('memory_not_found');
 
   const changed_by = opts.changed_by ?? 'system';
-  const v = version(memory_id, 'TOMBSTONE', opts.reason ?? 'forget requested', changed_by);
+  const now = new Date().toISOString();
+  const event_id = newEventId();
+  const v = version(memory_id, 'TOMBSTONE', opts.reason ?? 'forget requested', changed_by, now, event_id);
 
-  upsertEntry(memory_id, (cur) => {
-    const versions = [...(cur.versions ?? [])];
-    v.version_number = versions.length + 1;
-    return {
-      ...cur,
-      status: 'tombstoned',
-      tombstoned_at: new Date().toISOString(),
-      versions: [...versions, v],
-    };
-  });
+  upsertEntryWithEvent(
+    memory_id,
+    (cur) => ({ ...cur, status: 'tombstoned', tombstoned_at: now, versions: appendVersion(cur, v) }),
+    (entry) => ({
+      type: 'MEMORY_DELETED',
+      metadata: { reason: opts.reason ?? null, mode: 'tombstone', overlay_entry: entry },
+      extra: {
+        event_id,
+        created_at: now,
+        memory_id,
+        owner_id: existing.scope.owner_id,
+        project_id: existing.scope.project_id,
+      },
+    }),
+  );
   invalidateRegistry();
 
-  logEvent(
-    'MEMORY_DELETED',
-    { reason: opts.reason ?? null, mode: 'tombstone' },
-    { memory_id, owner_id: existing.scope.owner_id, project_id: existing.scope.project_id },
-  );
-
   return { memory_id, status: 'tombstoned' };
+}
+
+function clamp01(n: number): number {
+  if (Number.isNaN(n)) return 0;
+  return Math.min(1, Math.max(0, n));
 }

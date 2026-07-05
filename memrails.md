@@ -4,7 +4,7 @@
 
 # memrails.md — project_memrails
 
-> Governed projection of 24 active memories (floor 0.75, restricted excluded). Generated 2026-07-04T23:59:03.850Z.
+> Governed projection of 25 active memories (floor 0.75, restricted excluded). Generated 2026-07-05T22:12:53.815Z.
 
 ## Decisions
 
@@ -46,6 +46,8 @@
   > memory.retrieve() returns a context bundle, the governed evolution of the packet. It carries context_bundle_id, scored memories (each with summary, confidence, status, reason_selected), an omitted list with reasons, token accounting, and a retrieval_trace listing branches selected and policy filters applied. A synthesized packet is attached only when the caller asks for it.
 - The v0.1 contract in knowledge/memrails-contract-v0.1.md is the normative spec; conformance levels (Baseline/Governed/Portable) are claimed only with a passing suite in tests/conformance/. (confidence 0.95 · `clm_contract_v0_1_pointer` · knowledge/claims/contract-v0.1.md)
   > The MemRails v0.1 contract (knowledge/memrails-contract-v0.1.md) is the normative spec — record model, governance invariants, retrieval guarantees, export/import portability, the memrails.md projection — and a runtime claims Baseline, Governed, or Portable conformance only with a passing suite in tests/conformance/.
+- The ledger is the event spine — governance changes and their events commit in one transaction, every governance event carries the resulting overlay entry, and any projection can be dropped and rebuilt by replaying the stream. (confidence 0.95 · `clm_ledger_spine` · knowledge/claims/ledger-spine.md)
+  > - Every governance transition (supersede, dispute, restore, re-score,   tombstone, §6 governance import) commits its overlay change and its ledger   event in **one Postgres transaction**; the version row links back via   `source_event_id`. - Governance events carry `metadata.overlay_entry` — the full resulting   entry — so folding them in `seq` order reconstructs governance state   exactly (`src/l
 - Retrieval order is grep → key → semantic → evidence → compress. (confidence 0.95 · `clm_retrieval_order` · knowledge/claims/retrieval-order.md)
   > Retrieval order is grep → key → semantic → evidence → compress. The orchestrator runs cheap filters first and only falls through to L5 compression when lower tiers fail to resolve or when the intent requires synthesis.
 - The default evidence floor is 0.75. (confidence 0.90 · `clm_evidence_floor` · knowledge/claims/evidence-floor.md)
@@ -58,12 +60,12 @@
 - The MemRails retrieval stack runs L1 grep, L2 key lookup, L3 semantic, L4 evidence filter, L5 compression in that order — cheap filters before expensive synthesis, with L5 reserved as a last-resort synthesis layer. (confidence 0.95 · `clm_architecture` · knowledge/architecture.md)
 - The retrieval pipeline runs scope → policy → tree branch selection → ranking → token-budgeted bundle → telemetry, with a transparent additive score. (confidence 0.95 · `clm_governed_retrieval_doc` · knowledge/governed-retrieval.md)
   > > Do not build "vector memory." Build governed memory retrieval. ```txt 1. memory.retrieve(task_context) 2. Auth → resolve owner / project / agent scope 3. Policy → filter accessible memory (reason on every rejection) 4. MemoryIndex → select relevant branches by tree reasoning 5. Candidate gather from selected nodes (mode-dependent) 6. Rank → freshness / confidence / contradiction / token cost 7. 
-- PostgreSQL is the authority layer (registry, scope, policy, audit, metering); the MVP runs file-canonical with a JSON overlay and JSONL stores. (confidence 0.90 · `clm_data_model_doc` · knowledge/data-model.md)
-  > In production PostgreSQL is the authority layer; the MVP is **file-canonical**: curated `knowledge/**.md` + a JSON governance overlay + JSONL stores, which map one-to-one onto the production tables. | Production table | File-canonical MVP | |---|---| | `owners`, `agents`, `projects` | implicit scope defaults + frontmatter | | `memory_registry` | `knowledge/**.md` + `data/written-memory.jsonl` | | 
+- PostgreSQL is the authority layer (registry, scope, policy, audit, metering); implemented in C2 as an embedded Postgres (PGlite) behind the kernel seams, with the file-canonical overlay kept as the conforming lightweight backend. (confidence 0.90 · `clm_data_model_doc` · knowledge/data-model.md)
+  > PostgreSQL is the authority layer. As of conversion phase C2 it is **implemented**: an embedded Postgres (PGlite; a hosted deploy points the same schema at a pg-wire server) behind the `store.ts`/`governance.ts` seams — `src/lib/memory/authority/`. Backend selection is `MEMRAILS_AUTHORITY` (`file` | `dual` | `postgres`); `dual` is the migration window (file authoritative, Postgres shadowing every 
 
 ## Memory map
 
-- `/project/project_memrails/contract` — 2 memories
+- `/project/project_memrails/contract` — 3 memories
 - `/project/project_memrails/data_model` — 2 memories
 - `/project/project_memrails/index` — 1 memories
 - `/project/project_memrails/memory_index` — 1 memories
@@ -83,7 +85,7 @@ scope: { owner: user_memrails, project: project_memrails, agent: null }
 policy_filters_applied: [owner_scope, project_scope, agent_scope, active_only, sensitivity, expiry]
 evidence_floor: 0.75
 branches: 11
-memories_included: 24
+memories_included: 25
 memories_omitted: {}
-generated_at: 2026-07-04T23:59:03.850Z
+generated_at: 2026-07-05T22:12:53.815Z
 ```

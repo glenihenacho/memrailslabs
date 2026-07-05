@@ -1,5 +1,7 @@
 import type { PGlite } from '@electric-sql/pglite';
 import type { GovernanceOverlayEntry, MemoryRecord } from '@/types/governed';
+import type { LedgerEvent } from '@/types/ledger';
+import type { ContextBundle } from '@/types/bundle';
 import { getDb } from './client';
 
 /**
@@ -80,56 +82,111 @@ export function persistWrittenRecord(record: MemoryRecord): void {
   });
 }
 
+/** Querier accepted by the shared transaction bodies (a tx or the db itself). */
+type Querier = Pick<PGlite, 'query'>;
+
+async function upsertOverlayTx(tx: Querier, memory_id: string, entry: GovernanceOverlayEntry): Promise<void> {
+  const { versions = [], ...bare } = entry;
+  await tx.query(
+    `INSERT INTO memory_registry
+       (memory_id, origin, status, confidence, sensitivity, superseded_by,
+        disputed_reason, tombstoned_at, overlay, updated_at)
+     VALUES ($1, 'corpus', $2, $3, $4, $5, $6, $7, $8, now())
+     ON CONFLICT (memory_id) DO UPDATE SET
+       status = $2,
+       confidence = COALESCE($3, memory_registry.confidence),
+       sensitivity = COALESCE($4, memory_registry.sensitivity),
+       superseded_by = $5, disputed_reason = $6, tombstoned_at = $7,
+       overlay = $8, updated_at = now()`,
+    [
+      memory_id,
+      bare.status ?? null,
+      bare.confidence ?? null,
+      bare.sensitivity ?? null,
+      bare.superseded_by ?? null,
+      bare.disputed_reason ?? null,
+      bare.tombstoned_at ?? null,
+      JSON.stringify(bare),
+    ],
+  );
+  await tx.query('DELETE FROM memory_versions WHERE memory_id = $1', [memory_id]);
+  for (const v of versions) {
+    await tx.query(
+      `INSERT INTO memory_versions
+         (version_id, memory_id, version_number, change_type, changed_by,
+          diff_summary, source_event_id, created_at)
+       VALUES ($1, $2, $3, $4, $5, $6, $7, $8)`,
+      [
+        v.version_id,
+        v.memory_id,
+        v.version_number,
+        v.change_type,
+        v.changed_by ?? null,
+        v.diff_summary ?? null,
+        v.source_event_id ?? null,
+        v.created_at,
+      ],
+    );
+  }
+}
+
+async function insertEventTx(tx: Querier, event: LedgerEvent): Promise<void> {
+  await tx.query(
+    `INSERT INTO ledger_events (event_id, event_type, schema_version, event, created_at)
+     VALUES ($1, $2, $3, $4, $5) ON CONFLICT (event_id) DO NOTHING`,
+    [event.event_id, event.event_type, event.schema_version ?? 1, JSON.stringify(event), event.created_at],
+  );
+}
+
 /**
- * Upsert one governance overlay entry: typed columns for SQL, the entry
- * verbatim in `overlay` (for exact round-trips), versions normalized into
- * `memory_versions`. Corpus-origin ids get a governance-only row.
+ * Upsert one governance overlay entry (no event). Used by plain overlay
+ * saves; lifecycle transitions go through {@link persistGovernanceChange}.
  */
 export function persistOverlayEntry(memory_id: string, entry: GovernanceOverlayEntry): void {
   enqueue(async (db) => {
-    const { versions = [], ...bare } = entry;
     await db.transaction(async (tx) => {
-      await tx.query(
-        `INSERT INTO memory_registry
-           (memory_id, origin, status, confidence, sensitivity, superseded_by,
-            disputed_reason, tombstoned_at, overlay, updated_at)
-         VALUES ($1, 'corpus', $2, $3, $4, $5, $6, $7, $8, now())
-         ON CONFLICT (memory_id) DO UPDATE SET
-           status = $2,
-           confidence = COALESCE($3, memory_registry.confidence),
-           sensitivity = COALESCE($4, memory_registry.sensitivity),
-           superseded_by = $5, disputed_reason = $6, tombstoned_at = $7,
-           overlay = $8, updated_at = now()`,
-        [
-          memory_id,
-          bare.status ?? null,
-          bare.confidence ?? null,
-          bare.sensitivity ?? null,
-          bare.superseded_by ?? null,
-          bare.disputed_reason ?? null,
-          bare.tombstoned_at ?? null,
-          JSON.stringify(bare),
-        ],
+      await upsertOverlayTx(tx as unknown as Querier, memory_id, entry);
+    });
+  });
+}
+
+/**
+ * The C3 spine guarantee: a governance change and its ledger event land in
+ * **one transaction** — projections rebuilt from the stream can never see a
+ * state change without its event or vice versa.
+ */
+export function persistGovernanceChange(
+  memory_id: string,
+  entry: GovernanceOverlayEntry,
+  event: LedgerEvent,
+): void {
+  enqueue(async (db) => {
+    await db.transaction(async (tx) => {
+      const q = tx as unknown as Querier;
+      await upsertOverlayTx(q, memory_id, entry);
+      await insertEventTx(q, event);
+    });
+  });
+}
+
+/** Standalone (non-governance) event → `ledger_events`. Idempotent by event_id. */
+export function persistLedgerEvent(event: LedgerEvent): void {
+  enqueue(async (db) => {
+    await insertEventTx(db, event);
+  });
+}
+
+/** Retrieval telemetry: bundle row + its event, one transaction. */
+export function persistRetrieval(bundle: ContextBundle, event: LedgerEvent): void {
+  enqueue(async (db) => {
+    await db.transaction(async (tx) => {
+      const q = tx as unknown as Querier;
+      await q.query(
+        `INSERT INTO retrievals (retrieval_id, bundle, created_at)
+         VALUES ($1, $2, $3) ON CONFLICT (retrieval_id) DO NOTHING`,
+        [bundle.retrieval_id, JSON.stringify(bundle), bundle.created_at],
       );
-      await tx.query('DELETE FROM memory_versions WHERE memory_id = $1', [memory_id]);
-      for (const v of versions) {
-        await tx.query(
-          `INSERT INTO memory_versions
-             (version_id, memory_id, version_number, change_type, changed_by,
-              diff_summary, source_event_id, created_at)
-           VALUES ($1, $2, $3, $4, $5, $6, $7, $8)`,
-          [
-            v.version_id,
-            v.memory_id,
-            v.version_number,
-            v.change_type,
-            v.changed_by ?? null,
-            v.diff_summary ?? null,
-            v.source_event_id ?? null,
-            v.created_at,
-          ],
-        );
-      }
+      await insertEventTx(q, event);
     });
   });
 }
