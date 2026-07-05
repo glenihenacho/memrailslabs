@@ -2,6 +2,7 @@ import { NextResponse } from 'next/server';
 import { loadRegistry } from '@/lib/memory';
 import { artifactRail } from '@/lib/rails/artifact';
 import { authenticate, authErrorResponse } from '@/lib/auth/authenticate';
+import { ensureAuthorityReady } from '@/lib/memory/authority';
 
 export const runtime = 'nodejs';
 export const dynamic = 'force-dynamic';
@@ -17,6 +18,7 @@ export async function GET(req: Request) {
   } catch (err) {
     return authErrorResponse(err);
   }
+  await ensureAuthorityReady();
   const url = new URL(req.url);
   const format = url.searchParams.get('format') ?? 'json';
   const project = url.searchParams.get('project_id');

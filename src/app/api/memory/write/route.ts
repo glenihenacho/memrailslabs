@@ -2,6 +2,7 @@ import { NextResponse } from 'next/server';
 import { z } from 'zod';
 import { write } from '@/lib/memory';
 import { requireOwner, authErrorResponse } from '@/lib/auth/authenticate';
+import { ensureAuthorityReady, flushAuthority } from '@/lib/memory/authority';
 
 export const runtime = 'nodejs';
 export const dynamic = 'force-dynamic';
@@ -52,6 +53,8 @@ export async function POST(req: Request) {
   } catch (err) {
     return authErrorResponse(err);
   }
+  await ensureAuthorityReady();
   const result = write({ ...parsed.data, owner_id });
+  await flushAuthority();
   return NextResponse.json(result, { status: 201 });
 }

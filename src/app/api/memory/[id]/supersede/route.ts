@@ -2,6 +2,7 @@ import { NextResponse } from 'next/server';
 import { z } from 'zod';
 import { supersede, getRecord } from '@/lib/memory';
 import { requireOwner, authErrorResponse } from '@/lib/auth/authenticate';
+import { ensureAuthorityReady, flushAuthority } from '@/lib/memory/authority';
 
 export const runtime = 'nodejs';
 export const dynamic = 'force-dynamic';
@@ -45,12 +46,14 @@ export async function POST(req: Request, { params }: { params: { id: string } })
   } catch (err) {
     return authErrorResponse(err);
   }
+  await ensureAuthorityReady();
   const target = getRecord(params.id, { force: true });
   if (!target || target.scope.owner_id !== owner_id) {
     return NextResponse.json({ error: 'memory_not_found' }, { status: 404 });
   }
   try {
     const result = supersede(params.id, { ...parsed.data, changed_by: 'api' });
+    await flushAuthority();
     return NextResponse.json(result);
   } catch (err) {
     const message = (err as Error).message;

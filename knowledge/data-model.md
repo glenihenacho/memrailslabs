@@ -5,16 +5,24 @@ tags: [data-model, schema, postgres, registry, stack, stack-decisions]
 aliases: [data model, schema, registry tables, postgres schema]
 memory_type: note
 index_path: /project/project_memrails/data_model
-summary: PostgreSQL is the authority layer (registry, scope, policy, audit, metering); the MVP runs file-canonical with a JSON overlay and JSONL stores.
+summary: PostgreSQL is the authority layer (registry, scope, policy, audit, metering); implemented in C2 as an embedded Postgres (PGlite) behind the kernel seams, with the file-canonical overlay kept as the conforming lightweight backend.
 created_at: 2026-06-14
-updated_at: 2026-06-14
+updated_at: 2026-07-05
 ---
 
 # Data Model
 
-In production PostgreSQL is the authority layer; the MVP is **file-canonical**:
-curated `knowledge/**.md` + a JSON governance overlay + JSONL stores, which map
-one-to-one onto the production tables.
+PostgreSQL is the authority layer. As of conversion phase C2 it is
+**implemented**: an embedded Postgres (PGlite; a hosted deploy points the same
+schema at a pg-wire server) behind the `store.ts`/`governance.ts` seams —
+`src/lib/memory/authority/`. Backend selection is `MEMRAILS_AUTHORITY`
+(`file` | `dual` | `postgres`); `dual` is the migration window (file
+authoritative, Postgres shadowing every write), verified by
+`npm run authority:diff` and migrated by `npm run authority:migrate` (the §6
+export/import tool pointed at Postgres). The file-canonical form — curated
+`knowledge/**.md` + JSON governance overlay + JSONL stores — remains a
+conforming lightweight backend for self-hosted/local mode, and maps one-to-one
+onto the tables.
 
 | Production table | File-canonical MVP |
 |---|---|
