@@ -2,14 +2,23 @@ import { existsSync, mkdirSync, readFileSync, renameSync, writeFileSync } from '
 import { dirname } from 'node:path';
 import type { GovernanceOverlay, GovernanceOverlayEntry } from '@/types/governed';
 import { dataPath } from '@/lib/paths';
+import { authorityMode } from './authority/mode';
+import {
+  snapshotLoadOverlay,
+  snapshotSaveOverlay,
+  snapshotUpsertOverlayEntry,
+} from './authority/snapshot';
+import { persistOverlayEntry } from './authority/persist';
 
 /**
- * File-canonical authority layer.
+ * Governance authority layer.
  *
  * The canonical markdown stays immutable (CLAUDE.md Rule 1 + Rule 4). Mutable
  * governance state — status transitions, confidence overrides, supersede/dispute
- * pointers, version history — lives in this JSON overlay. In production this
- * overlay is the PostgreSQL `memory_registry` + `memory_versions` tables.
+ * pointers, version history — lives in the JSON overlay in `file`/`dual` modes
+ * and in the PostgreSQL `memory_registry` + `memory_versions` tables in
+ * `postgres` mode (conversion phase C2). `dual` shadows every overlay write
+ * into Postgres while the file stays authoritative for the migration window.
  */
 
 function overlayFile(): string {
@@ -19,6 +28,9 @@ function overlayFile(): string {
 let cache: GovernanceOverlay | null = null;
 
 export function loadOverlay(opts: { force?: boolean } = {}): GovernanceOverlay {
+  // Postgres mode: the snapshot is the in-process view of the tables and is
+  // always current for this process, so `force` has nothing to re-read.
+  if (authorityMode() === 'postgres') return snapshotLoadOverlay();
   if (cache && !opts.force) return cache;
   const path = overlayFile();
   if (!existsSync(path)) {
@@ -36,6 +48,11 @@ export function loadOverlay(opts: { force?: boolean } = {}): GovernanceOverlay {
 }
 
 export function saveOverlay(overlay: GovernanceOverlay): void {
+  const mode = authorityMode();
+  if (mode === 'postgres') {
+    snapshotSaveOverlay(overlay);
+    return;
+  }
   const path = overlayFile();
   if (!existsSync(dirname(path))) {
     mkdirSync(dirname(path), { recursive: true });
@@ -45,6 +62,11 @@ export function saveOverlay(overlay: GovernanceOverlay): void {
   writeFileSync(tmp, `${JSON.stringify(overlay, null, 2)}\n`, 'utf8');
   renameSync(tmp, path);
   cache = overlay;
+  if (mode === 'dual') {
+    for (const [memory_id, entry] of Object.entries(overlay)) {
+      persistOverlayEntry(memory_id, entry);
+    }
+  }
 }
 
 export function getEntry(memory_id: string): GovernanceOverlayEntry | undefined {
@@ -55,6 +77,11 @@ export function upsertEntry(
   memory_id: string,
   patch: (current: GovernanceOverlayEntry) => GovernanceOverlayEntry,
 ): GovernanceOverlayEntry {
+  if (authorityMode() === 'postgres') {
+    const next = patch(snapshotLoadOverlay()[memory_id] ?? {});
+    snapshotUpsertOverlayEntry(memory_id, next);
+    return next;
+  }
   const overlay = loadOverlay({ force: true });
   const next = patch(overlay[memory_id] ?? {});
   overlay[memory_id] = next;

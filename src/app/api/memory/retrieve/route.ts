@@ -5,6 +5,7 @@ import { authenticate, authErrorResponse } from '@/lib/auth/authenticate';
 // Side-effect import: installs the billing meter into the kernel's metering
 // seam so API retrievals stay billed (1 retrieve = 1 billable retrieval).
 import '@/lib/billing/meter';
+import { ensureAuthorityReady } from '@/lib/memory/authority';
 
 export const runtime = 'nodejs';
 export const dynamic = 'force-dynamic';
@@ -42,6 +43,7 @@ export async function POST(req: Request) {
   } catch (err) {
     return authErrorResponse(err);
   }
+  await ensureAuthorityReady();
   const bundle = retrieve({ ...parsed.data, owner_id });
   return NextResponse.json(bundle);
 }

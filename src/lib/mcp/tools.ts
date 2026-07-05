@@ -11,6 +11,7 @@ import { write } from '@/lib/memory/write';
 import { findRetrieval } from '@/lib/memory/telemetry';
 import { memoryMap } from '@/lib/memory';
 import { projectMarkdown } from '@/lib/memory/project-md';
+import { ensureAuthorityReady, flushAuthority } from '@/lib/memory/authority';
 // Side-effect import: installs the billing meter so MCP retrievals stay billed.
 import '@/lib/billing/meter';
 
@@ -85,6 +86,17 @@ export const MCP_TOOLS: McpTool[] = [
 
 /** Dispatch an MCP tool call to the governed lib. Read-only by default. */
 export async function dispatchTool(name: string, args: Record<string, unknown>): Promise<unknown> {
+  // Hydrate the Postgres authority snapshot before the first synchronous read
+  // and confirm any write is durable before responding. Both no-op in file mode.
+  await ensureAuthorityReady();
+  try {
+    return await dispatchToolInner(name, args);
+  } finally {
+    await flushAuthority();
+  }
+}
+
+async function dispatchToolInner(name: string, args: Record<string, unknown>): Promise<unknown> {
   switch (name) {
     case 'memrails.memory.retrieve':
       return retrieve({

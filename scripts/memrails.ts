@@ -18,6 +18,7 @@ import { memoryMap } from '@/lib/memory';
 import { projectMarkdown } from '@/lib/memory/project-md';
 import { exportRecords, importRecords } from '@/lib/memory/records';
 import type { RetrievalMode } from '@/types/bundle';
+import { ensureAuthorityReady, flushAuthority, closeDb } from '@/lib/memory/authority';
 // Side-effect import: installs the billing meter so CLI retrievals stay billed.
 import '@/lib/billing/meter';
 
@@ -26,7 +27,10 @@ function flag(name: string, fallback?: string): string | undefined {
   return i >= 0 && process.argv[i + 1] ? process.argv[i + 1] : fallback;
 }
 
-function main() {
+async function main() {
+  // Hydrate the Postgres authority (no-op in file mode) before sync reads;
+  // flush pending persistence before the process exits.
+  await ensureAuthorityReady();
   const cmd = process.argv[2];
   switch (cmd) {
     case 'retrieve': {
@@ -104,4 +108,10 @@ function main() {
   }
 }
 
-main();
+main()
+  .then(() => flushAuthority())
+  .then(() => closeDb()) // release the PGlite handle so the process can exit
+  .catch((err) => {
+    console.error(err);
+    process.exit(1);
+  });

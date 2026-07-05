@@ -1,0 +1,89 @@
+/**
+ * Postgres authority schema — conversion phase C2, per `knowledge/data-model.md`.
+ *
+ * `memory_registry` + `memory_versions` are the grown-up form of the
+ * `data/governance.json` overlay: one row per governed memory (written
+ * records carry their full body in `record`; corpus-origin rows carry
+ * governance only — the markdown stays a load source until it is demoted to
+ * a projection). `ledger_events` and `retrievals` are created now and
+ * populated in C3 when the ledger becomes the event spine.
+ *
+ * Plain Postgres SQL throughout — the embedded PGlite engine and a hosted
+ * pg-wire server run the same DDL.
+ *
+ * pgvector: added in C5 as the `hybrid` fallback rail; PGlite loads the
+ * vector extension at that point. Nothing here depends on it.
+ */
+export const SCHEMA = `
+CREATE TABLE IF NOT EXISTS memory_registry (
+  memory_id      text PRIMARY KEY,
+  origin         text NOT NULL DEFAULT 'written' CHECK (origin IN ('written', 'corpus')),
+  owner_id       text,
+  project_id     text,
+  agent_id       text,
+  status         text,
+  confidence     double precision,
+  sensitivity    text,
+  superseded_by  text,
+  disputed_reason text,
+  tombstoned_at  timestamptz,
+  -- Full MemoryRecord body for written records; NULL for corpus governance rows.
+  record         jsonb,
+  -- GovernanceOverlayEntry (minus versions, which are normalized below);
+  -- NULL when the row carries no overlay state.
+  overlay        jsonb,
+  created_at     timestamptz NOT NULL DEFAULT now(),
+  updated_at     timestamptz NOT NULL DEFAULT now()
+);
+CREATE INDEX IF NOT EXISTS memory_registry_scope_idx
+  ON memory_registry (owner_id, project_id);
+CREATE INDEX IF NOT EXISTS memory_registry_status_idx
+  ON memory_registry (status);
+
+CREATE TABLE IF NOT EXISTS memory_versions (
+  version_id      text PRIMARY KEY,
+  memory_id       text NOT NULL,
+  version_number  integer NOT NULL,
+  change_type     text NOT NULL,
+  changed_by      text,
+  diff_summary    text,
+  source_event_id text,
+  created_at      timestamptz NOT NULL,
+  UNIQUE (memory_id, version_number)
+);
+CREATE INDEX IF NOT EXISTS memory_versions_memory_idx
+  ON memory_versions (memory_id);
+
+CREATE TABLE IF NOT EXISTS memory_sources (
+  memory_id  text NOT NULL,
+  seq        integer NOT NULL,
+  type       text NOT NULL,
+  source_id  text,
+  ref        text,
+  hash       text,
+  PRIMARY KEY (memory_id, seq)
+);
+
+CREATE TABLE IF NOT EXISTS contradiction_edges (
+  from_memory_id text NOT NULL,
+  to_memory_id   text NOT NULL,
+  PRIMARY KEY (from_memory_id, to_memory_id)
+);
+
+-- Populated in C3 (ledger as event spine). Created now so the C2 schema is
+-- the complete authority surface.
+CREATE TABLE IF NOT EXISTS ledger_events (
+  event_id   text PRIMARY KEY,
+  event_type text NOT NULL,
+  event      jsonb NOT NULL,
+  created_at timestamptz NOT NULL
+);
+CREATE INDEX IF NOT EXISTS ledger_events_type_idx
+  ON ledger_events (event_type);
+
+CREATE TABLE IF NOT EXISTS retrievals (
+  retrieval_id text PRIMARY KEY,
+  bundle       jsonb NOT NULL,
+  created_at   timestamptz NOT NULL
+);
+`;
