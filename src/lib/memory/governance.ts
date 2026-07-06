@@ -2,13 +2,16 @@ import { existsSync, mkdirSync, readFileSync, renameSync, writeFileSync } from '
 import { dirname } from 'node:path';
 import type { GovernanceOverlay, GovernanceOverlayEntry } from '@/types/governed';
 import { dataPath } from '@/lib/paths';
+import type { LedgerEvent, LedgerEventType } from '@/types/ledger';
 import { authorityMode } from './authority/mode';
 import {
   snapshotLoadOverlay,
   snapshotSaveOverlay,
   snapshotUpsertOverlayEntry,
+  snapshotUpsertOverlayEntryWithEvent,
 } from './authority/snapshot';
 import { persistOverlayEntry } from './authority/persist';
+import { buildEvent, emitEvent } from '@/lib/ledger/events';
 
 /**
  * Governance authority layer.
@@ -87,6 +90,44 @@ export function upsertEntry(
   overlay[memory_id] = next;
   saveOverlay(overlay);
   return next;
+}
+
+export type GovernanceEventInput = {
+  type: LedgerEventType;
+  metadata: Record<string, unknown>;
+  extra?: Partial<LedgerEvent>;
+};
+
+/**
+ * C3 spine commit: apply a governance patch and record its ledger event as
+ * one unit. In postgres mode the registry change and the event share a
+ * single transaction; in file/dual mode the overlay write and the JSONL
+ * append happen back-to-back (the file backend has no transactions — its
+ * conformance level is behavioral, not durable-atomic).
+ *
+ * `eventOf` receives the resulting entry so the event can carry
+ * `overlay_entry` — the payload replay folds to rebuild governance state.
+ */
+export function upsertEntryWithEvent(
+  memory_id: string,
+  patch: (current: GovernanceOverlayEntry) => GovernanceOverlayEntry,
+  eventOf: (entry: GovernanceOverlayEntry) => GovernanceEventInput,
+): { entry: GovernanceOverlayEntry; event: LedgerEvent } {
+  if (authorityMode() === 'postgres') {
+    const entry = patch(snapshotLoadOverlay()[memory_id] ?? {});
+    const spec = eventOf(entry);
+    const event = buildEvent(spec.type, spec.metadata, spec.extra);
+    snapshotUpsertOverlayEntryWithEvent(memory_id, entry, event);
+    return { entry, event };
+  }
+  const overlay = loadOverlay({ force: true });
+  const entry = patch(overlay[memory_id] ?? {});
+  overlay[memory_id] = entry;
+  saveOverlay(overlay); // dual mode shadows the overlay into Postgres here
+  const spec = eventOf(entry);
+  const event = buildEvent(spec.type, spec.metadata, spec.extra);
+  emitEvent(event); // dual mode shadows the event into ledger_events here
+  return { entry, event };
 }
 
 export function overlayPath(): string {

@@ -1,7 +1,13 @@
 import type { GovernanceOverlay, GovernanceOverlayEntry, MemoryRecord, MemoryVersion } from '@/types/governed';
+import type { LedgerEvent } from '@/types/ledger';
 import { getDb } from './client';
 import { authorityMode } from './mode';
-import { persistOverlayEntry, persistWrittenRecord, truncateAuthority } from './persist';
+import {
+  persistGovernanceChange,
+  persistOverlayEntry,
+  persistWrittenRecord,
+  truncateAuthority,
+} from './persist';
 
 /**
  * In-process read replica of the Postgres authority.
@@ -113,6 +119,17 @@ export function snapshotUpsertOverlayEntry(memory_id: string, entry: GovernanceO
   assertHydrated();
   snapshot.overlay = { ...snapshot.overlay, [memory_id]: entry };
   persistOverlayEntry(memory_id, entry);
+}
+
+/** C3: governance change + its ledger event, committed in one transaction. */
+export function snapshotUpsertOverlayEntryWithEvent(
+  memory_id: string,
+  entry: GovernanceOverlayEntry,
+  event: LedgerEvent,
+): void {
+  assertHydrated();
+  snapshot.overlay = { ...snapshot.overlay, [memory_id]: entry };
+  persistGovernanceChange(memory_id, entry, event);
 }
 
 /**

@@ -70,16 +70,29 @@ CREATE TABLE IF NOT EXISTS contradiction_edges (
   PRIMARY KEY (from_memory_id, to_memory_id)
 );
 
--- Populated in C3 (ledger as event spine). Created now so the C2 schema is
--- the complete authority surface.
+-- The event spine (C3): every governance change lands here in the same
+-- transaction as its registry write; rails (C4+) consume in seq order.
 CREATE TABLE IF NOT EXISTS ledger_events (
-  event_id   text PRIMARY KEY,
-  event_type text NOT NULL,
-  event      jsonb NOT NULL,
-  created_at timestamptz NOT NULL
+  seq            bigserial UNIQUE,
+  event_id       text PRIMARY KEY,
+  event_type     text NOT NULL,
+  schema_version integer NOT NULL DEFAULT 1,
+  event          jsonb NOT NULL,
+  created_at     timestamptz NOT NULL
 );
 CREATE INDEX IF NOT EXISTS ledger_events_type_idx
   ON ledger_events (event_type);
+-- Upgrade path for authorities created by the C2 schema.
+ALTER TABLE ledger_events ADD COLUMN IF NOT EXISTS seq bigserial UNIQUE;
+ALTER TABLE ledger_events ADD COLUMN IF NOT EXISTS schema_version integer NOT NULL DEFAULT 1;
+
+-- Consumer cursors (C3): each projection tracks how far along the spine it
+-- has read; idempotence is by event_id, ordering by seq.
+CREATE TABLE IF NOT EXISTS ledger_cursors (
+  consumer   text PRIMARY KEY,
+  last_seq   bigint NOT NULL DEFAULT 0,
+  updated_at timestamptz NOT NULL DEFAULT now()
+);
 
 CREATE TABLE IF NOT EXISTS retrievals (
   retrieval_id text PRIMARY KEY,

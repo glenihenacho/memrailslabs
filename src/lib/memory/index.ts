@@ -90,7 +90,7 @@ export function inspect(packet_id: string): MemoryPacket | null {
 // memory retrieval for locally inferred agents.
 export { retrieve } from './retrieve';
 export { write } from './write';
-export { supersede, dispute, forget } from './lifecycle';
+export { supersede, dispute, restore, updateConfidence, forget } from './lifecycle';
 export { loadRegistry, getRecord, DEFAULT_SCOPE } from './registry';
 export { buildIndex, selectBranches, toMemoryMap } from './index-tree';
 export { recordFeedback, findRetrieval } from './telemetry';

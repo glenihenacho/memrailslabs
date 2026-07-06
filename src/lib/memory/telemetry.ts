@@ -2,10 +2,13 @@ import { appendFileSync, existsSync, mkdirSync, readFileSync } from 'node:fs';
 import { dirname } from 'node:path';
 import { randomUUID } from 'node:crypto';
 import type { ContextBundle } from '@/types/bundle';
-import { logEvent } from '@/lib/ledger/events';
+import { buildEvent, logEvent } from '@/lib/ledger/events';
+import { appendEvent } from '@/lib/ledger/jsonl';
 import { dataPath } from '@/lib/paths';
 import { hotRetrievals } from '@/lib/rails/hot';
 import { shortHash } from '@/lib/observability/hash';
+import { authorityMode } from './authority/mode';
+import { persistRetrieval } from './authority/persist';
 
 /**
  * Retrieval telemetry. Every `memory.retrieve()` writes a full record here so
@@ -37,8 +40,11 @@ function append(path: string, obj: unknown): void {
 
 export function recordRetrieval(bundle: ContextBundle): void {
   hotRetrievals.set(bundle.retrieval_id, bundle); // Hot Rail: keep recent state warm
+  // The JSONL bundle log stays in every mode — it backs the synchronous
+  // findRetrieval() cold path. In postgres/dual mode the bundle row and its
+  // ledger event additionally land in the tables, in one transaction (C3).
   append(retrievalsFile(), bundle);
-  logEvent(
+  const event = buildEvent(
     'MEMORY_RETRIEVED',
     {
       task_context_hash: shortHash(bundle.query),
@@ -58,6 +64,9 @@ export function recordRetrieval(bundle: ContextBundle): void {
       agent_id: bundle.scope.agent_id ?? undefined,
     },
   );
+  const mode = authorityMode();
+  if (mode !== 'postgres') appendEvent(event);
+  if (mode !== 'file') persistRetrieval(bundle, event);
 }
 
 export function findRetrieval(retrieval_id: string): ContextBundle | null {

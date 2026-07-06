@@ -16,11 +16,17 @@ export type LedgerEventType =
   | 'RETRIEVAL_BILLED'
   // Portability (contract v0.1 §6)
   | 'MEMORY_EXPORTED'
-  | 'MEMORY_IMPORTED';
+  | 'MEMORY_IMPORTED'
+  // Ledger as event spine (conversion phase C3)
+  | 'MEMORY_RESTORED'
+  | 'MEMORY_CONFIDENCE_UPDATED'
+  | 'MEMORY_GOVERNANCE_IMPORTED';
 
 export type LedgerEvent = {
   event_id: string;
   event_type: LedgerEventType;
+  /** Catalog schema version of this event's payload (C3; absent = pre-catalog v0). */
+  schema_version?: number;
   actor_id?: string;
   session_id?: string;
   packet_id?: string;
