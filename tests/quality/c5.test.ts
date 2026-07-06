@@ -72,10 +72,21 @@ describe('C5.2 — staleness re-verification on expires_at', () => {
     const versions = loadOverlay()[stale.memory_id]?.versions ?? [];
     expect(versions.some((v) => v.change_type === 'UPDATE_CONFIDENCE' && v.changed_by === 'staleness_job')).toBe(true);
 
-    // Idempotent-ish: a dry run reports without mutating.
+    // A periodic job must not compound decay: a second real run skips the
+    // already-reverified record instead of downgrading 0.72 → 0.576.
+    const second = reverifyStaleness();
+    expect(second.already_reverified).toContain(stale.memory_id);
+    expect(second.expired.map((e) => e.memory_id)).not.toContain(stale.memory_id);
+    expect(getRecord(stale.memory_id, { force: true })!.confidence).toBeCloseTo(0.72, 3);
+    const stalenessVersions = (loadOverlay()[stale.memory_id]?.versions ?? []).filter(
+      (v) => v.changed_by === 'staleness_job',
+    );
+    expect(stalenessVersions).toHaveLength(1);
+
+    // And a dry run reports without mutating.
     const dry = reverifyStaleness({ dry_run: true });
     expect(getRecord(stale.memory_id, { force: true })!.confidence).toBeCloseTo(0.72, 3);
-    expect(dry.expired.length).toBeGreaterThan(0);
+    expect(dry.already_reverified).toContain(stale.memory_id);
   });
 });
 

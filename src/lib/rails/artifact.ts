@@ -43,15 +43,25 @@ function sha256Hex(body: string): string {
   return createHash('sha256').update(body, 'utf8').digest('hex');
 }
 
-/** AES-256-GCM key: env (64 hex chars) or a generated local dev keyfile. */
+/**
+ * AES-256-GCM key: env (64 hex chars) or a generated local dev keyfile. The
+ * keyfile lives in data/keys/ — deliberately NOT the artifact blob directory,
+ * so reading the ciphertext store does not hand over the key. Generation is
+ * loudly announced: losing this file makes existing artifacts unrecoverable,
+ * and production deploys should always set MEMRAILS_ARTIFACT_KEY.
+ */
 function artifactKey(): Buffer {
   const env = process.env.MEMRAILS_ARTIFACT_KEY;
   if (env && /^[0-9a-f]{64}$/i.test(env)) return Buffer.from(env, 'hex');
-  const keyfile = dataPath('artifacts', '.key');
+  const keyfile = dataPath('keys', 'artifact.key');
   if (existsSync(keyfile)) return Buffer.from(readFileSync(keyfile, 'utf8').trim(), 'hex');
   const key = randomBytes(32);
   if (!existsSync(dirname(keyfile))) mkdirSync(dirname(keyfile), { recursive: true });
   writeFileSync(keyfile, key.toString('hex'), { encoding: 'utf8', mode: 0o600 });
+  console.warn(
+    `[memrails artifact] generated new dev encryption key at ${keyfile} — ` +
+      'set MEMRAILS_ARTIFACT_KEY in production; losing this key makes existing artifacts unrecoverable.',
+  );
   return key;
 }
 

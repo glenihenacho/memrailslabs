@@ -50,6 +50,7 @@ export const MCP_TOOLS: McpTool[] = [
         confidence: { type: 'number' },
         tags: { type: 'array', items: { type: 'string' } },
         project_id: { type: 'string' },
+        expires_at: { type: 'string', description: 'ISO timestamp validity window; the staleness job re-verifies past it.' },
       },
     },
   },
@@ -129,6 +130,7 @@ async function dispatchToolInner(name: string, args: Record<string, unknown>): P
         confidence: args.confidence as number | undefined,
         tags: args.tags as string[] | undefined,
         project_id: args.project_id as string | undefined,
+        expires_at: args.expires_at as string | undefined,
       });
     case 'memrails.memory.inspect': {
       const bundle = findRetrieval(String(args.retrieval_id ?? ''));

@@ -80,12 +80,19 @@ function evalCase(golden: GoldenCase): EvalCaseResult {
 export function runEvals(goldens: GoldenCase[]): EvalReport {
   const cases = goldens.map(evalCase);
   const tokens = cases.map((c) => c.tokens_returned).sort((a, b) => a - b);
+  const mid = Math.floor(tokens.length / 2);
+  const median =
+    tokens.length === 0
+      ? 0
+      : tokens.length % 2 === 0
+        ? (tokens[mid - 1] + tokens[mid]) / 2
+        : tokens[mid];
   return {
     cases,
     mean_recall: Number((cases.reduce((s, c) => s + c.recall, 0) / cases.length).toFixed(3)),
     top_hit_rate: Number((cases.filter((c) => c.top_hit).length / cases.length).toFixed(3)),
     floor_violations: cases.reduce((s, c) => s + c.floor_violations, 0),
-    median_tokens: tokens[Math.floor(tokens.length / 2)] ?? 0,
+    median_tokens: median,
     token_budget: EVAL_BUDGET,
   };
 }

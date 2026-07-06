@@ -54,6 +54,7 @@ async function main() {
         confidence: flag('confidence') ? Number(flag('confidence')) : undefined,
         tags: flag('tags')?.split(','),
         project_id: flag('project'),
+        expires_at: flag('expires'),
       });
       console.log(JSON.stringify(result, null, 2));
       break;

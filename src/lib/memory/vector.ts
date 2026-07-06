@@ -1,4 +1,3 @@
-import { createHash } from 'node:crypto';
 import type { MemoryRecord } from '@/types/governed';
 import { tokenize } from './ranking';
 
@@ -10,21 +9,33 @@ import { tokenize } from './ranking';
  * (top branch overlap below threshold), and every firing is recorded in the
  * retrieval trace (`policy_filters_applied` gains `vector_fallback`).
  *
- * The embedding is deterministic and local: hashed bag-of-words into a
- * 256-dim L2-normalized vector, cosine similarity. It needs no model, no
- * network, and no index for corpus-scale N. pgvector slots in behind this
- * same interface when a pg-wire Postgres is present (PGlite 0.5.x does not
+ * The embedding is deterministic and local: FNV-1a-hashed bag-of-words into
+ * a 256-dim L2-normalized vector, cosine similarity. (FNV-1a, not a crypto
+ * hash — this is feature bucketing on a hot path, not security.) Record
+ * embeddings are memoized by memory_id + updated_at so unchanged content is
+ * never re-hashed across retrievals. pgvector slots in behind this same
+ * interface when a pg-wire Postgres is present (PGlite 0.5.x does not
  * bundle the vector extension): same embed(), `<->` instead of cosine().
  */
 
 const DIM = 256;
 
+/** Deterministic 32-bit FNV-1a — feature hashing, no crypto overhead. */
+function fnv1a(str: string): number {
+  let h = 0x811c9dc5;
+  for (let i = 0; i < str.length; i += 1) {
+    h ^= str.charCodeAt(i);
+    h = Math.imul(h, 0x01000193);
+  }
+  return h >>> 0;
+}
+
 export function embed(text: string): Float64Array {
   const v = new Float64Array(DIM);
   for (const token of tokenize(text)) {
-    const h = createHash('sha1').update(token).digest();
-    const idx = h.readUInt16BE(0) % DIM;
-    const sign = h[2] % 2 === 0 ? 1 : -1;
+    const h = fnv1a(token);
+    const idx = h % DIM;
+    const sign = (h >>> 16) % 2 === 0 ? 1 : -1;
     v[idx] += sign;
   }
   let norm = 0;
@@ -40,6 +51,21 @@ export function cosine(a: Float64Array, b: Float64Array): number {
   return dot;
 }
 
+// Memoized record embeddings, keyed by memory_id + updated_at — a changed
+// record gets a new key, so no explicit invalidation hook is needed.
+const embeddingCache = new Map<string, Float64Array>();
+const CACHE_CAP = 4096;
+
+function recordEmbedding(r: MemoryRecord): Float64Array {
+  const key = `${r.memory_id}|${r.updated_at}`;
+  const cached = embeddingCache.get(key);
+  if (cached) return cached;
+  const v = embed(`${r.summary} ${r.content} ${r.tags.join(' ')}`);
+  if (embeddingCache.size >= CACHE_CAP) embeddingCache.clear(); // simple bound
+  embeddingCache.set(key, v);
+  return v;
+}
+
 /** Nearest in-scope memories to the task context, by embedding similarity. */
 export function vectorFallback(
   taskContext: string,
@@ -50,7 +76,7 @@ export function vectorFallback(
   return candidates
     .map((r) => ({
       memory_id: r.memory_id,
-      similarity: Number(cosine(q, embed(`${r.summary} ${r.content} ${r.tags.join(' ')}`)).toFixed(4)),
+      similarity: Number(cosine(q, recordEmbedding(r)).toFixed(4)),
     }))
     .filter((s) => s.similarity > 0)
     .sort((a, b) => b.similarity - a.similarity)

@@ -30,7 +30,12 @@ export function subscribe(name: string, handle: (event: LedgerEvent) => void): v
 export function publish(event: LedgerEvent): void {
   for (const s of subscribers) {
     try {
-      s.handle(event);
+      // Promise.resolve guards async handlers too: a rejected promise from a
+      // subscriber must never surface as an unhandled rejection on the write
+      // path — Postgres already has the event, the projection can rebuild.
+      Promise.resolve(s.handle(event) as unknown).catch((err) => {
+        console.error(`[memrails bus] subscriber ${s.name} rejected on ${event.event_type}:`, err);
+      });
     } catch (err) {
       console.error(`[memrails bus] subscriber ${s.name} failed on ${event.event_type}:`, err);
     }
