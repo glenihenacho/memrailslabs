@@ -14,3 +14,4 @@ data/accounts.json
 .tmp-test-data
 next-env.d.ts
 *.tsbuildinfo
+packages/*/dist/

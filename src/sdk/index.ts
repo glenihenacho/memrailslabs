@@ -16,7 +16,9 @@
 
 import type { ContextBundle, RetrievalMode } from '@/types/bundle';
 import type { MemoryRecord } from '@/types/governed';
+import type { MemoryMapNode } from '@/types/index-tree';
 import type { WriteResult } from '@/lib/memory/write';
+import type { FeedbackRecord } from '@/lib/memory/telemetry';
 
 export type MemRailsOptions = {
   apiKey?: string;
@@ -44,8 +46,20 @@ export type WriteArgs = {
   agentId?: string;
   memoryType?: MemoryRecord['memory_type'];
   confidence?: number;
+  sensitivity?: MemoryRecord['sensitivity'];
   tags?: string[];
   indexPath?: string;
+  /** Validity window: past this ISO instant the record leaves retrieval. */
+  expiresAt?: string;
+};
+
+export type FeedbackArgs = {
+  retrievalId: string;
+  rating: 'positive' | 'negative';
+  /** Rate one memory of the bundle; omit to rate the whole retrieval. */
+  memoryId?: string;
+  feedbackType?: string;
+  comment?: string;
 };
 
 export class MemRails {
@@ -98,8 +112,10 @@ export class MemRails {
         agent_id: args.agentId,
         memory_type: args.memoryType,
         confidence: args.confidence,
+        sensitivity: args.sensitivity,
         tags: args.tags,
         index_path: args.indexPath,
+        expires_at: args.expiresAt,
       }),
 
     get: async (memoryId: string): Promise<MemoryRecord> => {
@@ -116,6 +132,61 @@ export class MemRails {
 
     dispute: (memoryId: string, reason: string) =>
       this.post(`/api/memory/${encodeURIComponent(memoryId)}/dispute`, { reason }),
+
+    /** §4.4 — dispute is reversible: restore a disputed memory to active. */
+    restore: (memoryId: string, body: { reason?: string; confidence?: number } = {}) =>
+      this.post(`/api/memory/${encodeURIComponent(memoryId)}/restore`, body),
+
+    /** §4.6 — re-score through a versioned, evented transition. */
+    updateConfidence: (memoryId: string, body: { confidence: number; reason?: string }) =>
+      this.post(`/api/memory/${encodeURIComponent(memoryId)}/confidence`, body),
+
+    /** §4.5 — tombstone: the memory leaves every future bundle. */
+    forget: async (memoryId: string, reason?: string): Promise<unknown> => {
+      const id = encodeURIComponent(memoryId);
+      const qs = reason ? `?reason=${encodeURIComponent(reason)}` : '';
+      const res = await this.fetchImpl(`${this.baseUrl}/api/memory/${id}${qs}`, {
+        method: 'DELETE',
+        headers: this.headers(),
+      });
+      if (!res.ok) throw new Error(`MemRails forget failed: ${res.status} ${await res.text()}`);
+      return res.json();
+    },
+
+    /** Project memory map — the MemoryIndex as a nested tree. */
+    map: async (projectId: string): Promise<{ project_id: string; map: MemoryMapNode[] }> => {
+      const res = await this.fetchImpl(
+        `${this.baseUrl}/api/memory/map?project_id=${encodeURIComponent(projectId)}`,
+        { headers: this.headers() },
+      );
+      if (!res.ok) throw new Error(`MemRails map failed: ${res.status}`);
+      return res.json() as Promise<{ project_id: string; map: MemoryMapNode[] }>;
+    },
+
+    /** §6 / no lock-in — pull the governed store (json | jsonl | markdown). */
+    export: async (opts: { format?: 'json' | 'jsonl' | 'markdown'; projectId?: string } = {}): Promise<string> => {
+      const params = new URLSearchParams();
+      if (opts.format) params.set('format', opts.format);
+      if (opts.projectId) params.set('project_id', opts.projectId);
+      const qs = params.toString() ? `?${params}` : '';
+      const res = await this.fetchImpl(`${this.baseUrl}/api/memory/export${qs}`, {
+        headers: this.headers(),
+      });
+      if (!res.ok) throw new Error(`MemRails export failed: ${res.status}`);
+      return res.text();
+    },
+  };
+
+  /** Close the loop: feedback fans out to the rated bundle's memories (C5). */
+  readonly feedback = {
+    record: (args: FeedbackArgs): Promise<FeedbackRecord> =>
+      this.post<FeedbackRecord>('/api/feedback', {
+        retrieval_id: args.retrievalId,
+        memory_id: args.memoryId,
+        rating: args.rating,
+        feedback_type: args.feedbackType,
+        comment: args.comment,
+      }),
   };
 }
 

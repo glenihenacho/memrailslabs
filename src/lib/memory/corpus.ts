@@ -1,11 +1,21 @@
-import { readdirSync, readFileSync, statSync } from 'node:fs';
+import { existsSync, readdirSync, readFileSync, statSync } from 'node:fs';
 import { join, relative, resolve } from 'node:path';
 import matter from 'gray-matter';
 import type { EvidenceClaim } from '@/types/evidence';
 
-const KNOWLEDGE_DIR = resolve(process.cwd(), 'knowledge');
+/**
+ * Canonical corpus directory. Defaults to `<cwd>/knowledge`, overridable with
+ * `MEMRAILS_KNOWLEDGE_DIR` so an embedded runtime (`@memrails/local`) or a
+ * test can point at any markdown tree. A missing directory is an empty
+ * corpus, not a crash — written memories alone are a valid store.
+ */
+function knowledgeDir(): string {
+  if (process.env.MEMRAILS_KNOWLEDGE_DIR) return resolve(process.env.MEMRAILS_KNOWLEDGE_DIR);
+  return resolve(process.cwd(), 'knowledge');
+}
 
 function walkMarkdown(dir: string): string[] {
+  if (!existsSync(dir)) return [];
   const out: string[] = [];
   const entries = readdirSync(dir);
   for (const entry of entries) {
@@ -32,7 +42,7 @@ let cache: CorpusEntry[] | null = null;
 export function loadCorpus(opts: { force?: boolean } = {}): CorpusEntry[] {
   if (cache && !opts.force) return cache;
 
-  const files = walkMarkdown(KNOWLEDGE_DIR);
+  const files = walkMarkdown(knowledgeDir());
   const entries: CorpusEntry[] = [];
 
   for (const path of files) {
