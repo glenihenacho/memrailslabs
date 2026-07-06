@@ -51,7 +51,9 @@ function fingerprint(bundleJson: string): string {
   const memories = bundle.memories
     .map((m) => `${m.memory_id}|${m.summary}|${m.confidence}|${m.status}|${m.index_path}`)
     .sort();
-  const omitted = bundle.omitted.map((o) => o.memory_id).sort();
+  // The reason is part of the contract surface (§5.2): two runtimes that
+  // explain the same exclusion differently are not interchangeable.
+  const omitted = bundle.omitted.map((o) => `${o.memory_id}|${o.reason}`).sort();
   return JSON.stringify({ memories, omitted });
 }
 

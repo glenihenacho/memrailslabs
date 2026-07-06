@@ -29,9 +29,10 @@ from __future__ import annotations
 
 import json
 import os
+import urllib.error
 import urllib.parse
 import urllib.request
-from typing import Any, Optional
+from typing import Any, NoReturn, Optional
 
 __all__ = ["MemRails", "MemoryClient", "FeedbackClient"]
 __version__ = "0.1.1"
@@ -214,21 +215,36 @@ class MemRails:
             headers["authorization"] = f"Bearer {self.api_key}"
         return headers
 
+    def _raise_http_error(self, path: str, err: urllib.error.HTTPError) -> NoReturn:
+        # Parity with the TS SDK: surface the status AND the response body
+        # (e.g. invalid_input issues, only_disputed_memory_can_be_restored).
+        body = err.read().decode(errors="replace")
+        raise RuntimeError(f"MemRails {path} failed: {err.code} {body}") from err
+
     def _post(self, path: str, body: dict[str, Any]) -> dict[str, Any]:
         payload = json.dumps({k: v for k, v in body.items() if v is not None}).encode()
         req = urllib.request.Request(self.base_url + path, data=payload, headers=self._headers())
-        with urllib.request.urlopen(req) as resp:  # noqa: S310 (trusted base_url)
-            return json.loads(resp.read().decode())
+        try:
+            with urllib.request.urlopen(req) as resp:  # noqa: S310 (trusted base_url)
+                return json.loads(resp.read().decode())
+        except urllib.error.HTTPError as err:
+            self._raise_http_error(path, err)
 
     def _request(self, method: str, path: str) -> dict[str, Any]:
         req = urllib.request.Request(self.base_url + path, headers=self._headers(), method=method)
-        with urllib.request.urlopen(req) as resp:  # noqa: S310 (trusted base_url)
-            return json.loads(resp.read().decode())
+        try:
+            with urllib.request.urlopen(req) as resp:  # noqa: S310 (trusted base_url)
+                return json.loads(resp.read().decode())
+        except urllib.error.HTTPError as err:
+            self._raise_http_error(path, err)
 
     def _get(self, path: str) -> dict[str, Any]:
         return self._request("GET", path)
 
     def _get_text(self, path: str) -> str:
         req = urllib.request.Request(self.base_url + path, headers=self._headers())
-        with urllib.request.urlopen(req) as resp:  # noqa: S310 (trusted base_url)
-            return resp.read().decode()
+        try:
+            with urllib.request.urlopen(req) as resp:  # noqa: S310 (trusted base_url)
+                return resp.read().decode()
+        except urllib.error.HTTPError as err:
+            self._raise_http_error(path, err)

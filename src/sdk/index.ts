@@ -135,11 +135,17 @@ export class MemRails {
 
     /** §4.4 — dispute is reversible: restore a disputed memory to active. */
     restore: (memoryId: string, body: { reason?: string; confidence?: number } = {}) =>
-      this.post(`/api/memory/${encodeURIComponent(memoryId)}/restore`, body),
+      this.post<{ memory_id: string; status: 'active'; confidence: number }>(
+        `/api/memory/${encodeURIComponent(memoryId)}/restore`,
+        body,
+      ),
 
     /** §4.6 — re-score through a versioned, evented transition. */
     updateConfidence: (memoryId: string, body: { confidence: number; reason?: string }) =>
-      this.post(`/api/memory/${encodeURIComponent(memoryId)}/confidence`, body),
+      this.post<{ memory_id: string; confidence: number }>(
+        `/api/memory/${encodeURIComponent(memoryId)}/confidence`,
+        body,
+      ),
 
     /** §4.5 — tombstone: the memory leaves every future bundle. */
     forget: async (memoryId: string, reason?: string): Promise<unknown> => {

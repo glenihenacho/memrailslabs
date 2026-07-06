@@ -9,7 +9,7 @@
  *
  *   npm run package:verify
  */
-import { execSync, spawnSync } from 'node:child_process';
+import { execSync, spawnSync, type SpawnSyncReturns } from 'node:child_process';
 import { mkdtempSync, rmSync, writeFileSync } from 'node:fs';
 import { tmpdir } from 'node:os';
 import { join, resolve } from 'node:path';
@@ -60,23 +60,27 @@ await m.closeDb();
 console.log(JSON.stringify({ ok: true, memories: bundle.memories.length, planner: bundle.retrieval_trace.planner }));
 `;
 
-writeFileSync(join(work, 'smoke.mjs'), smoke, 'utf8');
+let res: SpawnSyncReturns<string>;
+try {
+  writeFileSync(join(work, 'smoke.mjs'), smoke, 'utf8');
 
-console.log(`▸ running smoke against the built artifact (cwd: ${work}) …`);
-const res = spawnSync(process.execPath, ['smoke.mjs'], {
-  cwd: work,
-  env: {
-    ...process.env,
-    MEMRAILS_DATA_DIR: join(work, 'data'),
-    MEMRAILS_KNOWLEDGE_DIR: join(work, 'knowledge'), // does not exist → empty corpus
-    MEMRAILS_AUTHORITY: 'file',
-  },
-  encoding: 'utf8',
-});
+  console.log(`▸ running smoke against the built artifact (cwd: ${work}) …`);
+  res = spawnSync(process.execPath, ['smoke.mjs'], {
+    cwd: work,
+    env: {
+      ...process.env,
+      MEMRAILS_DATA_DIR: join(work, 'data'),
+      MEMRAILS_KNOWLEDGE_DIR: join(work, 'knowledge'), // does not exist → empty corpus
+      MEMRAILS_AUTHORITY: 'file',
+    },
+    encoding: 'utf8',
+  });
 
-process.stdout.write(res.stdout ?? '');
-process.stderr.write(res.stderr ?? '');
-rmSync(work, { recursive: true, force: true });
+  process.stdout.write(res.stdout ?? '');
+  process.stderr.write(res.stderr ?? '');
+} finally {
+  rmSync(work, { recursive: true, force: true });
+}
 
 if (res.status !== 0) {
   console.error('✗ @memrails/local package verification FAILED');
