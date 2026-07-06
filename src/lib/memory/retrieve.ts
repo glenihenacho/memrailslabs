@@ -16,8 +16,13 @@ import { estimateTokens } from './compress';
 import { recordRetrieval } from './telemetry';
 import { buildPacketFromBundle } from './synthesize';
 import { meterBundle } from './meter';
+import { hotMemories } from '@/lib/rails/hot';
+import { usageStats } from '@/lib/rails/usage';
+import { vectorFallback } from './vector';
 
 const DEFAULT_BUDGET = 1800;
+/** Tree-signal strength below which hybrid mode adds the vector fallback. */
+const VECTOR_FALLBACK_THRESHOLD = 0.15;
 
 function bundleId(prefix: string): string {
   return `${prefix}_${randomUUID().replace(/-/g, '').slice(0, 16)}`;
@@ -83,22 +88,39 @@ export function retrieve(input: RetrieveInput): ContextBundle {
 
   // 2. Candidate gather by mode.
   const index = buildIndex(inScope);
-  const { selected, rootsVisited } = selectBranches(index, input.task_context);
+  const { selected, rootsVisited, topScore } = selectBranches(index, input.task_context);
   const branchPaths = selected.map((n) => n.path);
   const branchMemberIds = new Set(selected.flatMap((n) => n.member_ids));
+  let vectorFallbackFired = false;
 
   let candidateIds: Set<string>;
   if (mode === 'exact') {
     candidateIds = exactMatches(inScope, taskTokens);
   } else if (mode === 'hot') {
-    candidateIds = new Set(
-      [...inScope]
-        .sort((a, b) => Date.parse(b.updated_at) - Date.parse(a.updated_at))
-        .slice(0, 8)
-        .map((r) => r.memory_id),
-    );
+    // C4.1: the hot rail (usage + recency, event-invalidated) backs hot mode.
+    // Scope still governs: rail ids are intersected with the policy-gated set.
+    const inScopeIds = new Set(inScope.map((r) => r.memory_id));
+    const railIds = hotMemories.hotIds(8).filter((id) => inScopeIds.has(id));
+    candidateIds =
+      railIds.length > 0
+        ? new Set(railIds)
+        : // Cold start / empty rail: fall back to recency over the registry.
+          new Set(
+            [...inScope]
+              .sort((a, b) => Date.parse(b.updated_at) - Date.parse(a.updated_at))
+              .slice(0, 8)
+              .map((r) => r.memory_id),
+          );
   } else if (mode === 'hybrid') {
     candidateIds = new Set([...branchMemberIds, ...exactMatches(inScope, taskTokens)]);
+    // C5.3: vector fallback — fired only here, only when tree reasoning has a
+    // weak signal. Never the primary path (non-goals: no chunk→embed→top_k).
+    if (topScore < VECTOR_FALLBACK_THRESHOLD) {
+      vectorFallbackFired = true;
+      for (const near of vectorFallback(input.task_context, inScope, 5)) {
+        candidateIds.add(near.memory_id);
+      }
+    }
   } else {
     // tree (and debug)
     candidateIds = branchMemberIds;
@@ -107,7 +129,9 @@ export function retrieve(input: RetrieveInput): ContextBundle {
   const candidates = inScope.filter((r) => candidateIds.has(r.memory_id));
 
   // 3. Rank with the transparent formula.
-  const scoring: ScoreBreakdown[] = candidates.map((r) => scoreRecord(r, taskTokens));
+  const scoring: ScoreBreakdown[] = candidates.map((r) =>
+    scoreRecord(r, taskTokens, { usageSuccess: usageStats.usageSuccess(r.memory_id) }),
+  );
   const scoreById = new Map(scoring.map((s) => [s.memory_id, s]));
   const ranked = [...candidates].sort(
     (a, b) => (scoreById.get(b.memory_id)?.final_score ?? 0) - (scoreById.get(a.memory_id)?.final_score ?? 0),
@@ -161,7 +185,8 @@ export function retrieve(input: RetrieveInput): ContextBundle {
       mode,
       root_nodes_visited: rootsVisited,
       branches_selected: branchPaths,
-      policy_filters_applied: [...POLICY_FILTERS],
+      // The fallback is always visible in the trace when it fired (C5.3).
+      policy_filters_applied: vectorFallbackFired ? [...POLICY_FILTERS, 'vector_fallback'] : [...POLICY_FILTERS],
       candidates_considered: candidates.length,
       scoring: mode === 'debug' ? scoring : undefined,
     },
@@ -179,7 +204,7 @@ export function retrieve(input: RetrieveInput): ContextBundle {
   // in the billing shell and reaches the kernel through the seam in meter.ts.
   bundle.usage = meterBundle(bundle);
 
-  recordRetrieval(bundle);
+  recordRetrieval(bundle, scoring);
   return bundle;
 }
 

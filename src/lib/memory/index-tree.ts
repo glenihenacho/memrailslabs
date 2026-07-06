@@ -107,7 +107,7 @@ export function selectBranches(
   index: MemoryIndex,
   taskContext: string,
   opts: { limit?: number; threshold?: number } = {},
-): { selected: MemoryIndexNode[]; rootsVisited: number } {
+): { selected: MemoryIndexNode[]; rootsVisited: number; topScore: number } {
   const limit = opts.limit ?? 4;
   const threshold = opts.threshold ?? 0.0001;
   const taskTokens = new Set(tokenize(taskContext));
@@ -127,6 +127,9 @@ export function selectBranches(
   return {
     selected: selected.length > 0 ? selected : branchNodes, // fall back to all branches
     rootsVisited: index.nodes.filter((n) => n.depth <= 2).length,
+    // Tree-signal strength — hybrid mode's vector fallback fires below the
+    // confidence threshold (C5.3).
+    topScore: scored[0]?.score ?? 0,
   };
 }
 

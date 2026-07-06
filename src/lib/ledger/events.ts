@@ -2,6 +2,7 @@ import { randomUUID } from 'node:crypto';
 import type { LedgerEvent, LedgerEventType } from '@/types/ledger';
 import type { MemoryPacket } from '@/types/packet';
 import { appendEvent, readAllEvents } from './jsonl';
+import { publish } from './bus';
 import { schemaVersionOf } from './catalog';
 import { authorityMode } from '@/lib/memory/authority/mode';
 import { persistLedgerEvent } from '@/lib/memory/authority/persist';
@@ -57,6 +58,7 @@ export function logEvent(
 ): LedgerEvent {
   const event = buildEvent(type, metadata, extra);
   emitEvent(event);
+  publish(event); // live feed to in-process rail projections (C4)
   return event;
 }
 

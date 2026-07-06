@@ -12,6 +12,7 @@ import {
 } from './authority/snapshot';
 import { persistOverlayEntry } from './authority/persist';
 import { buildEvent, emitEvent } from '@/lib/ledger/events';
+import { publish } from '@/lib/ledger/bus';
 
 /**
  * Governance authority layer.
@@ -118,6 +119,7 @@ export function upsertEntryWithEvent(
     const spec = eventOf(entry);
     const event = buildEvent(spec.type, spec.metadata, spec.extra);
     snapshotUpsertOverlayEntryWithEvent(memory_id, entry, event);
+    publish(event); // live feed to rail projections (C4)
     return { entry, event };
   }
   const overlay = loadOverlay({ force: true });
@@ -127,6 +129,7 @@ export function upsertEntryWithEvent(
   const spec = eventOf(entry);
   const event = buildEvent(spec.type, spec.metadata, spec.extra);
   emitEvent(event); // dual mode shadows the event into ledger_events here
+  publish(event); // live feed to rail projections (C4)
   return { entry, event };
 }
 

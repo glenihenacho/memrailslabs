@@ -4,7 +4,7 @@
 
 # memrails.md — project_memrails
 
-> Governed projection of 25 active memories (floor 0.75, restricted excluded). Generated 2026-07-05T22:12:53.815Z.
+> Governed projection of 27 active memories (floor 0.75, restricted excluded). Generated 2026-07-06T03:04:42.680Z.
 
 ## Decisions
 
@@ -48,8 +48,12 @@
   > The MemRails v0.1 contract (knowledge/memrails-contract-v0.1.md) is the normative spec — record model, governance invariants, retrieval guarantees, export/import portability, the memrails.md projection — and a runtime claims Baseline, Governed, or Portable conformance only with a passing suite in tests/conformance/.
 - The ledger is the event spine — governance changes and their events commit in one transaction, every governance event carries the resulting overlay entry, and any projection can be dropped and rebuilt by replaying the stream. (confidence 0.95 · `clm_ledger_spine` · knowledge/claims/ledger-spine.md)
   > - Every governance transition (supersede, dispute, restore, re-score,   tombstone, §6 governance import) commits its overlay change and its ledger   event in **one Postgres transaction**; the version row links back via   `source_event_id`. - Governance events carry `metadata.overlay_entry` — the full resulting   entry — so folding them in `seq` order reconstructs governance state   exactly (`src/l
+- The V1 rails are ledger projections — the hot rail invalidates on lifecycle events (never TTL), the artifact rail stores content-addressed encrypted blobs with Postgres pointers, and the graph projection answers taint/ancestry/clusters/centrality over structure only — each droppable and rebuildable from the spine. (confidence 0.95 · `clm_rails_projections` · knowledge/claims/rails-projections.md)
+  > - Rails receive events two ways with **one handler**: the in-process bus   (live) and a cursor-tracked ledger consumer (rebuild) — so dropping any   rail and replaying the spine reconstructs the identical state. Postgres   wins all disagreements. - **Hot rail** (`rails/hot.ts`, Redis stand-in): recent/high-usage memory   ids backing `mode: 'hot'`; a superseded, disputed, or tombstoned memory   lea
 - Retrieval order is grep → key → semantic → evidence → compress. (confidence 0.95 · `clm_retrieval_order` · knowledge/claims/retrieval-order.md)
   > Retrieval order is grep → key → semantic → evidence → compress. The orchestrator runs cheap filters first and only falls through to L5 compression when lower tiers fail to resolve or when the intent requires synthesis.
+- The retrieval quality loop is closed — feedback fans out to bundle memories and feeds usage_success in the scorer, staleness re-verifies past expires_at through evented re-scores, the vector fallback fires only in hybrid mode on weak tree signal and is always trace-recorded, and every retrieval lands in the training corpus that the evals harness gates C6 against. (confidence 0.93 · `clm_retrieval_quality` · knowledge/claims/retrieval-quality.md)
+  > - **usage_success is live**: FEEDBACK_RECORDED (v2) fans retrieval-level   ratings out to the bundle's memory ids; the usage projection   (`rails/usage.ts`, rebuildable from the ledger) feeds a bounded ±0.15,   Laplace-smoothed term into the transparent scorer. - **Staleness is governed**: `npm run memory:staleness` re-verifies records   past `expires_at` with an evented, versioned confidence down
 - The default evidence floor is 0.75. (confidence 0.90 · `clm_evidence_floor` · knowledge/claims/evidence-floor.md)
   > The default evidence floor is 0.75. Claims below the floor are excluded from packets unless explicitly requested. Contradictions are surfaced in packet metadata rather than hidden.
 - MemRails is priced by memory retrieval — one successful memory.retrieve() is one billable unit, default $0.002 ($2 per 1,000), with no seat fees and no arbitrary quotas. (confidence 0.90 · `clm_pricing` · knowledge/pricing.md)
@@ -73,9 +77,9 @@
 - `/project/project_memrails/pricing` — 4 memories
 - `/project/project_memrails/product_scope` — 2 memories
 - `/project/project_memrails/rejected_assumptions` — 1 memories
-- `/project/project_memrails/retrieval_architecture` — 8 memories
+- `/project/project_memrails/retrieval_architecture` — 9 memories
 - `/project/project_memrails/roadmap` — 1 memories
-- `/project/project_memrails/stack_decisions` — 1 memories
+- `/project/project_memrails/stack_decisions` — 2 memories
 
 ---
 
@@ -85,7 +89,7 @@ scope: { owner: user_memrails, project: project_memrails, agent: null }
 policy_filters_applied: [owner_scope, project_scope, agent_scope, active_only, sensitivity, expiry]
 evidence_floor: 0.75
 branches: 11
-memories_included: 25
+memories_included: 27
 memories_omitted: {}
-generated_at: 2026-07-05T22:12:53.815Z
+generated_at: 2026-07-06T03:04:42.680Z
 ```

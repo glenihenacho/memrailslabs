@@ -11,6 +11,7 @@ import { write } from '@/lib/memory/write';
 import { findRetrieval } from '@/lib/memory/telemetry';
 import { memoryMap } from '@/lib/memory';
 import { projectMarkdown } from '@/lib/memory/project-md';
+import { graphQuery, type GraphQueryType } from '@/lib/rails/graph';
 import { ensureAuthorityReady, flushAuthority } from '@/lib/memory/authority';
 // Side-effect import: installs the billing meter so MCP retrievals stay billed.
 import '@/lib/billing/meter';
@@ -49,6 +50,7 @@ export const MCP_TOOLS: McpTool[] = [
         confidence: { type: 'number' },
         tags: { type: 'array', items: { type: 'string' } },
         project_id: { type: 'string' },
+        expires_at: { type: 'string', description: 'ISO timestamp validity window; the staleness job re-verifies past it.' },
       },
     },
   },
@@ -79,6 +81,20 @@ export const MCP_TOOLS: McpTool[] = [
         project_id: { type: 'string' },
         agent_id: { type: 'string' },
         include_sensitive: { type: 'boolean' },
+      },
+    },
+  },
+  {
+    name: 'memrails.memory.graph',
+    description:
+      "Query the graph projection (the auditor's map — structure only, never content). Fixed menu: taint (blast radius), ancestry (supersession lineage), clusters (connected component), centrality (load-bearing memories).",
+    input_schema: {
+      type: 'object',
+      required: ['query_type'],
+      properties: {
+        query_type: { type: 'string', enum: ['taint', 'ancestry', 'clusters', 'centrality'] },
+        root_id: { type: 'string' },
+        depth: { type: 'number' },
       },
     },
   },
@@ -114,6 +130,7 @@ async function dispatchToolInner(name: string, args: Record<string, unknown>): P
         confidence: args.confidence as number | undefined,
         tags: args.tags as string[] | undefined,
         project_id: args.project_id as string | undefined,
+        expires_at: args.expires_at as string | undefined,
       });
     case 'memrails.memory.inspect': {
       const bundle = findRetrieval(String(args.retrieval_id ?? ''));
@@ -128,6 +145,12 @@ async function dispatchToolInner(name: string, args: Record<string, unknown>): P
         agent_id: (args.agent_id as string | undefined) ?? null,
         include_sensitive: args.include_sensitive as boolean | undefined,
       });
+    case 'memrails.memory.graph':
+      return graphQuery(
+        args.query_type as GraphQueryType,
+        args.root_id as string | undefined,
+        args.depth as number | undefined,
+      );
     default:
       throw new Error(`unknown_tool:${name}`);
   }

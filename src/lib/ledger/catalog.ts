@@ -31,7 +31,7 @@ export type CatalogEntry = {
 export const EVENT_CATALOG: Record<LedgerEventType, CatalogEntry> = {
   // Governed memory lifecycle — the replayable spine.
   MEMORY_WRITTEN: {
-    schema_version: 1,
+    schema_version: 2, // v2: + source_refs, index_path, confidence
     governance: false, // creation seeds the registry, not the overlay
     description: 'A governed record was created (or deduplicated) via memory.write().',
   },
@@ -67,12 +67,12 @@ export const EVENT_CATALOG: Record<LedgerEventType, CatalogEntry> = {
   },
   // Retrieval + feedback telemetry.
   MEMORY_RETRIEVED: {
-    schema_version: 1,
+    schema_version: 2, // v2: + memory_ids of the returned bundle
     governance: false,
     description: 'One memory.retrieve() completed; metadata summarizes the bundle.',
   },
   FEEDBACK_RECORDED: {
-    schema_version: 1,
+    schema_version: 2, // v2: + memory_ids fan-out of the rated retrieval
     governance: false,
     description: 'Usage feedback recorded against a retrieval (scorer input in C5).',
   },
