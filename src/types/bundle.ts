@@ -60,6 +60,12 @@ export type RetrievalTrace = {
   branches_selected: string[];
   policy_filters_applied: string[];
   candidates_considered: number;
+  /**
+   * `name@version` of the branch planner that planned this retrieval
+   * (contract §9, amendment v0.1.1). Plans are advisory: policy and floor
+   * gates run in code after planning.
+   */
+  planner?: string;
   scoring?: ScoreBreakdown[];
 };
 

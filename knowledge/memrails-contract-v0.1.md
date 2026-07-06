@@ -7,7 +7,7 @@ memory_type: constraint
 index_path: /project/project_memrails/contract
 summary: The normative MemRails v0.1 contract — record model, governance invariants, retrieval guarantees, export/import portability, the memrails.md projection, and the Baseline/Governed/Portable conformance levels.
 created_at: 2026-07-04
-updated_at: 2026-07-04
+updated_at: 2026-07-06
 ---
 
 # MemRails Contract v0.1
@@ -17,6 +17,11 @@ updated_at: 2026-07-04
 > the conformance suite in `tests/conformance/`; a change that cannot keep that
 > suite green is a contract change and goes through a spec revision, not a code
 > sneak.
+>
+> **Amendment v0.1.1** — §9 planner accountability is in force: every planned
+> retrieval names its planner on the trace, and planner substitution
+> (fallback) is itself visible in the trace. Additive only; v0.1 bundles
+> remain conforming.
 
 ## §1 Purpose & scope
 
@@ -172,7 +177,12 @@ Models MAY plan retrieval (branch selection, budget allocation). They learn
 structure and decisions. Floor, status, scope, and sensitivity gates are
 enforced in code *after* planning; a planner proposal can never bypass §4/§5.
 When a model plans a retrieval, the trace MUST name it (`planner:
-model@version` — spec amendment v0.1.1).
+model@version` — spec amendment v0.1.1). When the configured planner fails and
+the runtime substitutes its fallback, the substitution MUST be visible in the
+trace and the fallback planner is the one named. A planner earns the default
+role only through the recorded eval gates — meeting every gate at equal or
+lower token cost than the incumbent — and the heuristic planner remains the
+permanent fallback regardless of which planner holds the default.
 
 ## §10 Kernel & conformance levels
 

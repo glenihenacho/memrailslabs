@@ -45,6 +45,13 @@ export type EvalReport = {
   token_budget: number;
 };
 
+export type EvalGates = {
+  min_mean_recall: number;
+  min_top_hit_rate: number;
+  max_floor_violations: number;
+  max_median_tokens: number;
+};
+
 const EVAL_BUDGET = 1800;
 
 function evalCase(golden: GoldenCase): EvalCaseResult {
@@ -77,8 +84,53 @@ function evalCase(golden: GoldenCase): EvalCaseResult {
   };
 }
 
-export function runEvals(goldens: GoldenCase[]): EvalReport {
-  const cases = goldens.map(evalCase);
+/**
+ * Run the golden set, optionally under a specific branch planner (C6 A/B):
+ * the planner flag is scoped to this run and restored afterwards.
+ */
+export function runEvals(goldens: GoldenCase[], opts: { planner?: string } = {}): EvalReport {
+  const prev = process.env.MEMRAILS_PLANNER;
+  if (opts.planner) process.env.MEMRAILS_PLANNER = opts.planner;
+  try {
+    return computeReport(goldens.map(evalCase));
+  } finally {
+    if (opts.planner) {
+      if (prev === undefined) delete process.env.MEMRAILS_PLANNER;
+      else process.env.MEMRAILS_PLANNER = prev;
+    }
+  }
+}
+
+/** Gate check: returns the list of violated gates (empty = conforming). */
+export function meetsGates(report: EvalReport, gates: EvalGates): string[] {
+  const violations: string[] = [];
+  if (report.mean_recall < gates.min_mean_recall) violations.push('mean_recall');
+  if (report.top_hit_rate < gates.min_top_hit_rate) violations.push('top_hit_rate');
+  if (report.floor_violations > gates.max_floor_violations) violations.push('floor_violations');
+  if (report.median_tokens > gates.max_median_tokens) violations.push('median_tokens');
+  return violations;
+}
+
+/**
+ * The default-flip law (C6): a candidate planner earns the default only by
+ * meeting every recorded gate, regressing no quality measure against the
+ * incumbent, and costing equal or fewer tokens. Anything less keeps the
+ * incumbent — the heuristic never loses its permanent-fallback role either way.
+ */
+export function earnsPromotion(
+  candidate: EvalReport,
+  incumbent: EvalReport,
+  gates: EvalGates,
+): { promote: boolean; reasons: string[] } {
+  const reasons = meetsGates(candidate, gates).map((g) => `gate:${g}`);
+  if (candidate.mean_recall < incumbent.mean_recall) reasons.push('regression:mean_recall');
+  if (candidate.top_hit_rate < incumbent.top_hit_rate) reasons.push('regression:top_hit_rate');
+  if (candidate.floor_violations > incumbent.floor_violations) reasons.push('regression:floor_violations');
+  if (candidate.median_tokens > incumbent.median_tokens) reasons.push('cost:median_tokens');
+  return { promote: reasons.length === 0, reasons };
+}
+
+function computeReport(cases: EvalCaseResult[]): EvalReport {
   const tokens = cases.map((c) => c.tokens_returned).sort((a, b) => a - b);
   const mid = Math.floor(tokens.length / 2);
   const median =

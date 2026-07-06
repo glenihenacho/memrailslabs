@@ -186,6 +186,8 @@ export type TrainingRow = {
   returned_ids: string[];
   omitted: Array<{ memory_id: string; reason: string }>;
   vector_fallback: boolean;
+  /** `name@version` of the planner that planned this retrieval (C6, §9). */
+  planner?: string;
   created_at: string;
 };
 
@@ -203,8 +205,8 @@ export function persistRetrieval(bundle: ContextBundle, event: LedgerEvent, trai
         await q.query(
           `INSERT INTO retrieval_training
              (retrieval_id, task_context_hash, mode, branches, scoring, returned_ids,
-              omitted, vector_fallback, created_at)
-           VALUES ($1, $2, $3, $4, $5, $6, $7, $8, $9)
+              omitted, vector_fallback, planner, created_at)
+           VALUES ($1, $2, $3, $4, $5, $6, $7, $8, $9, $10)
            ON CONFLICT (retrieval_id) DO NOTHING`,
           [
             training.retrieval_id,
@@ -215,6 +217,7 @@ export function persistRetrieval(bundle: ContextBundle, event: LedgerEvent, trai
             JSON.stringify(training.returned_ids),
             JSON.stringify(training.omitted),
             training.vector_fallback,
+            training.planner ?? null,
             training.created_at,
           ],
         );

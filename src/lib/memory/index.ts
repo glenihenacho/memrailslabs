@@ -93,6 +93,15 @@ export { write } from './write';
 export { supersede, dispute, restore, updateConfidence, forget } from './lifecycle';
 export { loadRegistry, getRecord, DEFAULT_SCOPE } from './registry';
 export { buildIndex, selectBranches, toMemoryMap } from './index-tree';
+export {
+  planBranches,
+  getPlanner,
+  registerPlanner,
+  heuristicPlanner,
+  corpusPlanner,
+  DEFAULT_PLANNER,
+} from './planner';
+export type { BranchPlan, BranchPlanner } from './planner';
 export { recordFeedback, findRetrieval } from './telemetry';
 
 import { loadRegistry } from './registry';

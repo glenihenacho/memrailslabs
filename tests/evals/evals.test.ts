@@ -13,7 +13,8 @@
  */
 import { beforeEach, describe, it, expect } from 'vitest';
 import { resetData } from '../conformance/helpers';
-import { runEvals, type GoldenCase } from '@/lib/memory/evals';
+import { runEvals, meetsGates, earnsPromotion, type GoldenCase, type EvalGates } from '@/lib/memory/evals';
+import { getPlanner, corpusPlanner, DEFAULT_PLANNER } from '@/lib/memory/planner';
 import { write } from '@/lib/memory/write';
 import { supersede } from '@/lib/memory/lifecycle';
 import { retrieve } from '@/lib/memory/retrieve';
@@ -34,6 +35,27 @@ describe('C5.5 — retrieval evals (quality gate for C6)', () => {
     expect(report.top_hit_rate).toBeGreaterThanOrEqual(golden.gates.min_top_hit_rate);
     expect(report.floor_violations).toBeLessThanOrEqual(golden.gates.max_floor_violations);
     expect(report.median_tokens).toBeLessThanOrEqual(golden.gates.max_median_tokens);
+  });
+
+  it('C6: the default planner flip stays earned — A/B re-verified on every run', () => {
+    const cases = golden.cases as GoldenCase[];
+    const gates = golden.gates as EvalGates;
+
+    const incumbent = runEvals(cases, { planner: golden.planner_promotion.incumbent });
+    const candidate = runEvals(cases, { planner: golden.planner_promotion.candidate });
+
+    // The incumbent heuristic must itself stay conforming — it is the
+    // permanent fallback, and a fallback that fails the gates is no fallback.
+    expect(meetsGates(incumbent, gates)).toEqual([]);
+
+    // The recorded promotion decision must match what the gate awards today.
+    // If corpus@v1 ever regresses on recall, top-hit, floor, or token cost,
+    // this fails and the default reverts with the record — no silent drift.
+    const promotion = earnsPromotion(candidate, incumbent, gates);
+    expect(promotion.reasons).toEqual([]);
+    expect(promotion.promote).toBe(golden.planner_promotion.promoted);
+    expect(DEFAULT_PLANNER === 'corpus').toBe(golden.planner_promotion.promoted);
+    expect(getPlanner().name).toBe(golden.planner_promotion.promoted ? corpusPlanner.name : golden.planner_promotion.incumbent);
   });
 
   it('states correct omission reasons for governed exclusions', () => {
