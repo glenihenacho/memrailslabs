@@ -191,11 +191,29 @@ export function persistRetrieval(bundle: ContextBundle, event: LedgerEvent): voi
   });
 }
 
+/** Artifact rail pointer (C4.2): the blob lives content-addressed off-Postgres. */
+export type ArtifactPointer = {
+  ref: string;
+  hash: string;
+  owner_id?: string | null;
+  bytes: number;
+};
+
+export function persistArtifactPointer(ptr: ArtifactPointer): void {
+  enqueue(async (db) => {
+    await db.query(
+      `INSERT INTO artifacts (ref, hash, owner_id, bytes, created_at)
+       VALUES ($1, $2, $3, $4, now()) ON CONFLICT (ref) DO NOTHING`,
+      [ptr.ref, ptr.hash, ptr.owner_id ?? null, ptr.bytes],
+    );
+  });
+}
+
 /** Test-only: wipe every authority table (ordered through the same journal). */
 export function truncateAuthority(): void {
   enqueue(async (db) => {
     await db.exec(
-      'TRUNCATE memory_registry, memory_versions, memory_sources, contradiction_edges, ledger_events, retrievals;',
+      'TRUNCATE memory_registry, memory_versions, memory_sources, contradiction_edges, ledger_events, retrievals, artifacts;',
     );
   });
 }

@@ -4,7 +4,7 @@
 
 # memrails.md — project_memrails
 
-> Governed projection of 25 active memories (floor 0.75, restricted excluded). Generated 2026-07-05T22:12:53.815Z.
+> Governed projection of 26 active memories (floor 0.75, restricted excluded). Generated 2026-07-06T02:48:42.000Z.
 
 ## Decisions
 
@@ -48,6 +48,8 @@
   > The MemRails v0.1 contract (knowledge/memrails-contract-v0.1.md) is the normative spec — record model, governance invariants, retrieval guarantees, export/import portability, the memrails.md projection — and a runtime claims Baseline, Governed, or Portable conformance only with a passing suite in tests/conformance/.
 - The ledger is the event spine — governance changes and their events commit in one transaction, every governance event carries the resulting overlay entry, and any projection can be dropped and rebuilt by replaying the stream. (confidence 0.95 · `clm_ledger_spine` · knowledge/claims/ledger-spine.md)
   > - Every governance transition (supersede, dispute, restore, re-score,   tombstone, §6 governance import) commits its overlay change and its ledger   event in **one Postgres transaction**; the version row links back via   `source_event_id`. - Governance events carry `metadata.overlay_entry` — the full resulting   entry — so folding them in `seq` order reconstructs governance state   exactly (`src/l
+- The V1 rails are ledger projections — the hot rail invalidates on lifecycle events (never TTL), the artifact rail stores content-addressed encrypted blobs with Postgres pointers, and the graph projection answers taint/ancestry/clusters/centrality over structure only — each droppable and rebuildable from the spine. (confidence 0.95 · `clm_rails_projections` · knowledge/claims/rails-projections.md)
+  > - Rails receive events two ways with **one handler**: the in-process bus   (live) and a cursor-tracked ledger consumer (rebuild) — so dropping any   rail and replaying the spine reconstructs the identical state. Postgres   wins all disagreements. - **Hot rail** (`rails/hot.ts`, Redis stand-in): recent/high-usage memory   ids backing `mode: 'hot'`; a superseded, disputed, or tombstoned memory   lea
 - Retrieval order is grep → key → semantic → evidence → compress. (confidence 0.95 · `clm_retrieval_order` · knowledge/claims/retrieval-order.md)
   > Retrieval order is grep → key → semantic → evidence → compress. The orchestrator runs cheap filters first and only falls through to L5 compression when lower tiers fail to resolve or when the intent requires synthesis.
 - The default evidence floor is 0.75. (confidence 0.90 · `clm_evidence_floor` · knowledge/claims/evidence-floor.md)
@@ -75,7 +77,7 @@
 - `/project/project_memrails/rejected_assumptions` — 1 memories
 - `/project/project_memrails/retrieval_architecture` — 8 memories
 - `/project/project_memrails/roadmap` — 1 memories
-- `/project/project_memrails/stack_decisions` — 1 memories
+- `/project/project_memrails/stack_decisions` — 2 memories
 
 ---
 
@@ -85,7 +87,7 @@ scope: { owner: user_memrails, project: project_memrails, agent: null }
 policy_filters_applied: [owner_scope, project_scope, agent_scope, active_only, sensitivity, expiry]
 evidence_floor: 0.75
 branches: 11
-memories_included: 25
+memories_included: 26
 memories_omitted: {}
-generated_at: 2026-07-05T22:12:53.815Z
+generated_at: 2026-07-06T02:48:42.000Z
 ```

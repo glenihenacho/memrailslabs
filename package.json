@@ -10,7 +10,7 @@
     "typecheck": "tsc --noEmit",
     "core:check": "tsx scripts/check-core-boundary.ts && tsc --noEmit -p tsconfig.core.json",
     "test": "vitest run",
-    "test:pg": "MEMRAILS_AUTHORITY=postgres MEMRAILS_PG_DIR=:memory: vitest run tests/conformance tests/authority tests/ledger",
+    "test:pg": "MEMRAILS_AUTHORITY=postgres MEMRAILS_PG_DIR=:memory: vitest run tests/conformance tests/authority tests/ledger tests/rails",
     "test:watch": "vitest",
     "memory:extract": "tsx scripts/extract-marketing.ts",
     "memory:index": "tsx scripts/index-knowledge.ts",

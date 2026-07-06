@@ -3,6 +3,7 @@ import { dirname } from 'node:path';
 import { randomUUID } from 'node:crypto';
 import type { ContextBundle } from '@/types/bundle';
 import { buildEvent, logEvent } from '@/lib/ledger/events';
+import { publish } from '@/lib/ledger/bus';
 import { appendEvent } from '@/lib/ledger/jsonl';
 import { dataPath } from '@/lib/paths';
 import { hotRetrievals } from '@/lib/rails/hot';
@@ -49,6 +50,8 @@ export function recordRetrieval(bundle: ContextBundle): void {
     {
       task_context_hash: shortHash(bundle.query),
       mode: bundle.mode,
+      // v2: ids of returned memories — rails rank hotness / usage from these.
+      memory_ids: bundle.memories.map((m) => m.memory_id),
       latency_ms: bundle.latency_ms,
       memories_considered: bundle.retrieval_trace.candidates_considered,
       memories_returned: bundle.memories.length,
@@ -67,6 +70,7 @@ export function recordRetrieval(bundle: ContextBundle): void {
   const mode = authorityMode();
   if (mode !== 'postgres') appendEvent(event);
   if (mode !== 'file') persistRetrieval(bundle, event);
+  publish(event); // live feed to rail projections (C4)
 }
 
 export function findRetrieval(retrieval_id: string): ContextBundle | null {

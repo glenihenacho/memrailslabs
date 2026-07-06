@@ -99,4 +99,15 @@ CREATE TABLE IF NOT EXISTS retrievals (
   bundle       jsonb NOT NULL,
   created_at   timestamptz NOT NULL
 );
+
+-- Artifact rail pointers (C4.2): the blob store holds content-addressed,
+-- encrypted bodies; Postgres stores pointers only.
+CREATE TABLE IF NOT EXISTS artifacts (
+  ref        text PRIMARY KEY,
+  hash       text NOT NULL,
+  owner_id   text,
+  bytes      integer NOT NULL,
+  created_at timestamptz NOT NULL DEFAULT now()
+);
+CREATE INDEX IF NOT EXISTS artifacts_hash_idx ON artifacts (hash);
 `;

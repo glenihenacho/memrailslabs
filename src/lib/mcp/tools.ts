@@ -11,6 +11,7 @@ import { write } from '@/lib/memory/write';
 import { findRetrieval } from '@/lib/memory/telemetry';
 import { memoryMap } from '@/lib/memory';
 import { projectMarkdown } from '@/lib/memory/project-md';
+import { graphQuery, type GraphQueryType } from '@/lib/rails/graph';
 import { ensureAuthorityReady, flushAuthority } from '@/lib/memory/authority';
 // Side-effect import: installs the billing meter so MCP retrievals stay billed.
 import '@/lib/billing/meter';
@@ -82,6 +83,20 @@ export const MCP_TOOLS: McpTool[] = [
       },
     },
   },
+  {
+    name: 'memrails.memory.graph',
+    description:
+      "Query the graph projection (the auditor's map — structure only, never content). Fixed menu: taint (blast radius), ancestry (supersession lineage), clusters (connected component), centrality (load-bearing memories).",
+    input_schema: {
+      type: 'object',
+      required: ['query_type'],
+      properties: {
+        query_type: { type: 'string', enum: ['taint', 'ancestry', 'clusters', 'centrality'] },
+        root_id: { type: 'string' },
+        depth: { type: 'number' },
+      },
+    },
+  },
 ];
 
 /** Dispatch an MCP tool call to the governed lib. Read-only by default. */
@@ -128,6 +143,12 @@ async function dispatchToolInner(name: string, args: Record<string, unknown>): P
         agent_id: (args.agent_id as string | undefined) ?? null,
         include_sensitive: args.include_sensitive as boolean | undefined,
       });
+    case 'memrails.memory.graph':
+      return graphQuery(
+        args.query_type as GraphQueryType,
+        args.root_id as string | undefined,
+        args.depth as number | undefined,
+      );
     default:
       throw new Error(`unknown_tool:${name}`);
   }

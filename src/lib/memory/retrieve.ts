@@ -16,6 +16,7 @@ import { estimateTokens } from './compress';
 import { recordRetrieval } from './telemetry';
 import { buildPacketFromBundle } from './synthesize';
 import { meterBundle } from './meter';
+import { hotMemories } from '@/lib/rails/hot';
 
 const DEFAULT_BUDGET = 1800;
 
@@ -91,12 +92,20 @@ export function retrieve(input: RetrieveInput): ContextBundle {
   if (mode === 'exact') {
     candidateIds = exactMatches(inScope, taskTokens);
   } else if (mode === 'hot') {
-    candidateIds = new Set(
-      [...inScope]
-        .sort((a, b) => Date.parse(b.updated_at) - Date.parse(a.updated_at))
-        .slice(0, 8)
-        .map((r) => r.memory_id),
-    );
+    // C4.1: the hot rail (usage + recency, event-invalidated) backs hot mode.
+    // Scope still governs: rail ids are intersected with the policy-gated set.
+    const inScopeIds = new Set(inScope.map((r) => r.memory_id));
+    const railIds = hotMemories.hotIds(8).filter((id) => inScopeIds.has(id));
+    candidateIds =
+      railIds.length > 0
+        ? new Set(railIds)
+        : // Cold start / empty rail: fall back to recency over the registry.
+          new Set(
+            [...inScope]
+              .sort((a, b) => Date.parse(b.updated_at) - Date.parse(a.updated_at))
+              .slice(0, 8)
+              .map((r) => r.memory_id),
+          );
   } else if (mode === 'hybrid') {
     candidateIds = new Set([...branchMemberIds, ...exactMatches(inScope, taskTokens)]);
   } else {

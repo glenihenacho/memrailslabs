@@ -139,6 +139,10 @@ export function write(input: WriteInput): WriteResult {
       memory_type,
       contradicts,
       input_hash: sha256(content),
+      // v2: structure (never content) for graph/hot projections.
+      source_refs: record.source_refs,
+      index_path,
+      confidence: record.confidence,
     },
     { memory_id, owner_id: scope.owner_id, project_id: scope.project_id, agent_id: scope.agent_id ?? undefined },
   );
