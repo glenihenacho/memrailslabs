@@ -30,6 +30,6 @@ updated_at: 2026-07-06
   memory content (contract §9).
 - **The evals harness gates C6**: fixed golden query set
   (`tests/evals/golden.json`) with recorded baseline (mean recall 1.0,
-  top-hit 0.7, zero floor violations, median 446 tokens). Model-planned
+  top-hit 0.8, zero floor violations, median 547.5 tokens). Model-planned
   retrieval must meet these gates at equal or lower token cost before any
   default flip; the heuristic tree is the permanent fallback.

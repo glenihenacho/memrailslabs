@@ -117,6 +117,9 @@ CREATE TABLE IF NOT EXISTS retrieval_training (
   outcome           jsonb,
   created_at        timestamptz NOT NULL
 );
+-- C6: which planner planned this retrieval (name@version) — the label a
+-- future model planner trains against.
+ALTER TABLE retrieval_training ADD COLUMN IF NOT EXISTS planner text;
 
 -- Artifact rail pointers (C4.2): the blob store holds content-addressed,
 -- encrypted bodies; Postgres stores pointers only.

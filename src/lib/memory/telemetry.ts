@@ -82,6 +82,8 @@ export function recordRetrieval(bundle: ContextBundle, scoring: unknown[] = []):
       returned_ids: bundle.memories.map((m) => m.memory_id),
       omitted: bundle.omitted,
       vector_fallback: bundle.retrieval_trace.policy_filters_applied.includes('vector_fallback'),
+      // C6: label every training row with the planner that planned it.
+      planner: bundle.retrieval_trace.planner,
       created_at: bundle.created_at,
     };
     persistRetrieval(bundle, event, training);

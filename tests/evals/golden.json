@@ -14,6 +14,13 @@
     "max_floor_violations": 0,
     "max_median_tokens": 900
   },
+  "planner_promotion": {
+    "recorded_at_phase": "C6",
+    "incumbent": "heuristic@v1",
+    "candidate": "corpus@v1",
+    "promoted": true,
+    "note": "corpus@v1 meets every gate at equal token cost on the committed corpus (mean_recall 1.0, top_hit 0.8, 0 floor violations, median 547.5): its lexical routing is identical to heuristic@v1 by design and the learned usage prior differentiates only where feedback exists. An IDF-reweighted lexical variant was tried and rejected by this gate (mean_recall 1.0 -> 0.9, top_hit 0.8 -> 0.7). The eval suite re-verifies this promotion on every run; heuristic@v1 remains the permanent fallback."
+  },
   "cases": [
     {
       "id": "core_primitive",

@@ -9,7 +9,8 @@ import type {
   ScoreBreakdown,
 } from '@/types/bundle';
 import { loadRegistry } from './registry';
-import { buildIndex, selectBranches } from './index-tree';
+import { buildIndex } from './index-tree';
+import { planBranches } from './planner';
 import { evaluatePolicy, defaultScope, POLICY_FILTERS, type ScopeRequest } from './scope';
 import { scoreRecord, tokenize } from './ranking';
 import { estimateTokens } from './compress';
@@ -86,9 +87,13 @@ export function retrieve(input: RetrieveInput): ContextBundle {
     }
   }
 
-  // 2. Candidate gather by mode.
+  // 2. Candidate gather by mode. Branch selection goes through the planner
+  // seam (C6): the configured planner proposes branches, code disposes —
+  // every candidate is re-filtered against the policy-gated in-scope set
+  // below, so a plan can never widen scope (§9).
   const index = buildIndex(inScope);
-  const { selected, rootsVisited, topScore } = selectBranches(index, input.task_context);
+  const plan = planBranches(input.task_context, index);
+  const { selected, rootsVisited, topScore } = plan;
   const branchPaths = selected.map((n) => n.path);
   const branchMemberIds = new Set(selected.flatMap((n) => n.member_ids));
   let vectorFallbackFired = false;
@@ -185,9 +190,17 @@ export function retrieve(input: RetrieveInput): ContextBundle {
       mode,
       root_nodes_visited: rootsVisited,
       branches_selected: branchPaths,
-      // The fallback is always visible in the trace when it fired (C5.3).
-      policy_filters_applied: vectorFallbackFired ? [...POLICY_FILTERS, 'vector_fallback'] : [...POLICY_FILTERS],
+      // Substitutions are always visible in the trace: 'vector_fallback' when
+      // hybrid's safety net fired (C5.3), 'planner_fallback' when the
+      // configured planner failed and heuristic@v1 stepped in (C6).
+      policy_filters_applied: [
+        ...POLICY_FILTERS,
+        ...(vectorFallbackFired ? ['vector_fallback'] : []),
+        ...(plan.fallback ? ['planner_fallback'] : []),
+      ],
       candidates_considered: candidates.length,
+      // §9 (v0.1.1): every planned retrieval names its planner.
+      planner: plan.planner,
       scoring: mode === 'debug' ? scoring : undefined,
     },
     usage: { billable_retrievals: 0, billable_units: 0, credits_remaining: null, credit_exhausted: false },
