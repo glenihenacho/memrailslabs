@@ -4,6 +4,7 @@ import { invalidateRegistry } from '@/lib/memory/registry';
 import { resetAuthorityForTests } from '@/lib/memory/authority';
 import { hotMemories, hotRetrievals } from '@/lib/rails/hot';
 import { graphRail } from '@/lib/rails/graph';
+import { usageStats } from '@/lib/rails/usage';
 
 /**
  * Shared conformance-suite reset: wipe the isolated test data dir (see
@@ -19,4 +20,5 @@ export function resetData(): void {
   hotMemories.clear();
   hotRetrievals.clear();
   graphRail.clear();
+  usageStats.clear();
 }

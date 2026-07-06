@@ -100,6 +100,24 @@ CREATE TABLE IF NOT EXISTS retrievals (
   created_at   timestamptz NOT NULL
 );
 
+-- Training corpus (C5.4): structure and decisions of every retrieval —
+-- hashed task context, branch plan, full score breakdowns, what was
+-- returned/omitted, whether the vector fallback fired, and (updated later)
+-- the feedback outcome. Never memory content (contract v0.1 s9). This is
+-- what the C6 planner trains on.
+CREATE TABLE IF NOT EXISTS retrieval_training (
+  retrieval_id      text PRIMARY KEY,
+  task_context_hash text NOT NULL,
+  mode              text NOT NULL,
+  branches          jsonb NOT NULL,
+  scoring           jsonb NOT NULL,
+  returned_ids      jsonb NOT NULL,
+  omitted           jsonb NOT NULL,
+  vector_fallback   boolean NOT NULL DEFAULT false,
+  outcome           jsonb,
+  created_at        timestamptz NOT NULL
+);
+
 -- Artifact rail pointers (C4.2): the blob store holds content-addressed,
 -- encrypted bodies; Postgres stores pointers only.
 CREATE TABLE IF NOT EXISTS artifacts (

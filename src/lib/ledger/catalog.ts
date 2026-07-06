@@ -72,7 +72,7 @@ export const EVENT_CATALOG: Record<LedgerEventType, CatalogEntry> = {
     description: 'One memory.retrieve() completed; metadata summarizes the bundle.',
   },
   FEEDBACK_RECORDED: {
-    schema_version: 1,
+    schema_version: 2, // v2: + memory_ids fan-out of the rated retrieval
     governance: false,
     description: 'Usage feedback recorded against a retrieval (scorer input in C5).',
   },

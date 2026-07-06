@@ -1,0 +1,29 @@
+{
+  "description": "Fixed eval query set with golden bundles against the committed knowledge corpus (C5.5). This baseline is the quality gate for C6: model-planned retrieval must meet or beat it at equal or lower token cost before any default flip.",
+  "baseline": {
+    "recorded_at_phase": "C5",
+    "mean_recall": 1.0,
+    "top_hit_rate": 0.7,
+    "floor_violations": 0,
+    "median_tokens": 446,
+    "token_budget": 1800
+  },
+  "gates": {
+    "min_mean_recall": 1.0,
+    "min_top_hit_rate": 0.7,
+    "max_floor_violations": 0,
+    "max_median_tokens": 900
+  },
+  "cases": [
+    { "id": "core_primitive", "task_context": "what is the core retrieval primitive of memrails", "must_include": ["clm_memory_retrieve"] },
+    { "id": "billing", "task_context": "how is retrieval metered billed and priced", "must_include": ["clm_metered_retrieval"] },
+    { "id": "pipeline", "task_context": "governed retrieval pipeline scope policy ranking modes", "must_include": ["clm_governed_retrieval_doc", "clm_governed_scope"] },
+    { "id": "lifecycle", "task_context": "how does memrails handle changing truth supersede dispute forget", "must_include": ["clm_memory_supersession"] },
+    { "id": "packet", "task_context": "packet contract provenance hashes evidence", "must_include": ["clm_packet_contract"] },
+    { "id": "index_tree", "task_context": "memory index hierarchical tree reasoning retrieval not vector top k", "must_include": ["clm_memory_index"] },
+    { "id": "contract", "task_context": "contract conformance levels portable governed baseline", "must_include": ["clm_contract_v0_1"] },
+    { "id": "quotas", "task_context": "free tier retrieval credits quotas caps", "must_include": ["clm_no_quotas"] },
+    { "id": "ledger", "task_context": "ledger event spine replay consumers rebuild", "must_include": ["clm_ledger_spine"] },
+    { "id": "rails", "task_context": "hot rail artifact rail graph projection taint", "must_include": ["clm_rails_projections"] }
+  ]
+}

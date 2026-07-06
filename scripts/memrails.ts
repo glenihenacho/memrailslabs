@@ -17,6 +17,7 @@ import { findRetrieval } from '@/lib/memory/telemetry';
 import { memoryMap } from '@/lib/memory';
 import { projectMarkdown } from '@/lib/memory/project-md';
 import { exportRecords, importRecords } from '@/lib/memory/records';
+import { reverifyStaleness } from '@/lib/memory/staleness';
 import type { RetrievalMode } from '@/types/bundle';
 import { ensureAuthorityReady, flushAuthority, closeDb } from '@/lib/memory/authority';
 // Side-effect import: installs the billing meter so CLI retrievals stay billed.
@@ -92,6 +93,11 @@ async function main() {
       }
       break;
     }
+    case 'staleness': {
+      const report = reverifyStaleness({ dry_run: process.argv.includes('--dry-run') });
+      console.log(JSON.stringify(report, null, 2));
+      break;
+    }
     case 'import': {
       const src = flag('in');
       if (!src) {
@@ -103,7 +109,7 @@ async function main() {
       break;
     }
     default:
-      console.error('usage: memrails <retrieve|write|map|inspect|project-md|export|import> [flags]');
+      console.error('usage: memrails <retrieve|write|map|inspect|project-md|export|import|staleness> [flags]');
       process.exit(1);
   }
 }

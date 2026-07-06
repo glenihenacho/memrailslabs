@@ -9,7 +9,7 @@ import { dataPath } from '@/lib/paths';
 import { hotRetrievals } from '@/lib/rails/hot';
 import { shortHash } from '@/lib/observability/hash';
 import { authorityMode } from './authority/mode';
-import { persistRetrieval } from './authority/persist';
+import { persistRetrieval, persistTrainingOutcome, type TrainingRow } from './authority/persist';
 
 /**
  * Retrieval telemetry. Every `memory.retrieve()` writes a full record here so
@@ -39,7 +39,7 @@ function append(path: string, obj: unknown): void {
   appendFileSync(path, `${JSON.stringify(obj)}\n`, 'utf8');
 }
 
-export function recordRetrieval(bundle: ContextBundle): void {
+export function recordRetrieval(bundle: ContextBundle, scoring: unknown[] = []): void {
   hotRetrievals.set(bundle.retrieval_id, bundle); // Hot Rail: keep recent state warm
   // The JSONL bundle log stays in every mode — it backs the synchronous
   // findRetrieval() cold path. In postgres/dual mode the bundle row and its
@@ -69,7 +69,23 @@ export function recordRetrieval(bundle: ContextBundle): void {
   );
   const mode = authorityMode();
   if (mode !== 'postgres') appendEvent(event);
-  if (mode !== 'file') persistRetrieval(bundle, event);
+  if (mode !== 'file') {
+    // C5.4: every retrieval is future training data — structure and
+    // decisions only (hashed task context, branch plan, score breakdowns,
+    // inclusion/omission), never memory content (contract v0.1 §9).
+    const training: TrainingRow = {
+      retrieval_id: bundle.retrieval_id,
+      task_context_hash: shortHash(bundle.query),
+      mode: bundle.mode,
+      branches: bundle.retrieval_trace.branches_selected,
+      scoring,
+      returned_ids: bundle.memories.map((m) => m.memory_id),
+      omitted: bundle.omitted,
+      vector_fallback: bundle.retrieval_trace.policy_filters_applied.includes('vector_fallback'),
+      created_at: bundle.created_at,
+    };
+    persistRetrieval(bundle, event, training);
+  }
   publish(event); // live feed to rail projections (C4)
 }
 
@@ -100,11 +116,26 @@ export function recordFeedback(input: Omit<FeedbackRecord, 'feedback_id' | 'crea
     ...input,
   };
   append(feedbackFile(), record);
+  // v2: retrieval-level feedback fans out to the bundle's memory ids so the
+  // usage-success projection can credit every memory the rating covered.
+  const bundle = findRetrieval(record.retrieval_id);
+  const memory_ids = record.memory_id
+    ? [record.memory_id]
+    : (bundle?.memories.map((m) => m.memory_id) ?? []);
   logEvent(
     'FEEDBACK_RECORDED',
-    { rating: record.rating, feedback_type: record.feedback_type, memory_id: record.memory_id },
+    { rating: record.rating, feedback_type: record.feedback_type, memory_id: record.memory_id, memory_ids },
     { retrieval_id: record.retrieval_id, memory_id: record.memory_id },
   );
+  if (authorityMode() !== 'file') {
+    // C5.4: the outcome lands on the training row it rates.
+    persistTrainingOutcome(record.retrieval_id, {
+      rating: record.rating,
+      memory_id: record.memory_id ?? null,
+      feedback_type: record.feedback_type ?? null,
+      at: record.created_at,
+    });
+  }
   return record;
 }
 

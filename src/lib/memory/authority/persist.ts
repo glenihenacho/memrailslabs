@@ -176,8 +176,21 @@ export function persistLedgerEvent(event: LedgerEvent): void {
   });
 }
 
-/** Retrieval telemetry: bundle row + its event, one transaction. */
-export function persistRetrieval(bundle: ContextBundle, event: LedgerEvent): void {
+/** Training-corpus row (C5.4): retrieval structure + decisions, no content. */
+export type TrainingRow = {
+  retrieval_id: string;
+  task_context_hash: string;
+  mode: string;
+  branches: string[];
+  scoring: unknown[];
+  returned_ids: string[];
+  omitted: Array<{ memory_id: string; reason: string }>;
+  vector_fallback: boolean;
+  created_at: string;
+};
+
+/** Retrieval telemetry: bundle row + training row + its event, one transaction. */
+export function persistRetrieval(bundle: ContextBundle, event: LedgerEvent, training?: TrainingRow): void {
   enqueue(async (db) => {
     await db.transaction(async (tx) => {
       const q = tx as unknown as Querier;
@@ -186,8 +199,43 @@ export function persistRetrieval(bundle: ContextBundle, event: LedgerEvent): voi
          VALUES ($1, $2, $3) ON CONFLICT (retrieval_id) DO NOTHING`,
         [bundle.retrieval_id, JSON.stringify(bundle), bundle.created_at],
       );
+      if (training) {
+        await q.query(
+          `INSERT INTO retrieval_training
+             (retrieval_id, task_context_hash, mode, branches, scoring, returned_ids,
+              omitted, vector_fallback, created_at)
+           VALUES ($1, $2, $3, $4, $5, $6, $7, $8, $9)
+           ON CONFLICT (retrieval_id) DO NOTHING`,
+          [
+            training.retrieval_id,
+            training.task_context_hash,
+            training.mode,
+            JSON.stringify(training.branches),
+            JSON.stringify(training.scoring),
+            JSON.stringify(training.returned_ids),
+            JSON.stringify(training.omitted),
+            training.vector_fallback,
+            training.created_at,
+          ],
+        );
+      }
       await insertEventTx(q, event);
     });
+  });
+}
+
+/** Append a feedback outcome onto the retrieval's training row (C5.4). */
+export function persistTrainingOutcome(
+  retrieval_id: string,
+  outcome: Record<string, unknown>,
+): void {
+  enqueue(async (db) => {
+    await db.query(
+      `UPDATE retrieval_training
+       SET outcome = COALESCE(outcome, '[]'::jsonb) || $2::jsonb
+       WHERE retrieval_id = $1`,
+      [retrieval_id, JSON.stringify([outcome])],
+    );
   });
 }
 
@@ -213,7 +261,7 @@ export function persistArtifactPointer(ptr: ArtifactPointer): void {
 export function truncateAuthority(): void {
   enqueue(async (db) => {
     await db.exec(
-      'TRUNCATE memory_registry, memory_versions, memory_sources, contradiction_edges, ledger_events, retrievals, artifacts;',
+      'TRUNCATE memory_registry, memory_versions, memory_sources, contradiction_edges, ledger_events, ledger_cursors, retrievals, retrieval_training, artifacts;',
     );
   });
 }

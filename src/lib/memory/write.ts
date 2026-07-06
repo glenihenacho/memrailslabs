@@ -23,6 +23,8 @@ export type WriteInput = {
   sensitivity?: SensitivityLevel;
   tags?: string[];
   index_path?: string;
+  /** Optional validity window — the staleness job re-verifies past this. */
+  expires_at?: string;
 };
 
 export type WriteResult = {
@@ -126,7 +128,7 @@ export function write(input: WriteInput): WriteResult {
     superseded_by: null,
     created_at: now,
     updated_at: now,
-    expires_at: null,
+    expires_at: input.expires_at ?? null,
   };
 
   appendWritten(record);
