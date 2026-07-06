@@ -201,11 +201,14 @@ class MemRails:
         self,
         api_key: Optional[str] = None,
         base_url: str = "http://localhost:3000",
+        timeout: float = 30.0,
     ) -> None:
         if not base_url.startswith(("http://", "https://")):
             raise ValueError("base_url must use http:// or https://")
         self.api_key = api_key or os.environ.get("MEMRAILS_API_KEY")
         self.base_url = base_url.rstrip("/")
+        # Per-request timeout in seconds; urlopen's default is to wait forever.
+        self.timeout = timeout
         self.memory = MemoryClient(self)
         self.feedback = FeedbackClient(self)
 
@@ -225,7 +228,7 @@ class MemRails:
         payload = json.dumps({k: v for k, v in body.items() if v is not None}).encode()
         req = urllib.request.Request(self.base_url + path, data=payload, headers=self._headers())
         try:
-            with urllib.request.urlopen(req) as resp:  # noqa: S310 (trusted base_url)
+            with urllib.request.urlopen(req, timeout=self.timeout) as resp:  # noqa: S310 (trusted base_url)
                 return json.loads(resp.read().decode())
         except urllib.error.HTTPError as err:
             self._raise_http_error(path, err)
@@ -233,7 +236,7 @@ class MemRails:
     def _request(self, method: str, path: str) -> dict[str, Any]:
         req = urllib.request.Request(self.base_url + path, headers=self._headers(), method=method)
         try:
-            with urllib.request.urlopen(req) as resp:  # noqa: S310 (trusted base_url)
+            with urllib.request.urlopen(req, timeout=self.timeout) as resp:  # noqa: S310 (trusted base_url)
                 return json.loads(resp.read().decode())
         except urllib.error.HTTPError as err:
             self._raise_http_error(path, err)
@@ -244,7 +247,7 @@ class MemRails:
     def _get_text(self, path: str) -> str:
         req = urllib.request.Request(self.base_url + path, headers=self._headers())
         try:
-            with urllib.request.urlopen(req) as resp:  # noqa: S310 (trusted base_url)
+            with urllib.request.urlopen(req, timeout=self.timeout) as resp:  # noqa: S310 (trusted base_url)
                 return resp.read().decode()
         except urllib.error.HTTPError as err:
             self._raise_http_error(path, err)
