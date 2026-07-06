@@ -1,4 +1,5 @@
-import type { MemoryIndex, MemoryIndexNode } from '@/types/index-tree';
+import type { MemoryIndex } from '@/types/index-tree';
+import type { BranchPlan, BranchPlanner } from '@/types/planner';
 import { selectBranches } from './index-tree';
 import { tokenize } from './ranking';
 import { usageStats } from '@/lib/rails/usage';
@@ -36,22 +37,7 @@ import { usageStats } from '@/lib/rails/usage';
  * lower token cost than the incumbent).
  */
 
-export type BranchPlan = {
-  /** `name@version` of the planner that produced this plan — lands on the trace. */
-  planner: string;
-  selected: MemoryIndexNode[];
-  rootsVisited: number;
-  /** Lexical tree-signal strength; hybrid's vector fallback fires below threshold (C5.3). */
-  topScore: number;
-  /** True when the named planner failed and heuristic@v1 stepped in. */
-  fallback?: boolean;
-};
-
-export interface BranchPlanner {
-  /** Stable `name@version` identifier, recorded on every trace it plans. */
-  readonly name: string;
-  plan(taskContext: string, index: MemoryIndex): Omit<BranchPlan, 'planner' | 'fallback'>;
-}
+export type { BranchPlan, BranchPlanner } from '@/types/planner';
 
 const LIMIT = 4;
 const THRESHOLD = 0.0001;
@@ -130,15 +116,28 @@ export function getPlanner(name?: string): BranchPlanner {
 }
 
 /**
- * Plan branch selection with the configured planner; on planner failure fall
- * back to heuristic@v1 and mark the plan so the trace records the substitution.
- * A retrieval never fails because a planner did.
+ * Plan branch selection with the configured planner. Every substitution is a
+ * fallback event the trace records — an unknown planner name (a
+ * `MEMRAILS_PLANNER` typo) as much as a planner that throws. A retrieval
+ * never fails because a planner did: if even the heuristic faults, the plan
+ * degrades to empty branch selection and retrieval proceeds on the
+ * mode-specific paths that don't need branches.
  */
 export function planBranches(taskContext: string, index: MemoryIndex, plannerName?: string): BranchPlan {
-  const planner = getPlanner(plannerName);
+  const requested = plannerName ?? process.env.MEMRAILS_PLANNER ?? DEFAULT_PLANNER;
+  const resolved = planners.get(requested);
+  const planner = resolved ?? heuristicPlanner;
   try {
-    return { planner: planner.name, ...planner.plan(taskContext, index) };
+    const out = planner.plan(taskContext, index);
+    return resolved ? { planner: planner.name, ...out } : { planner: planner.name, fallback: true, ...out };
   } catch {
-    return { planner: heuristicPlanner.name, fallback: true, ...heuristicPlanner.plan(taskContext, index) };
+    if (planner !== heuristicPlanner) {
+      try {
+        return { planner: heuristicPlanner.name, fallback: true, ...heuristicPlanner.plan(taskContext, index) };
+      } catch {
+        // fall through to the empty plan
+      }
+    }
+    return { planner: heuristicPlanner.name, fallback: true, selected: [], rootsVisited: 0, topScore: 0 };
   }
 }

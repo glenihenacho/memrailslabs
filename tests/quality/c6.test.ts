@@ -28,8 +28,15 @@ import { authorityMode, flushAuthority, getDb } from '@/lib/memory/authority';
 const PROJECT = 'project_planner_c6';
 const pgOnly = authorityMode() === 'postgres' ? describe : describe.skip;
 
+// Planner selection must stay order-independent across suites: restore the
+// pre-test MEMRAILS_PLANNER rather than unconditionally deleting it.
+let previousPlanner: string | undefined;
+beforeEach(() => {
+  previousPlanner = process.env.MEMRAILS_PLANNER;
+});
 afterEach(() => {
-  delete process.env.MEMRAILS_PLANNER;
+  if (previousPlanner === undefined) delete process.env.MEMRAILS_PLANNER;
+  else process.env.MEMRAILS_PLANNER = previousPlanner;
 });
 
 describe('C6.1 — every plan is named on the trace (§9, v0.1.1)', () => {
@@ -56,9 +63,12 @@ describe('C6.1 — every plan is named on the trace (§9, v0.1.1)', () => {
     const corpus = retrieve({ task_context: 'planner flag subject memory', project_id: PROJECT });
     expect(corpus.retrieval_trace.planner).toBe(corpusPlanner.name);
 
+    // A typo'd planner name is a fallback event, not a silent substitution:
+    // the heuristic is named AND the trace records the substitution.
     process.env.MEMRAILS_PLANNER = 'no_such_planner@v9';
     const unknown = retrieve({ task_context: 'planner flag subject memory', project_id: PROJECT });
     expect(unknown.retrieval_trace.planner).toBe(heuristicPlanner.name);
+    expect(unknown.retrieval_trace.policy_filters_applied).toContain('planner_fallback');
   });
 });
 
@@ -196,6 +206,17 @@ describe('C6.3 — plans are advisory: gates run in code after planning (§9)', 
     expect(bundle.memories.length).toBeGreaterThan(0);
     expect(bundle.retrieval_trace.planner).toBe(heuristicPlanner.name);
     expect(bundle.retrieval_trace.policy_filters_applied).toContain('planner_fallback');
+  });
+
+  it('degrades to an empty plan when even the heuristic faults (double fault)', () => {
+    // A malformed index makes every planner throw; planBranches must still
+    // return a plan rather than propagate — "a retrieval never fails because
+    // a planner did" has no exception for the fallback itself.
+    const malformed = { nodes: null, edges: [], memberships: [] } as unknown as Parameters<typeof planBranches>[1];
+    const plan = planBranches('planner double fault', malformed);
+    expect(plan.selected).toEqual([]);
+    expect(plan.fallback).toBe(true);
+    expect(plan.planner).toBe(heuristicPlanner.name);
   });
 });
 
