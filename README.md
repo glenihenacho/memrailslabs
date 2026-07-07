@@ -45,6 +45,8 @@ npm run dev   # → http://localhost:3000/console-live
 | GET / DELETE | `/api/memory/:id` | Read / forget (tombstone) a memory |
 | POST | `/api/memory/:id/supersede` | Mark superseded, point at replacement |
 | POST | `/api/memory/:id/dispute` | Flag, drop confidence, exclude from retrieval |
+| POST | `/api/memory/:id/restore` | Reverse a dispute (§4.4) |
+| POST | `/api/memory/:id/confidence` | Re-score through a versioned transition |
 | GET | `/api/memory/export` | Export registry as `json` / `jsonl` / `markdown` |
 | GET | `/api/memory/map` | Project MemoryIndex tree |
 | GET | `/api/retrievals/:id/trace` | Replay a retrieval's trace |
@@ -84,6 +86,24 @@ See `knowledge/billing-model.md` and `knowledge/federation.md`.
 - **Python:** `sdk/python/memrails` — `MemRails().memory.retrieve(...)`
 - **CLI:** `npm run memrails -- <retrieve|write|map|inspect>`
 - **MCP:** `src/lib/mcp/tools.ts` + `npm run mcp:server` (stdio JSON-RPC stub)
+- **Embedded:** `@memrails/local` (`packages/local/`) — the contract kernel
+  in-process, self-hosted and unmetered. `npm run package:local` builds it;
+  `npm run package:verify` smokes the built artifact.
+
+## Contract & conformance
+
+The runtime implements the **MemRails memory contract v0.1.1**
+(`knowledge/memrails-contract-v0.1.md`) and certifies the **Portable** level
+(§10): the conformance suite passes unchanged on the file-canonical and
+Postgres-canonical authorities, and the §6 round-trip law holds across two
+separate processes with different backends, in both directions
+(`tests/conformance/cross-runtime.test.ts`). The suite doubles as the
+certification kit for third-party backends — see `tests/conformance/README.md`.
+
+```bash
+npm run conformance      # file-canonical authority
+npm run conformance:pg   # embedded Postgres authority (includes cross-runtime)
+```
 
 ## Storage (file-canonical MVP)
 

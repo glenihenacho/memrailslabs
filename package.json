@@ -28,7 +28,11 @@
     "authority:diff": "tsx scripts/diff-authority.ts",
     "memrails": "tsx scripts/memrails.ts",
     "mcp:server": "tsx scripts/mcp-server.ts",
-    "ledger:export": "tsx scripts/export-ledger.ts"
+    "ledger:export": "tsx scripts/export-ledger.ts",
+    "package:local": "tsup --config packages/local/tsup.config.ts",
+    "package:verify": "tsx scripts/verify-local-package.ts",
+    "conformance": "vitest run tests/conformance",
+    "conformance:pg": "MEMRAILS_AUTHORITY=postgres MEMRAILS_PG_DIR=:memory: vitest run tests/conformance"
   },
   "dependencies": {
     "@electric-sql/pglite": "^0.5.4",
@@ -47,6 +51,7 @@
     "eslint-config-next": "14.2.15",
     "postcss": "^8.4.41",
     "tailwindcss": "^3.4.16",
+    "tsup": "^8.5.1",
     "tsx": "^4.19.0",
     "typescript": "^5.5.4",
     "vitest": "^2.0.5"

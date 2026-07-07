@@ -26,6 +26,9 @@ const Body = z.object({
   sensitivity: z.enum(['normal', 'sensitive', 'restricted']).optional(),
   tags: z.array(z.string()).optional(),
   index_path: z.string().optional(),
+  // Validity window (C5.2): past this instant the record leaves retrieval
+  // and the staleness job re-verifies it with a governed downgrade.
+  expires_at: z.string().datetime({ offset: true }).optional(),
   source: z
     .object({
       type: z.enum(['conversation', 'file', 'tool_result', 'manual', 'api', 'correction']),

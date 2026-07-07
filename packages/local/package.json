@@ -1,0 +1,36 @@
+{
+  "name": "@memrails/local",
+  "version": "0.1.1",
+  "description": "MemRails contract v0.1.1 kernel as an embeddable local runtime — governed memory.retrieve() for locally inferred agents, file-canonical by default, Postgres-canonical by flag.",
+  "license": "UNLICENSED",
+  "type": "module",
+  "main": "./dist/index.cjs",
+  "module": "./dist/index.js",
+  "types": "./dist/index.d.ts",
+  "exports": {
+    ".": {
+      "types": "./dist/index.d.ts",
+      "import": "./dist/index.js",
+      "require": "./dist/index.cjs"
+    }
+  },
+  "files": [
+    "dist",
+    "README.md"
+  ],
+  "engines": {
+    "node": ">=18"
+  },
+  "dependencies": {
+    "@electric-sql/pglite": "^0.5.4",
+    "gray-matter": "^4.0.3"
+  },
+  "keywords": [
+    "memory",
+    "agents",
+    "retrieval",
+    "governed",
+    "memrails",
+    "context-bundle"
+  ]
+}
